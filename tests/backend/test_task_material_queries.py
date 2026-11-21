@@ -105,8 +105,9 @@ def test_source_returns_frozen_line_order_instead_of_repository_identity_order()
     assert cycle_materials(work, attempt, (second, first)) == (first, second)
 
 
-def completed(tmp_path):
+def completed(tmp_path, pending=None):
     commands, _, store, actor, ids, inventory = configured(tmp_path)
+    inventory.pending = pending
     created = commands.create(
         "create",
         CreateTask(
@@ -191,3 +192,105 @@ def test_material_query_fails_closed_on_missing_sources_in_both_views(tmp_path, 
     ):
         with pytest.raises(StorageFailure, match="invalid_material_references"):
             read()
+
+
+def test_closed_material_cycles_remain_bounded_and_reachable_after_reopening(tmp_path):
+    commands, store, actor, ids, inventory, oid, receipt, _ = completed(tmp_path)
+    service = queries(store, actor.current())
+    assert service.material_history(oid, limit=1).items == ()
+    cycle_id = receipt.result.decode()["cycle"]["cycle_id"]
+    commands.reopen("reopen", ReopenTask(oid, 2, cycle_id, "Another performance"))
+    page = service.material_history(oid, limit=1)
+    assert page.next_cursor is None
+    assert len(page.items) == 1
+    assert page.items[0] == service.materials(oid, cycle_id)
+    assert page.items[0].cycle.closed_at is not None
+    assert (
+        page.items[0].materials[0].intent_id == receipt.result.decode()["materials"][0]["intent_id"]
+    )
+    assert service.occurrence(oid).cycle is None
+
+
+def test_material_history_cursor_reaches_every_closed_cycle_and_never_mutates(tmp_path):
+    commands, store, actor, ids, inventory, oid, receipt, request = completed(tmp_path)
+    service = queries(store, actor.current())
+    expected = []
+    for index in range(4):
+        cycle_id = receipt.result.decode()["cycle"]["cycle_id"]
+        expected.append(cycle_id)
+        revision = service.occurrence(oid).work.revision
+        commands.reopen(f"reopen-{index}", ReopenTask(oid, revision, cycle_id, "Repeat"))
+        if index < 3:
+            revision = service.occurrence(oid).work.revision
+            receipt = commands.complete(
+                f"complete-{index}", replace(request, expected_revision=revision)
+            )
+    count, movements = ids.count, len(inventory.movements())
+    observed, cursor = [], None
+    while True:
+        page = service.material_history(oid, limit=1, cursor=cursor)
+        assert len(page.items) == 1
+        observed.extend(value.cycle.cycle_id for value in page.items)
+        cursor = page.next_cursor
+        if cursor is None:
+            break
+    assert observed == sorted(expected)
+    assert ids.count == count and len(inventory.movements()) == movements
+    cursor = service.material_history(oid, limit=1).next_cursor
+    with pytest.raises(InvalidInput):
+        service.material_history(oid, limit=2, cursor=cursor)
+    with pytest.raises(NotFound):
+        service.material_history("missing")
+
+
+@pytest.mark.parametrize("limit", [0, 6, True, "1"])
+def test_material_history_rejects_unbounded_or_untyped_limits(tmp_path, limit):
+    _, store, actor, _, _, oid, _, _ = completed(tmp_path)
+    with pytest.raises(InvalidInput, match="invalid_page_size"):
+        queries(store, actor.current()).material_history(oid, limit=limit)
+
+
+def test_closed_material_history_rechecks_current_settlement_authority(tmp_path):
+    from domus.domain.task_material_values import MaterialPendingReason
+
+    commands, store, actor, ids, inventory, oid, receipt, _ = completed(
+        tmp_path, MaterialPendingReason.STOCK_SHORTAGE
+    )
+    service = queries(store, actor.current())
+    cycle_id = receipt.result.decode()["cycle"]["cycle_id"]
+    commands.reopen("reopen", ReopenTask(oid, 2, cycle_id, "Repeat"))
+    assert service.material_history(oid).items[0].allowed_actions == ("materials.settle",)
+    with store.write() as unit:
+        member = unit.members.by_user("home", actor.human.ha_user_id)
+        unit.members.save(
+            replace(
+                member,
+                exceptions=(PermissionRule(Permission.TASKS_MATERIAL_USE, False),),
+                revision=2,
+            ),
+            1,
+        )
+    assert service.material_history(oid).items[0].allowed_actions == ()
+    assert service.materials(oid, cycle_id).allowed_actions == ()
+    assert not inventory.movements()
+    with store.write() as unit:
+        member = unit.members.by_user("home", actor.human.ha_user_id)
+        unit.members.save(
+            replace(member, exceptions=(PermissionRule(Permission.TASKS_READ, False),), revision=3),
+            2,
+        )
+    with pytest.raises(Forbidden):
+        service.material_history(oid)
+
+
+def test_material_history_fails_closed_on_an_unlinked_open_cycle(tmp_path, monkeypatch):
+    from domus.infrastructure.sqlite_tasks import SQLiteTasks
+
+    _, store, actor, _, _, oid, receipt, _ = completed(tmp_path)
+    with store.read() as unit:
+        attempt = unit.tasks.cycle("home", receipt.result.decode()["cycle"]["cycle_id"])
+    monkeypatch.setattr(
+        SQLiteTasks, "cycles", lambda *args, **kwargs: (replace(attempt, cycle_id="unlinked"),)
+    )
+    with pytest.raises(StorageFailure, match="invalid_task_cycle"):
+        queries(store, actor.current()).material_history(oid)

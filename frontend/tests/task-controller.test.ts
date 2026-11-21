@@ -7,6 +7,7 @@ import {EntryReadError} from '../src/application/ports';
 import type {TaskAccess, TaskDetail, TaskReceipt, TaskScheduleDraft} from '../src/domain/tasks';
 import type {VerifiedEntrySession} from '../src/application/ports';
 import type {TaskServer} from '../src/application/task-ports';
+import type {InventoryServer} from '../src/application/inventory-controller';
 const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge' as const, subject: 'a'.repeat(32)};
 const revision = revisionValue('1');
 const detail: TaskDetail = {occurrenceId: 'work-1', definitionId: 'def-1', definitionRevision: revision, title: 'Clean 🧹',
@@ -14,18 +15,19 @@ const detail: TaskDetail = {occurrenceId: 'work-1', definitionId: 'def-1', defin
   allowedActions: ['claim', 'complete'], cycle: null, materials: [], materialRecording: 'review_on_completion', dependencyReviewRequired: false, pendingMaterials: false};
 const saved: TaskReceipt = {kind: 'receipt', stage: 'committed', action: 'task.create', operationId: 'op-1', occurrenceId: 'work-1', revision, state: 'available', cycle: null, archivedBy: null};
 const read = <T>(value: T) => ({result: Promise.resolve(value), cancel: vi.fn()});
-function fixture() {
+function fixture(catalog?: Pick<InventoryServer, 'read'>) {
   let now = 1000, sequence = 0;
   const storage = new Map<string, string>();
   const session = {context, deployment: 'native' as const, access: 'full' as 'full' | 'read_only', serverTime: now, expiresAt: 100000, householdApiAvailable: true};
   const identity = {session: vi.fn(() => read<VerifiedEntrySession | null>(session))};
   const server = {access: vi.fn(() => read<TaskAccess>({householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true})),
-    list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn(() => read(detail)),
-    original: vi.fn(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
+    list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn<TaskServer['detail']>(() => read(detail)),
+    materialHistory:vi.fn<TaskServer['materialHistory']>(()=>read({items:[],nextCursor:null})), materialCycle:vi.fn<TaskServer['materialCycle']>(),
+    original: vi.fn<TaskServer['original']>(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
   const journal = new TaskSessionJournal({getItem: key => storage.get(key) ?? null, setItem: (key, value) => {storage.set(key, value);}, removeItem: key => {storage.delete(key);}});
   const clock = {anchor: vi.fn((value: number) => {now = value;}), now: vi.fn(() => now)};
   const entropy = {requestKey: vi.fn(() => 'key-' + ++sequence)};
-  const controller = new TaskController('native', identity, server, journal, clock, entropy);
+  const controller = new TaskController('native', identity, server, journal, clock, entropy, catalog);
   return {controller, server, identity, session, storage, journal, clock, entropy, setNow: (value: number) => {now = value;}, advance: () => {now = 100000;}};
 }
 test.each([
@@ -532,4 +534,468 @@ test('reviewed completion rejects a different task revision and keeps manual sha
     performer_ids: reviewed.performerIds, allocation_fingerprint: reviewed.fingerprint, manual_shares: reviewed.manualShares,
   }});
   expect(f.controller.view.records?.[0].stage).toBe('uncertain');
+});
+
+function pendingMaterialWork(): TaskDetail {
+  return {...detail, state:'completed', revision:revisionValue('42'), currentCycleId:'cycle-1',
+    cycle:{cycleId:'cycle-1',verification:'pending',performedAt:'100',performerIds:['member-1']}, allowedActions:['materials.settle'],
+    materials:[{lineId:'line-1',label:'Soap',plannedQuantity:'2',precision:6,unitId:'millilitre',locationId:'pantry'}], pendingMaterials:true,
+    materialOutcomes:[{intentId:'intent-1',cycleId:'cycle-1',lineId:'line-1',revision:revisionValue('7'),effectRevision:'1',
+      submittedQuantity:'2',quantity:'2',state:'pending_regularization',pendingReason:'insufficient_stock',
+      confirmedQuantity:null,confirmedEffectRevision:null,movementId:null,postedAt:null}]};
+}
+function materialReceipt(work: TaskDetail): TaskReceipt {
+  return {kind:'receipt',stage:'committed',action:'task.material.settle',operationId:'material-operation',occurrenceId:work.occurrenceId,
+    intentId:'intent-1',cycle:work.cycle!,material:work.materialOutcomes![0],archivedBy:null};
+}
+test('settlement journals the intent revision, retains a lost reply and recovers by original read without another send', async () => {
+  const f=fixture(), current=pendingMaterialWork();
+  f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('42'));
+  expect(f.controller.view.notice).toBe('conflict'); expect(f.server.send).not.toHaveBeenCalled();
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  const request=f.server.send.mock.calls[0][0];
+  expect(request.command).toEqual({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
+    payload:{expected_revision:'7',cycle_id:'cycle-1',action:'post',reason:''}});
+  expect(f.controller.view.records?.[0]).toMatchObject({command:request.command,stage:'uncertain'});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  expect(f.server.send).toHaveBeenCalledOnce();
+  f.server.original.mockReturnValueOnce(read(materialReceipt(current)));
+  await f.controller.recover(request.key);
+  expect(f.server.original).toHaveBeenCalledWith({...request,operationId:null},context);
+  expect(f.controller.view.records?.[0]).toMatchObject({stage:'committed',operationId:'material-operation'});
+  expect(f.controller.view.outcome).not.toHaveProperty('revision'); expect(f.server.send).toHaveBeenCalledOnce();
+});
+test.each(['missing','cycle','denied','posted','known_quantity','other_work'])(
+  'settlement rejects %s selectors before preparing or sending new work', async kind => {
+    const f=fixture(); let current=pendingMaterialWork();
+    if (kind==='denied') current={...current,allowedActions:[]};
+    if (kind==='posted') current={...current,materialOutcomes:current.materialOutcomes!.map(value=>({...value,state:'posted' as const}))};
+    f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+    if(kind==='cycle')f.server.materialCycle.mockReturnValue(read({
+      cycle:{...current.cycle!,cycleId:'other-cycle',performedAt:'50'},closedAt:'75',
+      materialOutcomes:current.materialOutcomes!.map(value=>({...value,cycleId:'other-cycle',intentId:'other-intent'})),
+      allowedActions:['materials.settle'],
+    }));
+    await f.controller.settleMaterial(kind==='other_work'?'elsewhere':current.occurrenceId,kind==='missing'?'unknown':'intent-1',
+      kind==='cycle'?'other-cycle':'cycle-1',revisionValue('7'),...kind==='known_quantity'?['1','Initial recording'] as const:[]);
+    if(kind==='cycle'){
+      expect(f.controller.view.notice).toBe('conflict');
+      expect(f.server.materialCycle).toHaveBeenLastCalledWith(current,'home','other-cycle',context);
+      expect(f.controller.view.materialHistory?.items[0]).toMatchObject({cycle:{cycleId:'other-cycle'},
+        materialOutcomes:[{intentId:'other-intent',cycleId:'other-cycle'}]});
+    }
+    expect(f.server.send).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  });
+test('initial missing quantity recording uses explicit zero and reason through the existing correction command', async () => {
+  const f=fixture(), current=pendingMaterialWork();
+  const pending={...current,materialOutcomes:current.materialOutcomes!.map(value=>({...value,state:'pending_recording' as const,quantity:null}))};
+  f.server.detail.mockReturnValue(read(pending)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  f.server.send.mockResolvedValueOnce(materialReceipt(pending));
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'),'0','Nothing used');
+  expect(f.server.send.mock.calls[0][0].command).toMatchObject({payload:{expected_revision:'7',action:'correct',quantity:'0',reason:'Nothing used'}});
+  expect(f.controller.view.detail?.cycle).toEqual(current.cycle);
+});
+test('granular material denial retains readable work and never resends after access refresh', async () => {
+  const f=fixture(), current=pendingMaterialWork(); f.server.detail.mockReturnValue(read(current));
+  await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  f.server.send.mockResolvedValueOnce({kind:'rejected',reason:'forbidden',correlationId:'cor_material'});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.detail).toEqual(current); expect(f.controller.view.access?.memberId).toBe('member-1');
+  expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.records?.[0].stage).toBe('rejected');
+  expect(f.controller.view.outcome).toMatchObject({reason:'forbidden'}); expect(f.server.send).toHaveBeenCalledOnce();
+});
+test('identity changed during a material denial retires prior private work and draft', async () => {
+  const f=fixture(),current=pendingMaterialWork(); f.server.detail.mockReturnValue(read(current));
+  await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  f.server.send.mockImplementationOnce(async()=>{f.server.access.mockReturnValue(read({householdId:'other',memberId:'other',canCreate:true,canReviewSchedule:false}));
+    return {kind:'rejected',reason:'forbidden',correlationId:null};});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.notice).toBe('context_changed'); expect(f.controller.view.detail).toBeNull();
+});
+test('a material plan freezes exact intent across an uncertain creation while ordinary title-only creation does not read Inventory', async () => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'0',reserved:'0',available:'0',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog); f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh(); await f.controller.create('Title only','','normal'); expect(catalog.read).not.toHaveBeenCalled();
+  await f.controller.materialPlan('load'); await f.controller.materialPlan('add','soap-reference');
+  await f.controller.materialPlan('edit','soap-reference','1,25');
+  await f.controller.materialPlan('edit','soap-reference','invalid');
+  await f.controller.create('Invalid plan retained','','normal'); expect(f.controller.view.notice).toBe('invalid_input');
+  await f.controller.materialPlan('edit','soap-reference','1,25');
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'}); await f.controller.create('Planned','','normal');
+  const request=f.server.send.mock.calls[1][0];
+  expect(request.command).toMatchObject({action:'task.create',payload:{materials:[{reference_id:'soap-reference',planned_quantity:'1.25'}]}});
+  await f.controller.materialPlan('edit','soap-reference','0');
+  expect(f.controller.view.records?.[1].command).toEqual(request.command);
+  f.server.original.mockReturnValueOnce(read(saved)); await f.controller.recover(request.key);
+  expect(f.server.send).toHaveBeenCalledTimes(2); expect(f.controller.view.materialPlan?.rows).toEqual([]);
+  await f.controller.materialPlan('remove','soap-reference'); expect(f.controller.view.materialPlan?.rows).toEqual([]);
+  await f.controller.materialPlan('clear');
+  await f.controller.materialPlan('more');
+  await f.controller.materialPlan('add','unknown');
+  f.server.access.mockReturnValue(read({householdId:'other-home',memberId:'other',canCreate:true,canReviewSchedule:false,canLinkMaterials:true}));
+  await f.controller.materialPlan('load'); expect(f.controller.view.notice).toBe('context_changed');
+  f.controller.close(); await f.controller.materialPlan('load');
+});
+
+test('a denied material-bearing creation retains the opaque plan with no previously selected occurrence', async () => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Private soap',unit:'piece',recorded:'0',reserved:'0',available:'0',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);
+  const access={householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true};
+  f.server.access.mockReturnValue(read(access)); await f.controller.refresh();
+  await f.controller.materialPlan('load'); await f.controller.materialPlan('add','soap-reference');
+  f.server.send.mockImplementationOnce(async()=>{f.server.access.mockReturnValue(read({...access,canLinkMaterials:false}));
+    return {kind:'rejected',reason:'forbidden',correlationId:null};});
+  await f.controller.create('Keep my task','','normal');
+  expect(f.controller.view.detail).toBeNull(); expect(f.controller.view.materialPlan?.rows).toEqual([{referenceId:'soap-reference',input:'1',choice:null}]);
+  expect(f.controller.view.materialPlan?.notice).toBe('forbidden'); expect(f.controller.view.notice).toBeNull();
+});
+
+test.each(['list','detail'] as const)('a committed material creation retires its plan even when the follow-up %s read fails', async failed => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'5',reserved:'0',available:'5',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh();await f.controller.materialPlan('load');await f.controller.materialPlan('add','soap-reference');
+  await f.controller.materialPlan('edit','soap-reference','1,25');
+  const fail=()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  if(failed==='list')f.server.list.mockImplementationOnce(fail);else f.server.detail.mockImplementationOnce(fail);
+  await f.controller.create('Committed material task','','normal');
+  expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.outcome).toEqual(saved);
+  expect(f.controller.view.records?.[0].stage).toBe('committed');expect(f.controller.view.materialPlan?.rows).toEqual([]);
+  await f.controller.create('Unrelated title-only task','','normal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+  expect(f.server.send.mock.calls[0][0].command).toMatchObject({payload:{materials:[{reference_id:'soap-reference',planned_quantity:'1.25'}]}});
+  expect(f.server.send.mock.calls[1][0].command).toMatchObject({action:'task.create',payload:{title:'Unrelated title-only task'}});
+  expect(f.server.send.mock.calls[1][0].command.payload).not.toHaveProperty('materials');
+});
+
+test.each(['list','detail'] as const)('original recovery retires the committed material plan before a failed %s refresh', async failed => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'5',reserved:'0',available:'5',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh();await f.controller.materialPlan('load');await f.controller.materialPlan('add','soap-reference');
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});await f.controller.create('Lost creation reply','','normal');
+  const request=f.server.send.mock.calls[0][0];
+  const fail=()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  if(failed==='list')f.server.list.mockImplementationOnce(fail);else f.server.detail.mockImplementationOnce(fail);
+  await f.controller.recover(request.key);
+  expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.records?.[0].stage).toBe('committed');
+  expect(f.controller.view.materialPlan?.rows).toEqual([]);expect(f.server.send).toHaveBeenCalledOnce();
+  await f.controller.create('Next title-only task','','normal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);expect(f.server.send.mock.calls[1][0].command.payload).not.toHaveProperty('materials');
+});
+
+test('checking an already committed creation preserves a new material draft', async () => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'5',reserved:'0',available:'5',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh();await f.controller.create('First recorded task','','normal');
+  const request=f.server.send.mock.calls[0][0];
+  await f.controller.materialPlan('load');await f.controller.materialPlan('add','soap-reference');
+  await f.controller.materialPlan('edit','soap-reference','2,75');
+  const draft=f.controller.view.materialPlan?.rows;
+  await f.controller.recover(request.key);
+  expect(f.controller.view.records?.[0].stage).toBe('committed');expect(f.controller.view.materialPlan?.rows).toEqual(draft);
+  expect(f.server.send).toHaveBeenCalledOnce();
+  await f.controller.create('A new task with its own plan','','normal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+  expect(f.server.send.mock.calls[1][0].command).toMatchObject({payload:{materials:[{reference_id:'soap-reference',planned_quantity:'2.75'}]}});
+});
+
+function historicalMaterial() {
+  const current = pendingMaterialWork();
+  return {cycle:current.cycle!,closedAt:'200',materialOutcomes:current.materialOutcomes!,allowedActions:['materials.settle']};
+}
+test.each((['detail','material'] as const).flatMap(operation =>
+  (['unavailable','invalid_response','forbidden','authentication_required'] as const).map(reason=>({operation,reason}))))(
+  'a historical settlement $operation preflight $reason retains recoverable history and retires denied private facts',async ({operation,reason})=>{
+    const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,
+      currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+    f.server.list.mockReturnValue(read({items:[current],nextCursor:null}));f.server.detail.mockReturnValue(read(current));
+    await f.controller.refresh();await f.controller.select('work-1');
+    f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));
+    await f.controller.materialHistory();const prior=f.controller.view;
+    const failed=()=>({result:Promise.reject(new EntryReadError(reason)),cancel:vi.fn()});
+    if(operation==='detail')f.server.detail.mockImplementationOnce(failed);else f.server.materialCycle.mockImplementationOnce(failed);
+    await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+    const denied=reason==='forbidden'||reason==='authentication_required';
+    expect(f.controller.view.notice).toBe(reason);
+    expect(f.controller.view.materialHistory).toEqual(denied?null:prior.materialHistory);
+    expect(f.controller.view.detail).toEqual(denied?null:current);
+    expect(f.controller.view.page).toEqual(denied?null:prior.page);
+    expect(f.controller.view.records).toEqual(denied?null:prior.records);
+    if(operation==='detail')expect(f.server.materialCycle).not.toHaveBeenCalled();
+    expect(f.server.send).not.toHaveBeenCalled();expect(f.entropy.requestKey).not.toHaveBeenCalled();
+    if(!denied){
+      f.server.materialHistory.mockReturnValueOnce(read({items:[],nextCursor:null}));await f.controller.materialHistory(true);
+      expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','next-closed-cycle',context);
+    }
+  });
+test.each(['another_occurrence','no_selection','changed_identity'] as const)(
+  'settlement preflight does not restore unrelated private facts for %s',async boundary=>{
+    const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,
+      currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+    f.server.detail.mockReturnValue(read(current));await f.controller.refresh();
+    if(boundary!=='no_selection'){
+      await f.controller.select('work-1');f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'private-next'}));
+      await f.controller.materialHistory();
+    }
+    f.server.detail.mockClear();f.server.detail.mockImplementationOnce(()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()}));
+    if(boundary==='changed_identity')f.session.context={...context,subject:'b'.repeat(32)};
+    await f.controller.settleMaterial(boundary==='another_occurrence'?'work-2':'work-1','intent-1','cycle-1',revisionValue('7'));
+    expect(f.controller.view.notice).toBe(boundary==='changed_identity'?'context_changed':'unavailable');
+    expect(f.controller.view.detail).toBeNull();expect(f.controller.view.materialHistory).toBeNull();
+    if(boundary==='changed_identity')expect(f.server.detail).not.toHaveBeenCalled();
+    else expect(f.server.detail).toHaveBeenCalledOnce();
+    expect(f.server.materialCycle).not.toHaveBeenCalled();expect(f.server.send).not.toHaveBeenCalled();
+    expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  });
+test('a pending same-work settlement detail read retains selection and closing retires it before a late reply',async()=>{
+  const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,
+    currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'private-next'}));await f.controller.materialHistory();
+  const prior=f.controller.view;let finish!:(value:TaskDetail)=>void;
+  const pending={result:new Promise<TaskDetail>(resolve=>{finish=resolve;}),cancel:vi.fn()};
+  f.server.detail.mockClear();f.server.detail.mockReturnValueOnce(pending);
+  const loading=f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  await vi.waitFor(()=>expect(f.server.detail).toHaveBeenCalledOnce());
+  try{
+    expect(f.controller.view.detail).toEqual(current);expect(f.controller.view.materialHistory).toEqual(prior.materialHistory);
+    expect(f.controller.view.page).toEqual(prior.page);expect(f.controller.view.busy).toBe(true);
+    expect(f.server.send).not.toHaveBeenCalled();expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  }finally{f.controller.close();finish(current);await loading;}
+  expect(pending.cancel).toHaveBeenCalledOnce();expect(f.controller.view.phase).toBe('closed');
+  expect(f.controller.view.detail).toBeNull();expect(f.controller.view.materialHistory).toBeNull();
+  expect(f.server.send).not.toHaveBeenCalled();expect(f.entropy.requestKey).not.toHaveBeenCalled();
+});
+test.each(['committed','recovered'] as const)(
+  '%s historical settlement retains history when reading the saved line is temporarily unavailable',async path=>{
+    const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,
+      currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+    f.server.list.mockReturnValue(read({items:[current],nextCursor:null}));f.server.detail.mockReturnValue(read(current));
+    await f.controller.refresh();await f.controller.select('work-1');
+    f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));
+    await f.controller.materialHistory();const prior=f.controller.view.materialHistory;
+    f.server.materialCycle.mockReturnValue(read(old));
+    const failed=()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+    if(path==='committed')f.server.materialCycle.mockReturnValueOnce(read(old)).mockReturnValueOnce(failed());
+    f.server.send.mockResolvedValueOnce(path==='recovered'?{kind:'uncertain'}:materialReceipt(pendingMaterialWork()));
+    await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+    const request=f.server.send.mock.calls[0][0];
+    if(path==='recovered'){
+      f.server.materialCycle.mockReturnValueOnce(failed());
+      f.server.original.mockReturnValueOnce(read(materialReceipt(pendingMaterialWork())));await f.controller.recover(request.key);
+    }
+    expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.materialHistory).toEqual(prior);
+    expect(f.controller.view.detail).toEqual(current);expect(f.controller.view.records?.[0].stage).toBe('committed');
+    expect(f.server.send).toHaveBeenCalledOnce();
+  });
+test.each(['detail','reload','more'] as const)('failed material-history %s retains the selected facts and original continuation', async operation => {
+  const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  const prior=f.controller.view;
+  const failure={result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()};
+  if(operation==='detail')f.server.detail.mockReturnValueOnce(failure);else f.server.materialHistory.mockReturnValueOnce(failure);
+  await f.controller.materialHistory(operation==='more');
+  expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.detail).toEqual(current);
+  expect(f.controller.view.page).toEqual(prior.page);expect(f.controller.view.materialHistory).toEqual(prior.materialHistory);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[],nextCursor:null}));await f.controller.materialHistory(true);
+  expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','next-closed-cycle',context);
+  expect(f.controller.view.materialHistory).toEqual({items:[],nextCursor:null});expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['detail','history'] as const)('a current material-history %s denial retires the prior private facts', async operation => {
+  const f=fixture(),old=historicalMaterial();
+  f.server.detail.mockReturnValue(read(pendingMaterialWork()));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  const failure={result:Promise.reject(new EntryReadError('forbidden')),cancel:vi.fn()};
+  if(operation==='detail')f.server.detail.mockReturnValueOnce(failure);else f.server.materialHistory.mockReturnValueOnce(failure);
+  await f.controller.materialHistory(true);
+  expect(f.controller.view.notice).toBe('forbidden');expect(f.controller.view.detail).toBeNull();
+  expect(f.controller.view.materialHistory).toBeNull();expect(f.controller.view.page).toBeNull();expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['load','more','failure'] as const)('catalog reads retain the displayed material history and cursor: %s', async operation => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({
+    mayManage:true,mayShop:true,mayRequest:true,cursor:'next-products',locations:[],products:[]}))};
+  const f=fixture(catalog), old=historicalMaterial(), current={...pendingMaterialWork(),state:'available' as const,
+    currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  await f.controller.materialPlan('load');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));
+  await f.controller.materialHistory();const prior=f.controller.view.materialHistory;
+  if(operation==='failure')vi.mocked(catalog.read).mockReturnValueOnce({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  await f.controller.materialPlan(operation==='more'?'more':'load');
+  expect(f.controller.view.detail).toEqual(current);
+  expect(f.controller.view.materialHistory).toEqual(prior);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+test('closed-cycle usage is paged explicitly and settles against a fresh intent without changing current work', async () => {
+  const f=fixture(), old=historicalMaterial(), current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  await f.controller.materialHistory(); await f.controller.materialHistory(true); expect(f.server.materialHistory).not.toHaveBeenCalled();
+  f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select('work-1');
+  await f.controller.materialHistory(true); expect(f.server.materialHistory).not.toHaveBeenCalled();
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-page'}));
+  await f.controller.materialHistory();
+  expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home',null,context);
+  expect(f.controller.view.materialHistory?.items[0]).toEqual(old);
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'later-page'}));
+  await f.controller.materialHistory(true); expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','next-page',context);
+  f.server.materialCycle.mockReturnValue(read(old));
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  const request=f.server.send.mock.calls[0][0];
+  expect(request.command).toMatchObject({payload:{cycle_id:'cycle-1',expected_revision:'7'}});
+  expect(f.server.materialCycle).toHaveBeenCalledWith(current,'home','cycle-1',context);
+  f.server.original.mockReturnValueOnce(read(materialReceipt(pendingMaterialWork())));
+  await f.controller.recover(request.key);
+  expect(f.server.send).toHaveBeenCalledOnce(); expect(f.controller.view.detail).toEqual(current);
+  expect(f.controller.view.materialHistory?.items[0]).toEqual(old);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('later-page');
+  const later={...old,cycle:{...old.cycle,cycleId:'later-cycle'},
+    materialOutcomes:old.materialOutcomes.map(value=>({...value,cycleId:'later-cycle',intentId:'later-intent'}))};
+  f.server.materialHistory.mockReturnValueOnce(read({items:[later],nextCursor:null}));
+  await f.controller.materialHistory(true);
+  expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','later-page',context);
+  expect(f.controller.view.materialHistory?.items[0].cycle.cycleId).toBe('later-cycle');
+});
+test.each(['denied','stale','open','unavailable'] as const)('historical usage %s is checked before preparing a command', async kind => {
+  const f=fixture(), old=historicalMaterial();
+  const current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:[]};
+  f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select('work-1');
+  const value={...old,...kind==='denied'?{allowedActions:[]}:kind==='open'?{closedAt:null}:{}};
+  f.server.materialCycle.mockImplementation(()=>kind==='unavailable'
+    ?{result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()}:read(value));
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue(kind==='stale'?'6':'7'));
+  expect(f.server.send).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  expect(f.controller.view.notice).toBe(kind==='denied'?'action_not_allowed':kind==='stale'?'conflict':kind==='open'?'invalid_response':'unavailable');
+});
+test('historical material reads retire on an owner change and late completion cannot restore private facts', async () => {
+  const f=fixture(), old=historicalMaterial();
+  f.server.detail.mockReturnValue(read(pendingMaterialWork())); await f.controller.refresh(); await f.controller.select('work-1');
+  f.server.access.mockReturnValueOnce(read({householdId:'different',memberId:'other',canCreate:true,canReviewSchedule:false}));
+  await f.controller.materialHistory(); expect(f.controller.view.notice).toBe('context_changed'); expect(f.server.materialHistory).not.toHaveBeenCalled();
+  await f.controller.refresh(); await f.controller.select('work-1');
+  let resolve!:(value:{items:typeof old[];nextCursor:null})=>void;
+  const pending={result:new Promise<{items:typeof old[];nextCursor:null}>(accept=>{resolve=accept;}),cancel:vi.fn()};
+  f.server.materialHistory.mockReturnValueOnce(pending);
+  const loading=f.controller.materialHistory(); while(!f.server.materialHistory.mock.calls.length) await Promise.resolve();
+  f.controller.close(); resolve({items:[old],nextCursor:null}); await loading;
+  expect(pending.cancel).toHaveBeenCalledOnce(); expect(f.controller.view.materialHistory).toBeNull(); expect(f.controller.view.phase).toBe('closed');
+});
+test('a failed historical read retains current task facts and a retry explicitly reloads the first page', async () => {
+  const f=fixture(), current=pendingMaterialWork();
+  f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  await f.controller.materialHistory(); expect(f.controller.view.detail).toEqual(current); expect(f.controller.view.notice).toBe('unavailable');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[],nextCursor:null})); await f.controller.materialHistory(false);
+  expect(f.controller.view.materialHistory?.items).toEqual([]); expect(f.server.send).not.toHaveBeenCalled();
+});
+
+test('a committed historical settlement retains the next closed-cycle page', async () => {
+  const f=fixture(), old=historicalMaterial();
+  const current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  f.server.materialCycle.mockReturnValue(read(old));f.server.send.mockResolvedValueOnce(materialReceipt(pendingMaterialWork()));
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.records?.[0].stage).toBe('committed');
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  expect(f.controller.view.detail).toEqual(current);
+});
+test.each([false,true])('original recovery cannot attach an unrelated history continuation (different work: %s)', async differentWork => {
+  const f=fixture(), old=historicalMaterial();
+  const current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  const other={...current,occurrenceId:'other-work'};
+  f.server.detail.mockImplementation(id=>read(id==='work-1'?current:other));
+  await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialCycle.mockReturnValue(read(old));f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  const request=f.server.send.mock.calls[0][0];
+  await f.controller.select(differentWork?'other-work':'work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[{...old,cycle:{...old.cycle,cycleId:'other-cycle'},
+    materialOutcomes:old.materialOutcomes.map(value=>({...value,cycleId:'other-cycle',intentId:'other-intent'}))}],nextCursor:'other-work-cursor'}));
+  await f.controller.materialHistory();
+  f.server.original.mockReturnValueOnce(read(materialReceipt(pendingMaterialWork())));await f.controller.recover(request.key);
+  expect(f.controller.view.detail?.occurrenceId).toBe('work-1');
+  expect(f.controller.view.materialHistory?.nextCursor).toBeNull();
+  expect(f.controller.view.materialHistory?.items[0].cycle.cycleId).toBe('cycle-1');
+  expect(f.server.send).toHaveBeenCalledOnce();
+});
+
+function currentMaterialAndHistory() {
+  const base=pendingMaterialWork();
+  const current:TaskDetail={...base,cycle:{...base.cycle!,performedAt:'300'}};
+  const historical=historicalMaterial();
+  const old={...historical,cycle:{...historical.cycle,cycleId:'closed-cycle'},
+    materialOutcomes:historical.materialOutcomes.map(value=>({...value,cycleId:'closed-cycle',intentId:'closed-intent'}))};
+  const posted:TaskDetail={...current,pendingMaterials:false,allowedActions:['reopen'],materialOutcomes:current.materialOutcomes!.map(value=>
+    ({...value,revision:revisionValue('8'),state:'posted',pendingReason:null,confirmedQuantity:'2',confirmedEffectRevision:revisionValue('1'),
+      movementId:'current-movement',postedAt:'400'}))};
+  return {current,old,posted};
+}
+test.each(['committed','recovered'] as const)('current-cycle settlement %s retains the displayed closed page and continuation', async path=>{
+  const f=fixture(),{current,old,posted}=currentMaterialAndHistory();
+  f.server.list.mockReturnValue(read({items:[current],nextCursor:null}));f.server.detail.mockReturnValue(read(current));
+  await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  const prior=f.controller.view.materialHistory;
+  f.server.send.mockImplementationOnce(async()=>{
+    f.server.detail.mockReturnValue(read(posted));f.server.list.mockReturnValue(read({items:[posted],nextCursor:null}));
+    return path==='recovered'?{kind:'uncertain'}:materialReceipt(posted);
+  });
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  const afterSend=f.controller.view.materialHistory,request=f.server.send.mock.calls[0][0];
+  if(path==='recovered'){
+    f.server.original.mockReturnValueOnce(read(materialReceipt(posted)));await f.controller.recover(request.key);
+    expect(f.server.original).toHaveBeenCalledWith({...request,operationId:null},context);
+  }
+  expect(afterSend).toEqual(prior);expect(f.controller.view.materialHistory).toEqual(prior);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  expect(f.controller.view.detail).toEqual(posted);expect(f.controller.view.records?.[0].stage).toBe('committed');
+  expect(f.server.send).toHaveBeenCalledOnce();expect(f.server.materialCycle).not.toHaveBeenCalled();
+  const later={...old,closedAt:'250',cycle:{...old.cycle,cycleId:'closed-second'},
+    materialOutcomes:old.materialOutcomes.map(value=>({...value,cycleId:'closed-second',intentId:'closed-second-intent'}))};
+  f.server.materialHistory.mockReturnValueOnce(read({items:[later],nextCursor:null}));await f.controller.materialHistory(true);
+  expect(f.server.materialHistory).toHaveBeenLastCalledWith(posted,'home','next-closed-cycle',context);
+  expect(f.controller.view.materialHistory?.items[0].cycle.cycleId).toBe('closed-second');
+  expect(f.server.send).toHaveBeenCalledOnce();
+});
+test.each(['forbidden','authentication_required'] as const)('current-cycle settlement cannot restore history after %s',async reason=>{
+  const f=fixture(),{current,old}=currentMaterialAndHistory();
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'private-next'}));await f.controller.materialHistory();
+  f.server.access.mockReturnValueOnce({result:Promise.reject(new EntryReadError(reason)),cancel:vi.fn()});
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.materialHistory).toBeNull();expect(f.controller.view.detail).toBeNull();
+  expect(f.controller.view.notice).toBe(reason);expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['different_work','no_selection'] as const)('current-cycle original recovery does not attach abandoned history: %s',async navigation=>{
+  const f=fixture(),{current,old,posted}=currentMaterialAndHistory();
+  f.server.list.mockReturnValue(read({items:[current],nextCursor:'next-tasks'}));f.server.detail.mockReturnValue(read(current));
+  await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'original-history'}));await f.controller.materialHistory();
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  const request=f.server.send.mock.calls[0][0];
+  if(navigation==='different_work'){
+    const other:TaskDetail={...current,occurrenceId:'work-2'};
+    f.server.detail.mockImplementation(id=>read(id==='work-2'?other:posted));await f.controller.select('work-2');
+    f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'other-work-history'}));await f.controller.materialHistory();
+  }else{
+    await f.controller.more();expect(f.controller.view.detail).toBeNull();f.server.detail.mockReturnValue(read(posted));
+  }
+  f.server.original.mockReturnValueOnce(read(materialReceipt(posted)));await f.controller.recover(request.key);
+  expect(f.controller.view.detail).toEqual(posted);expect(f.controller.view.materialHistory).toBeNull();
+  expect(f.controller.view.records?.[0].stage).toBe('committed');expect(f.server.send).toHaveBeenCalledOnce();
 });

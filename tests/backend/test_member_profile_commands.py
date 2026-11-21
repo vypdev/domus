@@ -3,7 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import asdict, replace
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
 from test_member_commands import configured
@@ -28,6 +28,7 @@ from domus.domain.errors import (
     IdentityUnavailable,
     InvalidInput,
     NotFound,
+    StorageBusy,
     StorageFailure,
 )
 from domus.domain.identity import HumanIdentity, MemberStatus, Permission, PermissionRule, Role
@@ -331,29 +332,71 @@ def test_late_actual_outbox_failure_rolls_back_profile_receipt_and_audit_togethe
 
 
 @pytest.mark.parametrize("kind", ["alias", "preferences"])
-def test_real_independent_writers_have_one_revision_winner_and_one_original_receipt(tmp_path, kind):
+@pytest.mark.parametrize("held_writer", [False, True])
+def test_real_independent_writers_have_one_revision_winner_and_one_original_receipt(
+    tmp_path, kind, held_writer
+):
     service, store, actor, target = fixture(tmp_path)
-    owner(actor)
+    human = owner(actor)
     barrier = Barrier(2, timeout=5)
+    release_writer = Event()
     before = evidence(store)
 
+    class HoldingTransactions:
+        def read(self):
+            return store.read()
+
+        @contextmanager
+        def write(self):
+            with store.write() as unit:
+                assert release_writer.wait(timeout=5)
+                yield unit
+
+    if held_writer:
+        service = replace(service, transactions=HoldingTransactions())
+    method = service.update_alias if kind == "alias" else service.update_preferences
+    action = ALIAS_ACTION if kind == "alias" else PREFERENCES_ACTION
+    requests = tuple(
+        AliasUpdate(target, 1, str(number))
+        if kind == "alias"
+        else PreferencesUpdate(1, None, bool(number))
+        for number in (0, 1)
+    )
+
     def attempt(number):
-        request = (
-            AliasUpdate(target, 1, str(number))
-            if kind == "alias"
-            else PreferencesUpdate(1, None, bool(number))
-        )
         barrier.wait()
         try:
-            method = service.update_alias if kind == "alias" else service.update_preferences
-            return method(f"race-{number}", request)
+            return method(f"race-{number}", requests[number])
         except Conflict as error:
             assert error.code == "revision_conflict"
             return None
+        except StorageBusy as error:
+            assert error.code == "storage_busy"
+            return error
+        finally:
+            release_writer.set()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(attempt, (0, 1)))
-    assert sum(result is not None for result in results) == 1
+    saved = [
+        (number, result)
+        for number, result in enumerate(results)
+        if result is not None and not isinstance(result, StorageBusy)
+    ]
+    assert len(saved) == 1
+    if held_writer:
+        assert sum(isinstance(result, StorageBusy) for result in results) == 1
+    queries = HouseholdQueries(store, human)
+    for number, result in enumerate(results):
+        if isinstance(result, StorageBusy):
+            # After both writers finish, explicitly inspect and retry only the same original.
+            with pytest.raises(NotFound, match="^operation_missing$"):
+                queries.administration_request(action, f"race-{number}")
+            with pytest.raises(Conflict, match="^revision_conflict$"):
+                method(f"race-{number}", requests[number])
+    number, receipt = saved[0]
+    assert queries.administration_request(action, f"race-{number}").receipt == receipt
+    assert method(f"race-{number}", requests[number]) == receipt
     assert evidence(store) == tuple(count + 1 for count in before)
 
 

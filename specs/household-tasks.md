@@ -1183,3 +1183,190 @@ Done when the six supplied cases establish that authorized creators can use the 
 ### 20. References and decisions
 
 Issue: https://github.com/vypdev/domus/issues/111. This is a bounded update to the immutable retained owner `specs/household-tasks.md` at selected revision `209b396f6fde5dc34b69baa13251247918ab01cc`; its existing contract and cases remain authoritative. `specs/task-execution-foundation.md` retains the task execution context, and `specs/household-task-categories.md` remains an owning companion. The issue describes the protected task command, preview, and ledger as already supporting an exact base amount; that claim is issue-provided and was not independently verified here. The package declares pnpm 10.34.0, and `specs/README.md` documents specification validation and generation invocations, but their referenced definitions and execution prerequisites were not inspected here; no command result or SDK consistency verification is claimed.
+
+## Plan and reconcile task materials from Tasks
+
+- Status: Draft
+- Owners: Domus maintainers and Tasks
+- Scope: Optional Pantry material plans in ordinary, fixed and relative creation, per-line completion outcomes and explicit recovery through existing material commands
+- Open decisions blocking readiness: none within the existing material and permission contracts
+
+### 1. Executive summary
+
+Complete the material journey from optional Pantry selections through actual-use review and explicit pending-usage recovery. The member selects existing household products and quantities, saves one ordinary or scheduled task, reviews actual use and sees each posted, unused or pending outcome separately. Current authorized recovery reuses the existing settlement service.
+
+### 2. Problem, current behavior, and evidence
+
+TaskCreation.definition already resolves material selections through TaskMaterials. Ordinary HTTP creation accepts them, but the frontend command and form do not. Scheduled creation currently maps task text and optional base points without materials. Completion already displays server-owned material lines.
+
+### 3. Actors, surfaces, and terminology
+
+A current task creator may create a title-only task. Attaching planned material lines additionally requires the current inventory management authority already enforced by TaskMaterialAccess.link_actor. Planned quantities and actual consumption are separate facts. Existing task-scoped completion and settlement authority remains separate from material linking and general Inventory management; use the current accepted TaskMaterialAccess rules for every settlement and original recovery. Existing Pantry references resolve product, unit, precision and source on the server.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| task-material-planning-R01 | Offer optional existing Pantry product references with exact quantities under the existing list, duplicate and precision rules. Preserve title-only creation. |
+| task-material-planning-R02 | Carry the selected lines through ordinary, fixed and relative creation using the shared authoritative definition service and original-request boundary. |
+| task-material-planning-R03 | Recheck current household and creation/material-linking grants. Do not disclose foreign product facts or confer general stock rights through task-scoped consumption. |
+| task-material-planning-R04 | Provide clear EN/ES controls, units and source labels, bounded catalog navigation, validation, cancellation and recoverable reads/saves without losing the draft. |
+| task-material-planning-R05 | Show authoritative per-line actual outcomes and offer explicit currently authorized settlement or missing-quantity recording through existing commands. Keep task/approval/points independent, prevent automatic effects after refill or grants, and retain exact original requests/line identities across retry, restart and restoration. Preserve existing demand, reservation and stock semantics. |
+| task-material-planning-R06 | Qualify both protected compositions and actual CPU images, the published shared components and a separately installed immutable Edge candidate with scoped cleanup. |
+
+Named-location binding configuration, lot/package conversion, definition editing, arbitrary stock adjustments and new material authority are separate increments. Planning does not post a consumption movement.
+
+### 5. Current versus proposed product journey
+
+Create a task from Tasks using only its title, or open optional materials. Choose a catalog product, see its base unit and Pantry source, enter the planned quantity and optionally add another line. Save the ordinary or scheduled task. On completion, show the selected plan with its actual server-owned units and source for explicit actual-usage review. Display each posted, not-used and pending outcome separately. A permitted member can review and explicitly settle pending consumption, or record missing actual usage with the existing reason/quantity rules; stocking or a permission change alone never posts it.
+
+### 6. Functional behavior and state model
+
+Use server-owned reference identities, exact quantity strings and existing bounded lists. The server resolves and snapshots each accepted material binding through TaskCreation rather than accepting client-supplied product/unit/location facts. Scheduled creation must delegate to the same service. Frozen original requests include the selected lines. Unconfirmed writes require original recovery before a new submission. New material-bearing scheduled originals must recheck the linking grant from durable original facts, preserving legacy title-only recovery and avoiding authority inferred from a later edited definition.
+
+### 7. User-facing configuration
+
+Materials remain optional. Use current quantity and base-unit precision rules, including currently valid zero values; do not invent floating-point conversions. Permit at most the existing 32 distinct references. Keep existing recurrence, category, base-point and completion-policy settings.
+
+### 8. Clean Architecture design
+
+Domain owns quantities and selections. Application owns authorized catalog/read and creation use cases. Adapters map closed wire contracts and existing persisted bindings. Composition connects current ports in both deployments. Presentation composes published ha-ui fields, selects, cards and feedback without importing database or inventory business rules.
+
+### 9. UI/UX and content contract
+
+Keep title-only creation short. Label optional materials, product, planned quantity, base unit and Pantry source. Offer remove-line and bounded access to later catalog pages. Empty, denied and unavailable states explain how to proceed. Preserve the task draft and valid selected lines through retry and mode changes. Distinguish planning from the later confirmation of actual consumption. Keep the same server-owned base unit and Pantry source visible during actual-usage review; preserve legacy bindings without inventing units from precision or assuming every location is Pantry.
+
+### 10. Failure, recovery, and cleanup
+
+Invalid or revoked references cannot create partial definitions or material effects. A lost successful reply recovers the original definition/occurrence and line identities without creating another task. Preserve drafts after correctable failures. Retire private choices and pending focus when current household or grants change. Clean only owned synthetic test state.
+
+### 11. Security, permissions, and privacy
+
+Reuse current household and task creation authority and existing inventory-management material-linking authority. Catalog reads retain their current household-read boundary; offering editable material choices additionally requires the current linking grant. Protect original material-bearing receipts with current applicable grants. A denied material selector must not prevent an otherwise authorized title-only task. Foreign references and substituted unit/location facts fail before effects.
+
+### 12. Observability and operational UX
+
+The normal task receipt and detail show the saved material plan. Keep operation identities behind technical detail. Completion continues to distinguish posted, not-used and pending material outcomes under its existing receipt.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Existing tasks, original requests and manual/fixed/relative definitions remain compatible. Qualify browser-journal evolution separately from SQLite compatibility: older clients cannot be assumed to understand new command shapes. Retain opaque original intents through rollback and re-upgrade, preserve legacy recovery and bounded capacity, and state any safe old-client limitation without inventing a legacy command or clearing unknown requests. Prefer the existing material persistence model. If a schema change becomes necessary, qualify representative previous-schema and schema 20 upgrades with atomic failure and compatible restoration. After #146 acceptance, retain accepted Edge.57 as the rollback for the next candidate, with only the current candidate and its single accepted predecessor retained.
+
+### 14. Testing strategy and numeric budget
+
+Minimum twelve distinct cases. Existing owning task, recurrence and material cases remain unchanged.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Creation | 1 | Observable scenarios in the case inventory. |
+| Selection | 1 | Observable scenarios in the case inventory. |
+| Completion | 1 | Observable scenarios in the case inventory. |
+| Recurrence | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Persistence | 1 | Observable scenarios in the case inventory. |
+| Interaction | 1 | Observable scenarios in the case inventory. |
+| Installed acceptance | 1 | Observable scenarios in the case inventory. |
+| Outcomes | 1 | Observable scenarios in the case inventory. |
+| Explicit recovery | 1 | Observable scenarios in the case inventory. |
+| Missing actual quantity | 1 | Observable scenarios in the case inventory. |
+| Total | 12 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| task-material-planning-C01 | Creation | task-material-planning-R01 | Create a title-only task without opening material fields and without inventory management authority. Preserve the ordinary creation result. |
+| task-material-planning-C02 | Selection | task-material-planning-R01, task-material-planning-R04 | Choose later paginated products, edit/remove lines and validate exact piece and decimal quantities, duplicates and the 32-line bound against server-owned references. |
+| task-material-planning-C03 | Completion | task-material-planning-R02, task-material-planning-R05 | Create an ordinary task with two planned units, confirm one actual unit through the existing completion form and observe one linked consumption; planning and reopening do not fabricate consumption or a return. |
+| task-material-planning-C04 | Recurrence | task-material-planning-R02, task-material-planning-R05 | Create fixed and relative schedules with material lines and observe the exact initial and successor definition snapshots without duplicate material side effects. |
+| task-material-planning-C05 | Authorization | task-material-planning-R03 | Retire choice labels and controls when linking authority is absent or revoked. Deny foreign references and new material-bearing creation/original recovery without current authority. Retain an otherwise permitted title-only path without revealing denied choices. |
+| task-material-planning-C06 | Recovery | task-material-planning-R02 | Lose a committed creation reply, reload and recover the exact original task and material-line identities. Reject a changed payload under the same key and roll back a late injected failure. |
+| task-material-planning-C07 | Persistence | task-material-planning-R05 | Restart and activate compatible saved state containing selected lines and original receipts. Preserve existing legacy definitions and migration rules. |
+| task-material-planning-C08 | Interaction | task-material-planning-R04 | Exercise Ingress and standalone, English keyboard and 390 px Spanish touch, both themes, failed choice reads, correction and cancellation with retained task input and visible focus. |
+| task-material-planning-C09 | Installed acceptance | task-material-planning-R06 | Verify both actual image architectures and the immutable installed Edge version. Create, complete and explicitly regularize a task through the normal interface using synthetic stock, then remove only the owned installation and test data. |
+| task-material-planning-C10 | Outcomes | task-material-planning-R04, task-material-planning-R05 | Display one posted line, one unused zero and one shortfall separately, with quantities, known units/source and an actionable pending reason. Show task completion, verification and points independently; do not turn pending material usage into lost work or negative stock. |
+| task-material-planning-C11 | Explicit recovery | task-material-planning-R03, task-material-planning-R05 | Refill stock or change the applicable grant without automatic settlement. Deliberate current-authorized recovery reuses the same intent/line, fences concurrent intent revisions, rejects changed payload under the same key, rolls back a late failure and recovers a lost committed response by original GET without another movement, completion cycle, award or recurrence successor. |
+| task-material-planning-C12 | Missing actual quantity | task-material-planning-R04, task-material-planning-R05 | Existing separate-recording work retains its pending state until an authorized explicit quantity/reason submission. Validate precision and zero with current existing commands; retain forbidden, unavailable and corrected drafts. Zero records not-used without a zero stock movement. Do not add policy-setting UI or corrections of already posted usage in this increment. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+|---|---|
+| `specs/household-tasks.md` | update |
+| `specs/catalog.json` | update |
+| `specs/CATALOG.md` | update |
+| `backend/src/domus/entrypoints/schedule_creation_http.py` | update |
+| `backend/src/domus/entrypoints/task_http.py` | update |
+| `backend/src/domus/application/task_queries.py` | update |
+| `backend/src/domus/application/task_authorization.py` | update |
+| `backend/src/domus/application/recurrence_ports.py` | update |
+| `backend/src/domus/infrastructure/sqlite_recurrence.py` | update |
+| `frontend/src/domain/tasks.ts` | update |
+| `frontend/src/application/task-ports.ts` | update |
+| `frontend/src/application/task-controller.ts` | update |
+| `frontend/src/adapters/task-http.ts` | update |
+| `frontend/src/adapters/task-values.ts` | update |
+| `frontend/src/adapters/task-journal.ts` | update |
+| `frontend/src/composition/entry-page.ts` | update |
+| `frontend/src/presentation/domus-app.ts` | update |
+| `frontend/src/presentation/domus-tasks.ts` | update |
+| `frontend/src/presentation/task-messages.ts` | update |
+| `frontend/stories/tasks.stories.ts` | update |
+| `frontend/tests/tasks.test.ts` | update |
+| `frontend/tests/task-controller.test.ts` | update |
+| `frontend/tests/task-http.test.ts` | update |
+| `frontend/tests/task-journal.test.ts` | update |
+| `frontend/tests/task-component.test.ts` | update |
+| `frontend/tests/e2e/tasks.spec.ts` | update |
+| `tests/backend/test_schedule_creation_http.py` | update |
+| `tests/backend/test_task_material_http.py` | update |
+| `tests/backend/test_task_queries.py` | update |
+| `tests/backend/test_task_material_queries.py` | update |
+| `.github/workflows/ci_check.yml` | update |
+| `docs/user-guide.md` | update |
+| `docs/roadmap.md` | update |
+| `docs/contracts/home-assistant.md` | update |
+| `docs/evidence/task-navigation-integration.json` | update |
+| `specs/task-execution-foundation.md` | reference |
+| `backend/src/domus/application/task_creation.py` | reference |
+| `backend/src/domus/application/task_material_commands.py` | reference |
+| `backend/src/domus/application/task_material_views.py` | reference |
+| `frontend/src/application/inventory-controller.ts` | reference |
+| `frontend/src/adapters/inventory-http.ts` | reference |
+| `frontend/src/application/task-material-planning.ts` | create |
+| `frontend/src/presentation/domus-task-material-plan.ts` | create |
+| `frontend/src/presentation/domus-task-material-outcomes.ts` | create |
+| `frontend/src/presentation/task-material-messages.ts` | create |
+| `frontend/tests/task-material-planning.test.ts` | create |
+| `frontend/tests/task-material-components.test.ts` | create |
+| `docs/evidence/task-material-workflow-qualification.md` | create |
+
+[specs/household-tasks.md](household-tasks.md) · [specs/catalog.json](catalog.json) · [specs/CATALOG.md](CATALOG.md) · [backend/src/domus/entrypoints/schedule\_creation\_http.py](../backend/src/domus/entrypoints/schedule_creation_http.py) · [backend/src/domus/entrypoints/task\_http.py](../backend/src/domus/entrypoints/task_http.py) · [backend/src/domus/application/task\_queries.py](../backend/src/domus/application/task_queries.py) · [backend/src/domus/application/task\_authorization.py](../backend/src/domus/application/task_authorization.py) · [backend/src/domus/application/recurrence\_ports.py](../backend/src/domus/application/recurrence_ports.py) · [backend/src/domus/infrastructure/sqlite\_recurrence.py](../backend/src/domus/infrastructure/sqlite_recurrence.py) · [frontend/src/domain/tasks.ts](../frontend/src/domain/tasks.ts) · [frontend/src/application/task-ports.ts](../frontend/src/application/task-ports.ts) · [frontend/src/application/task-controller.ts](../frontend/src/application/task-controller.ts) · [frontend/src/adapters/task-http.ts](../frontend/src/adapters/task-http.ts) · [frontend/src/adapters/task-values.ts](../frontend/src/adapters/task-values.ts) · [frontend/src/adapters/task-journal.ts](../frontend/src/adapters/task-journal.ts) · [frontend/src/composition/entry-page.ts](../frontend/src/composition/entry-page.ts) · [frontend/src/presentation/domus-app.ts](../frontend/src/presentation/domus-app.ts) · [frontend/src/presentation/domus-tasks.ts](../frontend/src/presentation/domus-tasks.ts) · [frontend/src/presentation/task-messages.ts](../frontend/src/presentation/task-messages.ts) · [frontend/stories/tasks.stories.ts](../frontend/stories/tasks.stories.ts) · [frontend/tests/tasks.test.ts](../frontend/tests/tasks.test.ts) · [frontend/tests/task-controller.test.ts](../frontend/tests/task-controller.test.ts) · [frontend/tests/task-http.test.ts](../frontend/tests/task-http.test.ts) · [frontend/tests/task-journal.test.ts](../frontend/tests/task-journal.test.ts) · [frontend/tests/task-component.test.ts](../frontend/tests/task-component.test.ts) · [frontend/tests/e2e/tasks.spec.ts](../frontend/tests/e2e/tasks.spec.ts) · [tests/backend/test\_schedule\_creation\_http.py](../tests/backend/test_schedule_creation_http.py) · [tests/backend/test\_task\_material\_http.py](../tests/backend/test_task_material_http.py) · [tests/backend/test\_task\_queries.py](../tests/backend/test_task_queries.py) · [tests/backend/test\_task\_material\_queries.py](../tests/backend/test_task_material_queries.py) · [.github/workflows/ci\_check.yml](../.github/workflows/ci_check.yml) · [docs/user-guide.md](../docs/user-guide.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/contracts/home-assistant.md](../docs/contracts/home-assistant.md) · [docs/evidence/task-navigation-integration.json](../docs/evidence/task-navigation-integration.json) · [specs/task-execution-foundation.md](task-execution-foundation.md) · [backend/src/domus/application/task\_creation.py](../backend/src/domus/application/task_creation.py) · [backend/src/domus/application/task\_material\_commands.py](../backend/src/domus/application/task_material_commands.py) · [backend/src/domus/application/task\_material\_views.py](../backend/src/domus/application/task_material_views.py) · [frontend/src/application/inventory-controller.ts](../frontend/src/application/inventory-controller.ts) · [frontend/src/adapters/inventory-http.ts](../frontend/src/adapters/inventory-http.ts) · [frontend/src/application/task-material-planning.ts](../frontend/src/application/task-material-planning.ts) · [frontend/src/presentation/domus-task-material-plan.ts](../frontend/src/presentation/domus-task-material-plan.ts) · [frontend/src/presentation/domus-task-material-outcomes.ts](../frontend/src/presentation/domus-task-material-outcomes.ts) · [frontend/src/presentation/task-material-messages.ts](../frontend/src/presentation/task-material-messages.ts) · [frontend/tests/task-material-planning.test.ts](../frontend/tests/task-material-planning.test.ts) · [frontend/tests/task-material-components.test.ts](../frontend/tests/task-material-components.test.ts) · [docs/evidence/task-material-workflow-qualification.md](../docs/evidence/task-material-workflow-qualification.md)
+
+Update the user guide, roadmap, protected API contracts, the owning task traceability and one focused qualification document. Retain existing case identities and immutable candidate pins.
+
+### 16. Acceptance scenarios
+
+Exercise the twelve case rows with observable definition, occurrence, receipt and ledger assertions. Verify the complete creation-to-completion journey through the normal interface rather than externally seeding the selected task definition.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| task-material-planning-R01 | task-material-planning-C01, task-material-planning-C02 |
+| task-material-planning-R02 | task-material-planning-C03, task-material-planning-C04, task-material-planning-C06 |
+| task-material-planning-R03 | task-material-planning-C05, task-material-planning-C11 |
+| task-material-planning-R04 | task-material-planning-C02, task-material-planning-C08, task-material-planning-C10, task-material-planning-C12 |
+| task-material-planning-R05 | task-material-planning-C03, task-material-planning-C04, task-material-planning-C07, task-material-planning-C10, task-material-planning-C11, task-material-planning-C12 |
+| task-material-planning-R06 | task-material-planning-C09 |
+
+### 18. Implementation sequence
+
+Publish and verify the native specification and managed branch. Add strict selection contracts and shared creation for all three modes, preserve complete per-line material facts, and connect explicit pending recovery to current existing settlement commands and original lookup. Implement accessible drafts and current-authority review; do not expose posted-usage correction or new material-policy settings. Qualify full coverage, protected browser journeys, actual images, immutable packaging and installed cleanup.
+
+### 19. Definition of Done
+
+All twelve cases, global/per-file supported coverage, architecture and documentation checks pass. Exact same-head CI and valid review findings are resolved. Both CPU campaigns and installed Edge acceptance identify their actual inputs and outcomes. Verify merge, exact develop CI and Branch Sync and issue closure before the next increment.
+
+### 20. References and decisions
+
+Extend specs/household-tasks.md R7 and the existing R9 material review contract. Preserve the existing inventory-owned bindings, current linking authority, task-scoped actual-use defaults and independent point/verification outcomes. Follow the installed repository workflow and keep Copilot implementation with its owning agent.

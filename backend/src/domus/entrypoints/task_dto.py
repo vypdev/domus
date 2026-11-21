@@ -51,6 +51,10 @@ class PageQuery(StrictModel):
     cursor: str | None = Field(default=None, min_length=1, max_length=512)
 
 
+class MaterialHistoryQuery(PageQuery):
+    limit: Annotated[int, BeforeValidator(_query_integer)] = Field(default=1, ge=1, le=5)
+
+
 class DefinitionsQuery(PageQuery):
     state: DefinitionState | None = Field(default=None, strict=False)
 

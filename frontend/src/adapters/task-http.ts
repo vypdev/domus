@@ -5,14 +5,14 @@ import type {TaskOverview, TaskOverviewDeadline, TaskOverviewGroup} from '../app
 import {civilDate} from '../domain/civil-date';
 import type {JournalContext} from '../domain/journal';
 import {isCategoryCommand} from '../domain/tasks';
-import type {TaskCommand, TaskState} from '../domain/tasks';
+import type {TaskCommand, TaskState, TaskDetail} from '../domain/tasks';
 import {taskSchedulePolicy, taskText, taskTime, TASK_TEXT_LIMITS} from '../domain/tasks';
 import {BoundedHTTP, reason} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import type {EntryEndpoint} from './http-values';
 import {assertion, csrf, failure} from './http-values';
 import {boolean, check, choice, fields, identifier, integer, responseRevision, text} from './json-values';
-import {taskCategoryCatalog, taskCommandBody, taskDetail, taskPage, taskReceipt, taskRequest} from './task-values';
+import {taskCategoryCatalog, taskCommandBody, taskDetail, taskPage, taskReceipt, taskRequest, taskMaterialCycle, taskMaterialHistory} from './task-values';
 function route(command: TaskCommand): string {
   if (command.action === 'task.create') return command.payload.schedule === undefined
     ? 'tasks/definitions' : 'tasks/recurrence/creation/' + command.payload.schedule.draft.kind;
@@ -21,6 +21,8 @@ function route(command: TaskCommand): string {
     const item = 'tasks/categories/' + command.categoryId;
     return command.action === 'task.category.archive' ? item + '/archive' : item;
   }
+  if (command.action === 'task.material.settle') return 'tasks/occurrences/' + command.occurrenceId
+    + '/materials/' + command.intentId + '/settlement';
   const action = command.action === 'task.assign' ? 'assignment' : command.action.slice(5);
   return 'tasks/occurrences/' + command.occurrenceId + '/' + action;
 }
@@ -65,7 +67,7 @@ export class HttpTaskServer implements TaskServer {
   access(expected: JournalContext) {
     return this.network.owned(async signal => {
       const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'],
-        ['can_review_schedule','schedule_policy','category_catalog','can_record_for_others','can_manage_points','can_configure']);
+        ['can_review_schedule','schedule_policy','category_catalog','can_record_for_others','can_manage_points','can_configure','can_link_materials']);
       const policy = access.schedule_policy == null ? null : fields(access.schedule_policy, ['zone','data_identity','repeated_time','revision'], []);
       const householdId = identifier(access.household_id);
       const catalog = access.category_catalog === undefined ? {} : {categoryCatalog: taskCategoryCatalog(access.category_catalog, householdId)};
@@ -74,6 +76,7 @@ export class HttpTaskServer implements TaskServer {
         ...access.can_record_for_others === undefined ? {} : {canRecordForOthers: boolean(access.can_record_for_others)},
         ...access.can_manage_points === undefined ? {} : {canManagePoints: boolean(access.can_manage_points)},
         ...access.can_configure === undefined ? {} : {canConfigure: boolean(access.can_configure)},
+        ...access.can_link_materials === undefined ? {} : {canLinkMaterials: boolean(access.can_link_materials)},
         ...policy === null ? {} : {schedulePolicy: taskSchedulePolicy({...policy, revision: responseRevision(policy.revision)})}});
     });
   }
@@ -111,6 +114,21 @@ export class HttpTaskServer implements TaskServer {
         ? (isCategoryCommand(input.command) ? 'tasks/categories/requests/' : 'tasks/requests/') + input.command.action
         : 'tasks/recurrence/creation/requests/recurrence.' + schedule.draft.kind + '.create';
       return taskReceipt(await this.network.get(request + '/' + input.key, expected, signal), input, true);
+    });
+  }
+  materialHistory(work: TaskDetail, householdId: string, cursor: string | null, expected: JournalContext) {
+    return this.network.owned(async signal => {
+      check(cursor === null || typeof cursor === 'string' && cursor.length > 0 && cursor.length <= 512);
+      const query = new URLSearchParams({limit:'1'}); if (cursor !== null) query.set('cursor',cursor);
+      return taskMaterialHistory(await this.network.get('tasks/occurrences/' + identifier(work.occurrenceId)
+        + '/material-history?' + query.toString(), expected, signal), work, identifier(householdId));
+    });
+  }
+  materialCycle(work: TaskDetail, householdId: string, cycleId: string, expected: JournalContext) {
+    return this.network.owned(async signal => {
+      const selected = identifier(cycleId);
+      return taskMaterialCycle(await this.network.get('tasks/occurrences/' + identifier(work.occurrenceId)
+        + '/materials?cycle_id=' + encodeURIComponent(selected), expected, signal), work, identifier(householdId), selected);
     });
   }
   async send(value: TaskRequest, expected: JournalContext): Promise<TaskCommandResult> {

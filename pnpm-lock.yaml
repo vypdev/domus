@@ -27,8 +27,8 @@ importers:
   frontend:
     dependencies:
       '@vypdev/ha-ui':
-        specifier: 0.1.0-next.3
-        version: 0.1.0-next.3
+        specifier: 0.1.0-next.4
+        version: 0.1.0-next.4
       lit:
         specifier: 3.3.3
         version: 3.3.3
@@ -813,8 +813,8 @@ packages:
   '@vitest/utils@5.0.5':
     resolution: {integrity: sha512-/rBu7gzLDQI/SC79Tn98b5DwOgaHU/Gt4I9OVeP3YofzNaYtbImRCOJQmT1S6vOJg9gEIlWC+r3QxKkjuSa1nQ==}
 
-  '@vypdev/ha-ui@0.1.0-next.3':
-    resolution: {integrity: sha512-DgUrjC7MOGQ0JMSfEO2DpnagEYpik+9zB6LeGggZGVZO6X+2hYywed0uYFnnvNS7byqhV1N/SAoIAnx/LZ+yjQ==}
+  '@vypdev/ha-ui@0.1.0-next.4':
+    resolution: {integrity: sha512-X6kVFZ1IlgKlI/WGBoxYwc7qMTTNnruYcma1GdXSmGa5ejqTB6fj8KXEaEvt6DWin4WuN5HtmNxEuPt9d8ZfBA==}
 
   '@webcontainer/env@1.1.1':
     resolution: {integrity: sha512-6aN99yL695Hi9SuIk1oC88l9o0gmxL1nGWWQ/kNy81HigJ0FoaoTXpytCj6ItzgyCEwA9kF1wixsTuv5cjsgng==}
@@ -2041,7 +2041,7 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.2.0
 
-  '@vypdev/ha-ui@0.1.0-next.3':
+  '@vypdev/ha-ui@0.1.0-next.4':
     dependencies:
       lit: 3.3.3
 

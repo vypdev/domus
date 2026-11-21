@@ -31,6 +31,25 @@ export function taskTime(value: unknown): string {
 export function taskQuantity(value: unknown): string {
   requireValue(typeof value === 'string' && /^(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{0,5}[1-9])?$/u.test(value)); return value;
 }
+/** Normalize a human decimal entry only before preparing an immutable command. Zero is explicit. */
+export function taskQuantityInput(value: string, precision: number): string | null {
+  const trimmed = value.trim();
+  if (trimmed.length > 64 || !/^[0-9]+(?:[.,][0-9]+)?$/u.test(trimmed)) return null;
+  const [whole, fraction = ''] = trimmed.replace(',', '.').split('.');
+  const integer = whole.replace(/^0+(?=[0-9])/u, ''), decimal = fraction.replace(/0+$/u, '');
+  if (decimal.length > precision) return null;
+  try {return taskQuantity(integer + (decimal ? '.' + decimal : ''));} catch {return null;}
+}
+export interface TaskMaterialSelection {readonly reference_id: string; readonly planned_quantity: string;}
+export function taskMaterialSelections(value: unknown): readonly TaskMaterialSelection[] {
+  requireValue(Array.isArray(value) && value.length <= 32);
+  const seen = new Set<string>();
+  return Object.freeze(Array.from(value, raw => {
+    const item = fields(raw, ['reference_id', 'planned_quantity']), reference_id = taskIdentifier(item.reference_id);
+    requireValue(!seen.has(reference_id)); seen.add(reference_id);
+    return Object.freeze({reference_id, planned_quantity: taskQuantity(item.planned_quantity)});
+  }));
+}
 export function taskBasePointAmount(value: unknown): number {
   requireValue(typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 1_000_000);
   return value;
@@ -76,7 +95,10 @@ export function categoryLabel(value: unknown): string {
 }
 export type TaskCommand = CategoryCommand |
   Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority;
-    category_id?: string; schedule?: TaskSchedule; overrides?: TaskCreationOverrides}>}>
+    category_id?: string; schedule?: TaskSchedule; overrides?: TaskCreationOverrides; materials?: readonly TaskMaterialSelection[]}>}>
+  | Readonly<{action: 'task.material.settle'; occurrenceId: string; intentId: string; payload: Readonly<{
+    expected_revision: Revision; cycle_id: string; action: 'post'; reason: '';
+  }> | Readonly<{expected_revision: Revision; cycle_id: string; action: 'correct'; quantity: string; reason: string}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
   | Readonly<{action: 'task.assign'; occurrenceId: string; payload: Readonly<{expected_revision: Revision; assignee_ids: readonly string[]}>}>
   | Readonly<{action: 'task.transition'; occurrenceId: string; payload: Readonly<{
@@ -146,14 +168,17 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
       return Object.freeze({action, categoryId: taskIdentifier(item.categoryId),
         payload: Object.freeze({expected_revision: revisionValue(body.expected_revision), label})});
     }
-    const item = fields(value, action === 'task.create' ? ['action', 'payload'] : ['action', 'occurrenceId', 'payload']);
+    const item = fields(value, action === 'task.create' ? ['action', 'payload']
+      : action === 'task.material.settle' ? ['action', 'occurrenceId', 'intentId', 'payload'] : ['action', 'occurrenceId', 'payload']);
     if (action === 'task.create') {
       requireValue(typeof item.payload === 'object' && item.payload !== null);
       const hasSchedule = Object.hasOwn(item.payload, 'schedule');
       const hasCategory = Object.hasOwn(item.payload, 'category_id');
       const hasOverrides = Object.hasOwn(item.payload, 'overrides');
+      const hasMaterials = Object.hasOwn(item.payload, 'materials');
       const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority',
-        ...hasSchedule ? ['schedule'] : [], ...hasCategory ? ['category_id'] : [], ...hasOverrides ? ['overrides'] : []]);
+        ...hasSchedule ? ['schedule'] : [], ...hasCategory ? ['category_id'] : [], ...hasOverrides ? ['overrides'] : [],
+        ...hasMaterials ? ['materials'] : []]);
       requireValue(body.expected_revision === 0);
       const schedule = hasSchedule ? fields(body.schedule, ['draft', 'policy']) : null;
       let overrides: TaskCreationOverrides | undefined;
@@ -165,11 +190,22 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
         title: taskText(body.title, TASK_TEXT_LIMITS.title, true), description: taskText(body.description, TASK_TEXT_LIMITS.description, false, true),
         priority: choice(body.priority, TASK_PRIORITIES),
         ...overrides === undefined ? {} : {overrides},
+        ...hasMaterials ? {materials: taskMaterialSelections(body.materials)} : {},
         ...hasCategory ? {category_id: taskIdentifier(body.category_id)} : {}, ...schedule === null ? {} : {
           schedule: Object.freeze({draft: taskScheduleDraft(schedule.draft), policy: taskSchedulePolicy(schedule.policy)})
         }})});
     }
     const occurrenceId = taskIdentifier(item.occurrenceId);
+    if (action === 'task.material.settle') {
+      const correct = (item.payload as Fields)?.action === 'correct';
+      const body = fields(item.payload, ['expected_revision', 'cycle_id', 'action', 'reason', ...correct ? ['quantity'] : []]);
+      const base = {expected_revision: revisionValue(body.expected_revision), cycle_id: taskIdentifier(body.cycle_id)};
+      const intentId = taskIdentifier(item.intentId);
+      if (correct) return Object.freeze({action, occurrenceId, intentId, payload: Object.freeze({...base, action: 'correct',
+        quantity: taskQuantity(body.quantity), reason: taskText(body.reason, TASK_TEXT_LIMITS.reason, true, true)})});
+      requireValue(body.action === 'post' && body.reason === '');
+      return Object.freeze({action, occurrenceId, intentId, payload: Object.freeze({...base, action: 'post', reason: ''})});
+    }
     if (action === 'task.assign') {
       const body = fields(item.payload, ['expected_revision', 'assignee_ids']);
       return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision),
@@ -220,10 +256,27 @@ export interface TaskSummary {
   readonly dueDate?: string;
 }
 export interface TaskPage {readonly items: readonly TaskSummary[]; readonly nextCursor: string | null;}
-export interface TaskMaterial {readonly lineId: string; readonly label: string; readonly plannedQuantity: string; readonly precision: number;}
+export interface TaskMaterial {readonly lineId: string; readonly label: string; readonly plannedQuantity: string; readonly precision: number;
+  readonly unitId?: string; readonly locationId?: string;}
+export const TASK_MATERIAL_STATES = ['pending_recording', 'pending_authorization', 'pending_regularization', 'pending_processing',
+  'not_used', 'posted', 'corrected', 'dismissed'] as const;
+export interface TaskMaterialOutcome {
+  readonly intentId: string; readonly cycleId: string; readonly lineId: string; readonly revision: Revision;
+  readonly submittedQuantity: string | null; readonly quantity: string | null;
+  readonly state: typeof TASK_MATERIAL_STATES[number]; readonly pendingReason: string | null;
+  readonly confirmedQuantity: string | null; readonly confirmedEffectRevision: Revision | null;
+  readonly effectRevision: string; readonly movementId: string | null; readonly postedAt: string | null;
+}
 export interface TaskCycleSummary {
   readonly cycleId: string; readonly verification: 'none' | 'pending' | 'approved' | 'rejected';
   readonly performedAt: string; readonly performerIds: readonly string[];
+}
+export interface TaskMaterialCycle {
+  readonly cycle: TaskCycleSummary; readonly closedAt: string | null;
+  readonly materialOutcomes: readonly TaskMaterialOutcome[]; readonly allowedActions: readonly string[];
+}
+export interface TaskMaterialHistory {
+  readonly items: readonly TaskMaterialCycle[]; readonly nextCursor: string | null;
 }
 export interface TaskDetail extends TaskSummary {
   readonly description: string; readonly priority: TaskPriority; readonly allowedActions: readonly string[];
@@ -233,21 +286,29 @@ export interface TaskDetail extends TaskSummary {
   readonly materialRecording: 'review_on_completion' | 'separate_recording';
   readonly dependencyReviewRequired: boolean;
   readonly pendingMaterials: boolean; readonly categoryLabel?: string | null;
+  readonly materialOutcomes?: readonly TaskMaterialOutcome[];
 }
 export interface TaskCategory {readonly id: string; readonly label: string; readonly revision: Revision;}
 export interface TaskCategoryCatalog {readonly categories: readonly TaskCategory[]; readonly canManage: boolean;}
 export interface TaskAccess {
   readonly householdId: string; readonly memberId: string; readonly canCreate: boolean; readonly canReviewSchedule: boolean;
   readonly canRecordForOthers?: boolean; readonly canManagePoints?: boolean; readonly canConfigure?: boolean;
+  readonly canLinkMaterials?: boolean;
   readonly schedulePolicy?: TaskSchedulePolicy;
   readonly categoryCatalog?: TaskCategoryCatalog;
 }
-export interface TaskReceipt {
+export interface TaskWorkReceipt {
   readonly kind: 'receipt'; readonly stage: 'committed' | 'historical'; readonly operationId: string;
-  readonly action: TaskCommand['action']; readonly occurrenceId: string | null; readonly revision: Revision;
+  readonly action: Exclude<TaskCommand['action'], 'task.material.settle'>; readonly occurrenceId: string | null; readonly revision: Revision;
   readonly state: TaskState | 'active' | 'archived'; readonly cycle: TaskCycleSummary | null;
   readonly archivedBy: string | null;
   readonly basePointsMinor?: number;
   readonly assigneeIds?: readonly string[];
   readonly stateReason?: string;
 }
+export interface TaskMaterialReceipt {
+  readonly kind: 'receipt'; readonly stage: 'committed' | 'historical'; readonly operationId: string;
+  readonly action: 'task.material.settle'; readonly occurrenceId: string; readonly intentId: string;
+  readonly material: TaskMaterialOutcome; readonly cycle: TaskCycleSummary; readonly archivedBy: string | null;
+}
+export type TaskReceipt = TaskWorkReceipt | TaskMaterialReceipt;

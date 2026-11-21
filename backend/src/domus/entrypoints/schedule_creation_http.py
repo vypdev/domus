@@ -28,7 +28,13 @@ from domus.entrypoints.household_http import (
 from domus.entrypoints.http_contract import StrictModel
 from domus.entrypoints.recurrence_dto import NominalBody, nominal
 from domus.entrypoints.recurrence_http import _require_context
-from domus.entrypoints.task_dto import Identifier, PointValueMinor, Revision, TaskTextBody
+from domus.entrypoints.task_dto import (
+    Identifier,
+    MaterialSelectionBody,
+    PointValueMinor,
+    Revision,
+    TaskTextBody,
+)
 
 ScheduleCreationAction = Literal["recurrence.fixed.create", "recurrence.relative.create"]
 
@@ -51,10 +57,17 @@ class ScheduledTaskOverridesBody(StrictModel):
 
 class ScheduledTaskTextBody(TaskTextBody):
     overrides: ScheduledTaskOverridesBody | None = None
+    materials: list[MaterialSelectionBody] | None = Field(default=None, max_length=32)
 
     def domain(self) -> CreateTask:
         amount = None if self.overrides is None else self.overrides.point_value_minor
-        return CreateTask(self.content(), overrides=TaskOverrides(point_value_minor=amount))
+        return CreateTask(
+            self.content(),
+            overrides=TaskOverrides(point_value_minor=amount),
+            materials=None
+            if self.materials is None
+            else tuple(value.domain() for value in self.materials),
+        )
 
 
 class ScheduledTaskBody(StrictModel):

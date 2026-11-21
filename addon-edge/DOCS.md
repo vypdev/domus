@@ -1,7 +1,36 @@
 # Installation and operation
 
-Edge 0.0.0-edge.57 packages the immutable runtime declared in
-[artifact.json](artifact.json). If a protected response rejects your session, Domus hides
+Edge 0.0.0-edge.70 packages the immutable runtime declared in
+[artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
+for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
+including zero for unused materials. **More products** keeps earlier choices available while you browse later pages.
+Refreshing material choices checks the catalog again and retains draft quantities. Each result shows confirmed, unused or pending consumption
+separately from task completion and points. After reviewing stock or access, choose
+**Settle pending usage** explicitly. Existing separate-recording tasks offer **Record actual usage**
+with a quantity and reason. Failed reads, competing changes and interrupted replies retain the
+draft or exact original request for deliberate recovery.
+After reopening, **Review earlier usage** keeps pending consumption reachable under its original
+completion cycle. Local material quantity edits retain focus without reloading household proof.
+Spanish planned quantities use a comma while retaining their exact stored amount.
+After settling a closed completion, **Next closed completion** remains available when
+another page exists, including after recovering an interrupted settlement.
+Settling the current completion preserves the displayed earlier completion and its next page too.
+A committed creation clears its submitted material plan before any follow-up read.
+If that read fails, use the focused **Refresh tasks** control. A later unrelated plan
+is preserved when checking the already saved creation. The focused recovery control
+remains visible below fixed navigation, even with a long draft open. Loading or paging
+material choices preserves the displayed earlier completion and its next page.
+A transient detail or history read failure retains the selected task, displayed completion and
+continuation for an explicit retry. Deferred material focus respects a newer keyboard target and keeps its result visible
+below fixed navigation.
+
+If material access is denied before selection, the empty planner explains access review and
+**Refresh tasks**. Removing the retained plan or its last unavailable line preserves the task
+text and returns focus to the title when no material control is available. A temporary
+initial task-detail or closed-cycle read failure before settlement keeps the displayed earlier
+usage and its next page; retry explicitly. A denied session still hides private task and history facts.
+
+If a protected response rejects your session, Domus hides
 household information and offers **Reopen Domus**. Existing records and original requests
 are retained. After verifying your access, recover an interrupted request explicitly;
 opening the interface never repeats it automatically. Overview shows the signed-in member's completed tasks and

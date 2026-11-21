@@ -6,6 +6,7 @@ import json
 import re
 import subprocess
 from pathlib import Path
+from textwrap import dedent
 
 import pytest
 import yaml
@@ -258,10 +259,63 @@ def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
         "pnpm build:frontend",
         "uv build --package domus-server --wheel",
         "uv run pytest tests/packaging --no-cov",
+        dedent(
+            """\
+            set -euo pipefail
+            browser_fixture_root=$(
+              mktemp -d "/dev/shm/domus-browser-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX"
+            )
+            printf 'DOMUS_BROWSER_FIXTURE_ROOT=%s\\n' "$browser_fixture_root" >> "$GITHUB_ENV"
+            # Keep fixture I/O independent of the shared runner work volume. Actual
+            # persistent-disk validation remains in backend, both images and native QA.
+            test "$(stat --file-system --format=%T "$browser_fixture_root")" = tmpfs
+            stat --file-system \\
+              --format='source browser filesystem=%T free_blocks=%a block_size=%S' \\
+              "$browser_fixture_root"
+            """
+        ),
         "flock -w 600 /tmp/domus-ci-entry-browser.lock pnpm test:frontend-entry",
         "pnpm build:frontend-catalog",
         "flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog",
+        dedent(
+            """\
+            python3 - <<'PY'
+            import os
+            from pathlib import Path
+            import shutil
+            import stat
+
+            value = os.environ.get("DOMUS_BROWSER_FIXTURE_ROOT")
+            if value is None:
+                raise SystemExit(0)
+            root = Path(value)
+            prefix = (
+                f"domus-browser-{os.environ['GITHUB_RUN_ID']}-"
+                f"{os.environ['GITHUB_RUN_ATTEMPT']}-"
+            )
+            if (
+                root.parent != Path("/dev/shm")
+                or not root.name.startswith(prefix)
+                or root.is_symlink()
+                or not root.is_dir()
+            ):
+                raise SystemExit("Refusing unexpected source browser fixture root")
+            info = root.stat()
+            if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
+                raise SystemExit("Refusing unowned or non-private browser fixture root")
+            if any(root.rglob(".git")):
+                raise SystemExit("Refusing browser fixture containing a Git checkout")
+            shutil.rmtree(root)
+            PY
+            """
+        ),
     ]
+    retirement = next(
+        step
+        for step in job["steps"]
+        if step.get("name") == "Retire this job's disposable source-browser databases"
+    )
+    assert retirement["if"] == "${{ always() }}"
     assert "frontend" in REQUIRED_JOBS
     assert "frontend" in jobs["aggregate"]["needs"]
     artifact = next(step for step in job["steps"] if "path" in step.get("with", {}))
@@ -373,10 +427,10 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all sixty-six actual-image household journeys"
+        if step.get("name") == "Require all seventy actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==66" in audit["run"]
+    assert "expected']==70" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )

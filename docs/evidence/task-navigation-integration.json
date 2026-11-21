@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8f5d87774c27251fc4131850032e3b13e4c65dd122132c9dab6a28caf2ab5ccf",
+    ".vite/manifest.json": "fc24a51943fdb802972e4dc81a2e3e64c885a561739e309b5334ceba2f0ee8a3",
+    "assets/index-CAYlPSUq.js": "36491fe471fdf5acf97d0063a85beda9c061a2876ec36db04887a5f68b569b45",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DBLG-WGl.js": "3d2859452f2495cbce0025559d5f46b9ac2fe5aa3eb71409f7cb08abb93f23fd",
-    "index.html": "1d17cd326424ec6b6c918b288fc14d96aebff53181f83da6aa39c3924a5585aa"
+    "index.html": "749973a568f77ddc6d3b381f1682bfbb42741670276eb865ab0dc7b2982b94d5"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -419,5 +419,1087 @@
     "qualification": "docs/evidence/shared-entry-authentication-qualification.md",
     "correction": "The first source/package CI attempts caught this current UI evidence map still describing Edge56. Update it to the independently compared Git/archive, local/Linux wheel and final57 image bytes; retain the original failing job logs. Runtime and immutable candidate remain unchanged.",
     "boundary": "Current local proof; required same-head CI and installed candidate acceptance remain separate."
+  },
+  "preTaskMaterialWorkflow": {
+    "sourceCommit": "272b5e8436588b5fab090622d19298371a6dc33c",
+    "scope": "Accepted Edge.57 interface before task material planning and explicit settlement. The subsequent barcode observation correction changed tests only.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "8f5d87774c27251fc4131850032e3b13e4c65dd122132c9dab6a28caf2ab5ccf",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DBLG-WGl.js": "3d2859452f2495cbce0025559d5f46b9ac2fe5aa3eb71409f7cb08abb93f23fd",
+      "index.html": "1d17cd326424ec6b6c918b288fc14d96aebff53181f83da6aa39c3924a5585aa"
+    }
+  },
+  "taskMaterialWorkflowQualification": {
+    "issue": "https://github.com/vypdev/domus/issues/150",
+    "admissionCommit": "1e1a25e5076661a6dd2e368cad153100fb4c04e8",
+    "cases": "task-material-planning-C01 through task-material-planning-C12",
+    "haUiVersion": "0.1.0-next.4",
+    "haUiProductionCommit": "b73562365fcca645555e82cf0638c69bd0d24efd",
+    "haUiPublicationRun": 44699421594,
+    "haUiPublicationAttempt": 6,
+    "fivePublishedArchiveHashesVerified": true,
+    "frontendTests": 2077,
+    "frontendRuntimeFiles": 110,
+    "frontendCoverage": "100% globally and per file for all four metrics",
+    "backendTests": 5635,
+    "backendRuntimeModules": 231,
+    "backendCoverage": "100% statement and branch globally and per file; independent gate passed",
+    "entryBrowserTests": 125,
+    "catalogBrowserTests": 46,
+    "materialsBrowserCombinationsPassed": 4,
+    "sourceState": "Published runtime 00f8cd0 fixes the material hint at the maximum occurrence revision. Both real HTTP regressions and all 265 directed tests pass. The immutable Edge.67 build changes only TaskQueries; all four UI assets match installed Edge.66. Final complete backend coverage, CI/review and installed Edge.67 acceptance are required. Installed Edge.66 remains stopped pending exact cleanup confirmation.",
+    "qualification": "docs/evidence/task-material-workflow-qualification.md",
+    "reviewCorrections": {
+      "pullRequest": 151,
+      "frontendTests": 2070,
+      "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
+      "directedBackendMaterialTests": 117,
+      "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
+      "sourceAcceptance": "Final centered-focus2070frontend all110files/fourmetrics100%, types,4expandedmaterial journeys42.6s and46rebuiltcatalog pass. Final full125source/70perCPU same-head CI and current immutable65nativeC09/visiblefocus still required.",
+      "backendTests": 5635,
+      "backendStatements": 18045,
+      "backendBranches": 4876,
+      "backendIndependentGate": "passed",
+      "localDraftEditing": "Same focused field retained; no new household/session proof reads; current expiry still retires drafts.",
+      "plannedCompletionLocale": "Exact canonical quantity rendered with comma in Spanish; unit singular/plural matches quantity.",
+      "closedCycleContinuation": "Same-work, same-displayed-cycle continuation survives direct settlement and original GET recovery; unrelated work/page continuation is not inherited.",
+      "acceptedFixtureIdentity": "Bundle bytes and provenance independently equal the literal accepted Edge57 SHA256.",
+      "twoCycleMaterialJourneys": {
+        "redOnVerifiedEdge59": 4,
+        "greenAfterRebuild": 4,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0
+      },
+      "postCommittedReadFailure": "Clear the submitted planner after storing the committed receipt and before list/detail reads; preserve a later unrelated plan when checking an already known committed creation.",
+      "readRecoveryFocus": "Focus visible Refresh tasks once when post-create facts are unavailable; preserve subsequent typing and selected-detail focus; retired views cannot move focus.",
+      "postReadMaterialJourneys": {
+        "redOnVerifiedEdge60": 4,
+        "greenAfterRebuild": 4,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0
+      },
+      "frontendCounts": {
+        "statements": 8808,
+        "branches": 7896,
+        "functions": 1915,
+        "lines": 6397
+      },
+      "readRecoveryVisibility": "Center the focused Refresh tasks control so the actual HA iframe sticky navigation cannot cover it; keep repeated local editing focus unchanged.",
+      "catalogReadHistoryRetention": "Same-scope catalog reload, paging and failure preserve selected closed-cycle history and its continuation; three direct regressions fail before the fix and pass after.",
+      "savedRequestObserver": "Read the native details.open state before toggling; no dismissal/count assertion is removed.",
+      "reopenedHistoryGuard": "Verified false positive: frontend planned materials derive from the frozen definition snapshot; current material outcomes are a separate field. Normal thread resolution and proof are linked in PR151.",
+      "deferredMaterialFocus": "A pending animation-frame continuation respects a newer keyboard target. Two deterministic EN/ES regressions fail before the guard and pass after; no assertions or deadlines removed.",
+      "historyReadFailureRetention": "Same-scope transient detail/reload/paging failure retains prior selected work, displayed cycle and opaque continuation.3genuine reds now pass;2current denial cases still retire every private fact; retry reads original cursor; no writes.",
+      "wholeSourceAfterFocusCorrection": {
+        "expected": 125,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "durationMs": 496224.208,
+        "scope": "Complete campaign before companion history-read retention correction; original report and exact compiled UI hashes retained separately."
+      },
+      "combinedHistoryFailureJourneys": {
+        "expected": 4,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0,
+        "durationMs": 53800.962999999996,
+        "readsFailedPerJourney": 2,
+        "extraDomainWrites": 0
+      },
+      "materialOutcomeFocusVisibility": "Guarded deferred material focus centers its current target. All four rebuilt journeys pass42.6s with focused result heading below navigation. Raw64source also passed these assertions42.4s; original realHA64settlement screenshot is the negative clipping evidence, requiring independent installed65 verification.",
+      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft\u2192perform\u2192publish\u2192composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
+      "visibleMaterialFocusJourneys": {
+        "expected": 4,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0,
+        "durationMs": 42573.161,
+        "nativeBoundary": "Actual HomeAssistant clipping is not reproduced in the raw64source windows; native65 independently verifies it."
+      }
+    },
+    "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
+    "sourceEntryCampaigns": {
+      "baseline": {
+        "expected": 121,
+        "unexpected": 4,
+        "skipped": 0,
+        "flaky": 0,
+        "limitation": "Four expanded cases corrected only their asynchronous observation and explicit resolved journal capacity dismissal; original failed report preserved."
+      },
+      "focusedExpandedMaterials": {
+        "expected": 4,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      "distinctSuccessfulCases": 125,
+      "exactHeadWholeCI": "required"
+    },
+    "supersededUnacceptedCandidate58": {
+      "version": "0.0.0-edge.58",
+      "sourceCommit": "514258c9adbd54d938e28fd65a901764a89799cc",
+      "sourceArchiveSHA256": "91835d1b4632ddce683b217ec0b282552e3b2c13dc232d96b65c3599ecd00200",
+      "wheelSHA256": "f3fd2b92b73e84211a2fbf2552ea6176bacfaaa12eadf2b488223d207597d3a3",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "status": "Superseded before installed acceptance by two genuine review recovery corrections. Runnable58 exports/images retired after retaining original build receipts."
+    },
+    "supersededCandidate59": {
+      "version": "0.0.0-edge.59",
+      "sourceCommit": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
+      "sourceArchiveSHA256": "f78570f13f0d7679d21835ed361757fcb69052024c186e24b7300520b8eea82a",
+      "wheelSHA256": "ec3f66257983e0cfc92f83a94ec2d541ec4e84ca098323518153d43f8f2e5916",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
+      "status": "Superseded by continuation correction. Both CPU reports pass 70 journeys; native59 data retained for same-installation upgrade qualification."
+    },
+    "supersededCandidate60": {
+      "version": "0.0.0-edge.60",
+      "sourceCommit": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+      "sourceArchiveSHA256": "f6c73df97481cf90a7d140b3739d6716c5da28289dced4b6283a0888eee7f992",
+      "wheelSHA256": "97f358d6d76a30b47ca062f479aec7c3fc639694387acdcc0034cdea3e38aff2",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156",
+      "status": "Superseded by committed-creation post-read and recovery-focus corrections; prior native qualification does not accept the final source."
+    },
+    "supersededNativeQualification60": {
+      "version": "0.0.0-edge.60",
+      "runtimeSource": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+      "packagingHeadAtInstall": "ca7599096821f3a27ecf8999651eaa18ed392a52",
+      "upgradedFrom": "0.0.0-edge.59",
+      "originalCycleIntentIdentitiesRetained": true,
+      "nextPageAfterCommittedSettlement": true,
+      "currentReopenedWorkUnchanged": true,
+      "finalStock": {
+        "soapMillilitres": "7.75",
+        "cleanerPieces": "4",
+        "teaPieces": "5"
+      },
+      "fixedInitialAndSecondPlanPieces": "2",
+      "relativeInitialPlanMillilitres": "1.25",
+      "input": "EN/ES keyboard; actual emulated touch relative creation; 390x844 mobile; light/dark steady-state and visible focus",
+      "originalRequestsPreservedAcrossTwoTabs": true,
+      "stoppedAfterQualification": true,
+      "temporaryBrowserOverridesRestored": true,
+      "screenshotsAndReceipts": "Private local evidence; not uploaded",
+      "limits": "Native scheduled consumption is not claimed; separate 48 HTTP cases cover initial/successor effects. Exact-head CI/review and scoped cleanup remain required."
+    },
+    "runtimeSourceBeforePostReadCorrection": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+    "supersededCandidate61": {
+      "version": "0.0.0-edge.61",
+      "sourceCommit": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c",
+      "sourceArchiveSHA256": "68a46fd337af68aca0d1182e02c3e5e811f1b65165404d1e57646214b83cd661",
+      "wheelSHA256": "e0cefaf2ce7a91d401f3dded60ce5090e3d50554f42dce42b274125653233796",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:4a608cc1d1f67a5f2c886780175155a7964f651b1e667017bc3e6bdc71a193d8",
+      "status": "Superseded before acceptance: native original-check recovery focus was covered by the sticky navigation despite preserved draft and zero repeated POSTs."
+    },
+    "runtimeSourceBeforeVisibleFocusCorrection": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c",
+    "runtimeSourceBeforeCatalogRetention": "b1313f3a91c8d992495d30c2a04714df81afad4e",
+    "supersededCandidate62": {
+      "version": "0.0.0-edge.62",
+      "sourceCommit": "b1313f3a91c8d992495d30c2a04714df81afad4e",
+      "sourceArchiveSHA256": "3c720ae9603121b085fcb59004da2b35740ff2ad84310d4e28ec394a25b03a5c",
+      "wheelSHA256": "7929b6385f690a6a59fb89d5130251af81a7f58a0250997b0101f45d66825cd1",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:d501b294eedba158e87ec3252e8b7fa6fc26b3f15726c1aa15f6817c8970d089",
+      "status": "Native62 upgrade/recovery/explicit-stock-cycle passed, then superseded before PR acceptance by the valid catalog-read history-retention correction. Final62 source entry failed3existing standalone preconditions; full backend and70amd64 cases passed. ARM was cancelled after the correction was ready."
+    },
+    "precedingFullSourceCI62": {
+      "head": "0ae97b252a5aba4e6a86ee76b4602aa5ce4600c4",
+      "run": 44736515798,
+      "frontendEntryPassed": 122,
+      "frontendEntryFailed": 3,
+      "catalog": "not run after entry failure",
+      "backendTests": 5635,
+      "backendDurationSeconds": 1563.15,
+      "amd64BrowserPassed": 70,
+      "arm64": "cancelled after source correction ready",
+      "limit": "Pending writes and fixture reset deadlines observed; underlying cause unproven; no product exception applies."
+    },
+    "runtimeSource": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+    "runtimeSourceBeforeMaterialFocusCorrection": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
+    "supersededCandidate63": {
+      "version": "0.0.0-edge.63",
+      "sourceCommit": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
+      "sourceArchiveSHA256": "fe003b4238bf2d5b0b00f84b3b6e58f793a040ee1599278797ddcb8388b1a718",
+      "wheelSHA256": "6675744e12bbc983d9c512b5296854a8e01d03219cdfa7cd0fb520d50c2ca8e5",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:ee70884fef01cdf9c869eca986e5df64285dfe6ee26d2d085d6d0ec233f38586",
+      "pythonByteIdenticalToEdge62": true,
+      "status": "Native63 catalog/history upgrade qualification passed, but exact-head amd64 failed69/70 and exposed a deferred-focus defect. Backend/ARM cancelled after corrected2065unit gate; no product waiver."
+    },
+    "precedingImageCI63": {
+      "head": "cf473cdebd23a58664b725d8a8d1fa02b79bf141",
+      "run": 44744514387,
+      "amd64BrowserPassed": 69,
+      "amd64BrowserFailed": 1,
+      "backend": "cancelled after valid focus correction ready",
+      "arm64": "cancelled after valid focus correction ready",
+      "originalTraceRetained": true,
+      "productWaiver": false
+    },
+    "supersededCandidate64": {
+      "version": "0.0.0-edge.64",
+      "sourceCommit": "530a609f0a9490bccd7f3f2cd8598ec590689166",
+      "sourceArchiveSHA256": "380f4a071e81e2004edfb34a15e099a6d20cbcc27d3fd8f0e0652f6c1b2e3dd1",
+      "wheelSHA256": "541f831d5716308349567cbf2e3be8780c60ae9ca6330007c1528bc1d41126f6",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "pythonByteIdenticalToEdge63": true,
+      "status": "Native64 full C09 domain workflow passed with4distinct writes and9tasks, plus read-only recovery. Original material-outcome focus was partly hidden by fixed navigation;65required before merge.64fullCI still running, not final acceptance.",
+      "imageId": "sha256:bfe831f24e8ba53007041b3f8c8df277cac35fe15b67de97644377817242e7ec"
+    },
+    "precedingFullProductCI64": {
+      "head": "cc74e8cf90bdeee517f65a36a701f511ac7583dd",
+      "run": 44752737565,
+      "backendTests": 5635,
+      "backendDurationSeconds": 1598.56,
+      "backendRuntimeFiles": 231,
+      "backendCoverage": "100% statement/branch globally/perfile and independent gate passed",
+      "amd64BrowserPassed": 70,
+      "amd64BrowserDurationMs": 430848.332,
+      "wholeWorkflow": "Cancelled after native visible-focus defect and validated centering correction; report pass and job/workflow conclusion remain separate.",
+      "arm64": "cancelled/not qualified",
+      "frontend": "cancelled/not qualified",
+      "final65Gates": "required"
+    },
+    "immutableCandidate": {
+      "version": "0.0.0-edge.67",
+      "sourceCommit": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+      "sourceArchiveSHA256": "70419905b5704196b031b9e11bd4361f9d69eee90786fd61514f46d2cda6523d",
+      "wheelSHA256": "b49e89191c297e6022de62cf99bde4074caa3829d8f113e09a235ea4cc27780f",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "changedPythonFilesFrom66": [
+        "domus/application/task_queries.py"
+      ],
+      "uiFiles": 4,
+      "UIByteIdenticalToNative66": true,
+      "archiveWheelInstalledEquality": "passed",
+      "normalLocalLinuxWheelEquality": "passed",
+      "imageId": "sha256:9b8b53a61f48c1bf4297d8041d63a59668a4575660a341c148e5fee1ccce8b91",
+      "status": "Immutable build identity passed; installed Edge.67 acceptance and full final-pin backend coverage, product CI and review remain mandatory."
+    },
+    "installedEdge65": {
+      "version": "0.0.0-edge.65",
+      "runtimeSource": "c57879a992cd75c8c8b2ea0de41a25f509afed06",
+      "originalPackagingHead": "543ba3a2e848b2b528eee58107ac451fdfda9368",
+      "updateFrom": "0.0.0-edge.64",
+      "retainedPreviousWorkItems": 9,
+      "finalWorkItems": 10,
+      "products": 3,
+      "distinctWrites": 4,
+      "duplicateWrites": 0,
+      "finalStockPreserved": true,
+      "currentC09": "PASS EN keyboard creation, ES390actual touch completion, pending shortage, reviewed intake and one explicit settlement; exact same intent.",
+      "outcomeFocus": {
+        "focused": true,
+        "top": 457.109375,
+        "bottom": 482.703125,
+        "viewport": 940,
+        "navigationBottom": 56
+      },
+      "stopped": true,
+      "overridesRestored": true,
+      "receipt": "https://github.com/vypdev/domus/pull/151#issuecomment-7039956857",
+      "privateOriginals": "Retained locally; no native pagination or additional current-version failure-injection claim."
+    },
+    "packagedWorkerObservation": {
+      "originalRun": 44759701840,
+      "originalHead": "543ba3a2e848b2b528eee58107ac451fdfda9368",
+      "failedJob": 136368654155,
+      "originalContainerPasses": 49,
+      "originalContainerFailures": 1,
+      "originalFailure": "standalone second-lifetime recurrence_unavailable; underlying exception not retained and cause not established",
+      "originalBrowserCasesExecuted": 0,
+      "boundedUnchangedDiagnosticPasses": {
+        "arm64Modes": 2,
+        "amd64Modes": 2,
+        "extraStandaloneAMD64": 6
+      },
+      "independentTypedBusyReds": 2,
+      "correction": "Signal a real completed tick; allow only the production worker to recover a typed StorageBusy; other exceptions still fail with safe identity.",
+      "originalDeadlineSeconds": 10,
+      "productionPollSeconds": 5,
+      "actualAMD64Cases": 4,
+      "actualAMD64Seconds": 47.88,
+      "actualARM64Cases": 4,
+      "actualARM64Seconds": 38.09,
+      "runtimeAndPinUnchanged": true,
+      "finalExactHeadCIAndReview": "required"
+    },
+    "precedingFullProductCI65": {
+      "head": "24c046a1c770f5aee22ef7ef1215fac4a122fc45",
+      "run": 44790571363,
+      "all10ProductJobs": "success",
+      "branchSync": 44790571545,
+      "branchSyncConclusion": "success",
+      "backendTests": 5635,
+      "backendSeconds": 1406.82,
+      "sourceEntryCases": 125,
+      "catalogCases": 46,
+      "containerCasesEachCPU": 52,
+      "imageBrowserCasesEachCPU": 70,
+      "review": "Two new valid findings; corrected by the current source, so this historical green product head is not merge-accepted."
+    },
+    "currentCycleHistoryCorrection": {
+      "findings": [
+        4646361743,
+        4646361752
+      ],
+      "domainFixture": "Initial correction increments effect revision1to2; zero is not_used at intent revision8 with no movement, positive confirmation is corrected at intent revision9/effect2. Actual backend domain execution verifies these facts.",
+      "controller": "Preserve the same selected occurrence closed-history page/cursor for a current-cycle settlement before send and after direct/original receipt. Fresh access and scope checks remain; denial and abandoned selection cannot restore private history.",
+      "unitRegressionReds": 2,
+      "newControllerCases": 6,
+      "newMatchingCorrectionBaseline": 1,
+      "frontendTests": 2077,
+      "runtimeFiles": 110,
+      "coverage": {
+        "lines": {
+          "total": 6397,
+          "covered": 6397,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8809,
+          "covered": 8809,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 1915,
+          "covered": 1915,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 7896,
+          "covered": 7896,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "oldCompiledEdge65BrowserRed": "One real native English current settlement loses all3displayed historical lines after posting4; unchanged work/cycle and one send verified before failure.",
+      "correctedBrowser": {
+        "startTime": "2026-11-20T19:19:44.296Z",
+        "duration": 54764.116,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "catalog": {
+        "startTime": "2026-11-20T19:16:35.637Z",
+        "duration": 30617.576999999997,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "packaging": "One actual wheel acceptance plus both independent frontend coverage/accepted-fixture checks pass.",
+      "caseScope": [
+        "task-material-planning-C08",
+        "task-material-planning-C11",
+        "task-material-planning-C12"
+      ],
+      "inventory": "Same125source/70image cases; all four existing material journeys expanded, zero retries and unchanged individual deadlines.",
+      "newInstalledCandidate": "Required; native Edge65 acceptance does not cover this new UI."
+    },
+    "precedingCandidate65": {
+      "version": "0.0.0-edge.65",
+      "sourceCommit": "c57879a992cd75c8c8b2ea0de41a25f509afed06",
+      "sourceArchiveSHA256": "7e88ebd81eb0d247b0d9f2a226f91f8049a0c5a2dac72d3abb86e0af34cfc663",
+      "wheelSHA256": "b70a8dee635a1a0526ea4400686422869ccee816ac513f8b7570f600d2fba522",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "pythonByteIdenticalToEdge64": true,
+      "status": "Build identity and actual installed65 C09/visible-focus acceptance pass. Complete exact-head whole/source/both-CPU CI/review remain required after the worker-observation test correction.",
+      "imageId": "sha256:6e4a7b017ddc24a2ebdfb392ff5e5c64dfdfc0fb4fcf0d2b250e2dab3d2e3e0e"
+    },
+    "maximumWorkRevisionMaterialHint": {
+      "finding": 4646939608,
+      "reviewHead": "529a6ef8bcba122caf7365b0ee03a09f4ef6289d",
+      "reviewFiles": 67,
+      "reviewPartitions": 11,
+      "actualHTTPRegressionReds": 2,
+      "directedPasses": 265,
+      "sourceChange": "Only the exhausted-occurrence branch now returns the existing independent current-material hints; revision-dependent task actions stay disabled.",
+      "proof": "Each real composition completes max-1 to max, keeps its current pending material out of closed history, settles/replays/reads original exactly once without changing work/cycle, and advertises only materials.settle before posting.",
+      "uiByteIdenticalToEdge66": true,
+      "fullBackendGlobalCoverage": "Required on final exact-headCI; no local full-backend acceptance claimed for the new source."
+    },
+    "installedEdge66": {
+      "runtimeSource": "d50d25eaba5b012db21e212a451b27c36c0937c2",
+      "packagingHead": "529a6ef8bcba122caf7365b0ee03a09f4ef6289d",
+      "freshInstallation": true,
+      "syntheticProducts": 1,
+      "syntheticTasks": 1,
+      "completionCycles": 3,
+      "nativeCurrentSettlement": "PASS: one explicit current intent POST retains the displayed historical intent and Next control; Spanish touch at 390 px opens the other original closed completion.",
+      "finalStock": [
+        "0",
+        "0",
+        "0"
+      ],
+      "movements": "One intake and one task consumption linked to the same occurrence.",
+      "focus": {
+        "focused": true,
+        "top": 457.109375,
+        "bottom": 482.703125,
+        "viewport": 940
+      },
+      "receipt": "https://github.com/vypdev/domus/pull/151#issuecomment-7039956857",
+      "stopped": true,
+      "cleanup": "Pending fresh exact owner confirmation for Edge.66, app 58e9a17f and its one source; keep this installation frozen.",
+      "limitations": "Native direct settlement; lost-reply/original recovery is a separate source journey observation. An earlier debugger window was truncated; only the fresh current settlement window write total is qualified."
+    },
+    "precedingCandidate66": {
+      "version": "0.0.0-edge.66",
+      "sourceCommit": "d50d25eaba5b012db21e212a451b27c36c0937c2",
+      "sourceArchiveSHA256": "e81dfc8bd90a673086fd52d014b11c6a86e764b60188046a0d5f56faa831bb03",
+      "wheelSHA256": "81a67ca3a7ac4e8cc905068942383f7df481c197cede48140f1f0642990a2f5a",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "normalLocalLinuxWheelEquality": "passed",
+      "pythonByteIdenticalToEdge65": true,
+      "imageId": "sha256:378b5c118dd1a80ca86e2f9a497036591cedcb20ed0d6d072851ae075e3f4c81",
+      "status": "Immutable build identity passed; installed current-cycle/history acceptance and exact final-pin full CI/review remain required."
+    },
+    "packageAndWriterObserverCorrection": {
+      "originalHead": "529a6ef8bcba122caf7365b0ee03a09f4ef6289d",
+      "job": 136515952675,
+      "originalPassed": 5631,
+      "originalFailed": 4,
+      "originalSeconds": 1770.14,
+      "package": "Three stale Edge.65 assertions updated to verified Edge.67 version, source and checksum; frozen historical recipes retained.",
+      "writer": "Typed busy entering the SQLite writer; original lower-level statement/detail is not inferred. Two actual held-writer cases reproduce the observer assumption; normal races remain.",
+      "correction": "After both writers finish, explicitly check the same original and retry only that key/payload. Busy loser conflicts; winner original/replay match; exactly one receipt/audit/outbox.",
+      "productionTimeoutMs": 250,
+      "barrierSeconds": 5,
+      "ordinaryAndHeldRaceCases": 4,
+      "directedProfileAndPackagePasses": 88,
+      "scopedCommandCoverage": {
+        "cases": 80,
+        "statements": 60,
+        "branches": 8,
+        "all100": true
+      },
+      "runtimeUIAndPinUnchanged": true,
+      "fullFinalHeadCIAndCoverage": "required"
+    },
+    "permissionHistoryFocusReview": {
+      "reviewHead": "0184af9b313906a9b1110190ae17fd1390129599",
+      "findings": [
+        4647608334,
+        4647608360,
+        4647608368
+      ],
+      "valid": true,
+      "sourceFixes": "Empty denied plan notice/recovery, enabled select/button then title focus fallback, same-work history before closed-cycle await; current denial still retires private proof.",
+      "cases": [
+        "task-material-planning-C05",
+        "task-material-planning-C08",
+        "task-material-planning-C11"
+      ],
+      "directedRed": {
+        "failed": 7,
+        "passed": 3
+      },
+      "directedGreen": 236,
+      "frontendTests": 2087,
+      "runtimeModules": 110,
+      "coverage": {
+        "statements": [
+          8809,
+          8809
+        ],
+        "branches": [
+          7903,
+          7903
+        ],
+        "functions": [
+          1915,
+          1915
+        ],
+        "lines": [
+          6398,
+          6398
+        ]
+      },
+      "expandedJourneys": {
+        "passed": 4,
+        "durationMs": 51848.688,
+        "retries": 0,
+        "flaky": 0,
+        "skipped": 0
+      },
+      "initialCorrectionRegression": "Four unchanged combo-focus assertions caught combined-selector document order; corrected with separate queries, originals preserved.",
+      "catalog": {
+        "startTime": "2026-11-20T21:09:19.567Z",
+        "duration": 28598.68,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "newImmutableCandidate": {
+        "version": "0.0.0-edge.68",
+        "runtimeSource": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+        "sourceArchiveSHA256": "8d056c469217666f472e3578ebd1c74017b433a36d6ec4271e8713eb79b91cc9",
+        "wheelSHA256": "02dc09c81c4248102d3ec1a6a0f9c7dfaac3ec072a41c54b49c8d7716c971d6e",
+        "pythonFiles": 231,
+        "uiFiles": 4,
+        "archiveWheelInstalledBuilderEquality": "passed",
+        "localFinalImage": {
+          "candidate": "0.0.0-edge.68",
+          "runtimeSource": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+          "imageTag": "domus-150-edge68:pinned",
+          "imageId": "sha256:b296a0aaea746400bf3a5592f5e397d382df022f9616d8d3b87e93f8f7ebd2f8",
+          "architecture": "arm64",
+          "pythonFiles": 231,
+          "uiFiles": 4,
+          "archiveWheelInstalledEquality": "passed",
+          "versionAndSourceLabels": "passed"
+        },
+        "native": "required; not yet qualified"
+      },
+      "fullCurrentHeadGates": "required; no old product failure or valid finding waived",
+      "strictTypes": "both pass",
+      "independentCoverageAndAcceptedFixture": "2/2 pass",
+      "wheelUiEquality": "four files match actual wheel",
+      "authoredPythonUnchangedFrom": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+      "precedingUIInventory": {
+        "candidate": "0.0.0-edge.67",
+        "runtimeSource": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+        "packagingHead": "b4410b076b315cd05277f92e2a153d4cc2490d5b",
+        "files": {
+          ".vite/manifest.json": "8f5c096ee4ca02e11b83751d79782b1785c44de4306c1e21e40933ed9185f440",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "assets/index-CpMbFZoj.js": "c9f5ef260d3d57fd6feb886dd27355f30190124149a0dd26a701bc3a9b4216a7",
+          "index.html": "44d9e535e10755a21db8b1d2cec7e575ed5585d61b7a9cac951112202f493f9c"
+        },
+        "historicalOnly": true
+      },
+      "currentUIInventoryCorrection": {
+        "failedHead": "db76d144326a64d606275a8379491d91e7089aa3",
+        "failedJob": 136574884334,
+        "containerPassed": 51,
+        "containerFailed": 1,
+        "browserExecuted": 0,
+        "cause": "Current document inventory still recorded preceding67 UI bytes. Actual amd64 returned set equals68 immutable source/artifact/wheel/finalARM64 exactly. Preserve previous67 map as historical; update current map without changing the live-byte assertion.",
+        "packageGuardRed": {
+          "passed": 7,
+          "failed": 1
+        },
+        "currentFiles": {
+          "index.html": "474234aaae0ad24f0bcc19a0fa81136a1798a6956bbb56a6b6bf87d0591fc359",
+          ".vite/manifest.json": "33f919694394f10251d2051a202daf6c35fc2f2563d86cf995e581aa5d7342c0",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "assets/index-D_4X6e61.js": "2c5991f6e2e11640e8ad64855d31096f2d0380345127406a3254dafb24181bcb"
+        },
+        "runtimeUiPinUnchanged": true,
+        "imageDeliveryRecheck": {
+          "passed": 1,
+          "durationSeconds": 4.36,
+          "actualImage": "sha256:b296a0aaea746400bf3a5592f5e397d382df022f9616d8d3b87e93f8f7ebd2f8"
+        },
+        "packageGuardGreen": 8,
+        "allSuccessorHeadGates": "required; previous failed product campaign cancelled, no failure waived",
+        "actualWheelAcceptance": "passed",
+        "rootPolicy": {
+          "tests": 42,
+          "modules": 2,
+          "allFourMetrics": 100
+        }
+      },
+      "installed68": {
+        "status": "PASS; stopped; fresh exact permanent-cleanup answer pending",
+        "runtime": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+        "packaging": "db76d144326a64d606275a8379491d91e7089aa3",
+        "household": "Domus QA 150 Edge68",
+        "products": 1,
+        "tasks": 1,
+        "completions": 2,
+        "reopenings": 2,
+        "realTouch390pxSpanish": true,
+        "failedHistoricalRead": "Only exact own-occurrence GET; scope cleared before retry. Complete request window has no writes; same history/cursor remains.",
+        "deliberateRetryPosts": 1,
+        "sameHistoricalCycleAndPerformedReopenedTimes": true,
+        "otherPendingHistoryReachedByTouch": true,
+        "finalStock": [
+          "0",
+          "0",
+          "0"
+        ],
+        "movementRows": 2,
+        "movement": "domus_8TITHGz1EQi4n86G5gpjHJRPkaMoIy5v",
+        "occurrence": "domus_hwrEYYqHqpl7OiiPTqiTCegyre6OF2xg",
+        "overridesRestored": true,
+        "limitations": "No native role-change or lost-write-reply claim. Those boundaries are independently source-qualified."
+      },
+      "wrongCycleSelectorObserver": {
+        "finding": 4648108884,
+        "reviewHead": "db76d144326a64d606275a8379491d91e7089aa3",
+        "red": "1actual selector-conflict assertion fails with unavailable before fixture correction",
+        "fix": "Valid earlier closed-cycle response/different intent; assert requested cycle, selector conflict and no key/send instead of exiting on undefined mock.",
+        "allFrontendTests": 2087,
+        "allRuntimeModules": 110,
+        "allFourCoverageMetrics": 100,
+        "runtimeUiPinUnchanged": true
+      }
+    },
+    "initialDetailPreflightReview": {
+      "reviewHead": "a292bc3e625eb2157d8b6ed63168a13e7a8c59c3",
+      "findings": [
+        4649205479,
+        4649205487
+      ],
+      "sameRoot": true,
+      "cases": [
+        "task-material-planning-C05",
+        "task-material-planning-C08",
+        "task-material-planning-C11"
+      ],
+      "correction": "Initial detail GET failed before same-occurrence displayed history restoration. Fresh scope verification remains before restoration; fresh detail/material facts before acceptance/journal/send. Denial clears private facts.",
+      "unitRed": {
+        "failed": 3,
+        "passed": 9
+      },
+      "directedGreen": 12,
+      "compiledEdge68Red": {
+        "failed": 4,
+        "reason": "Selected closed history absent after initial detail GET failure;0settlementPOSTs and unchanged work."
+      },
+      "frontendTests": 2095,
+      "runtimeModules": 110,
+      "coverage": {
+        "lines": {
+          "total": 6400,
+          "covered": 6400,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8811,
+          "covered": 8811,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 1915,
+          "covered": 1915,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 7907,
+          "covered": 7907,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "expandedJourneys": {
+        "startTime": "2026-11-21T00:42:10.009Z",
+        "duration": 54931.747,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "catalog": {
+        "startTime": "2026-11-21T00:42:56.004Z",
+        "duration": 26937.724,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "strictTypes": "both pass",
+      "independentCoverageAndAcceptedFixture": "2/2 pass",
+      "wheelUIEquality": "four files equal",
+      "newCompiledUIFiles": {
+        "index.html": "d77374eba867d93ac7b180a16adfe571fb4d4712916973fa4918fb421ab5c020",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-C07fSFmw.js": "c1aa565f547d3be1a1fbe3b7e7092a3c02fa466fecd2046ccaa7b1ca79c5d585",
+        ".vite/manifest.json": "8e343a1d46667db1778219d10b6f1dd6cb89784eeadc45605758b7d764409eb7"
+      },
+      "newCandidate": "0.0.0-edge.69",
+      "native": "required; not yet built or installed",
+      "finalSameHeadGates": "required; valid findings and product failures are not waived",
+      "precedingUIInventory": {
+        "candidate": "0.0.0-edge.68",
+        "runtimeSource": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+        "files": {
+          ".vite/manifest.json": "33f919694394f10251d2051a202daf6c35fc2f2563d86cf995e581aa5d7342c0",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "assets/index-D_4X6e61.js": "2c5991f6e2e11640e8ad64855d31096f2d0380345127406a3254dafb24181bcb",
+          "index.html": "474234aaae0ad24f0bcc19a0fa81136a1798a6956bbb56a6b6bf87d0591fc359"
+        },
+        "historicalOnly": true
+      },
+      "newImmutableCandidate": {
+        "schemaVersion": 1,
+        "version": "0.0.0-edge.69",
+        "sourceCommit": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+        "sourceArchiveSHA256": "5697c6d9578c963888d5b8d343c7df1cde9afbbf0e5cbe6858ed28aad02a10ad",
+        "storageSchema": 35,
+        "wheelSHA256": "5a3bae82b601303743277299db99331251b762444ee66c2669fddad4f5e87e77",
+        "pythonFiles": 231,
+        "uiFiles": 4,
+        "archiveWheelInstalledBuilderEquality": "passed",
+        "normalLocalLinuxWheelEquality": "passed",
+        "native": "required; not yet installed",
+        "localFinalImage": {
+          "candidate": "0.0.0-edge.69",
+          "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+          "imageTag": "domus-150-edge69:pinned",
+          "imageId": "sha256:ef33ad8e28474ce32928fa1b70bde8f819e760f4af1a11dfb276eb8861bd251f",
+          "architecture": "arm64",
+          "pythonFiles": 231,
+          "uiFiles": 4,
+          "archiveWheelInstalledEquality": "passed",
+          "versionAndSourceLabels": "passed"
+        }
+      },
+      "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088"
+    },
+    "catalogPagingReview": {
+      "reviewHead": "874a1ec91000b082e239f3a942b52f6d2fe3c849",
+      "finding": 4649589154,
+      "valid": true,
+      "sourceFix": "Explicit more appends earlier current-scope choices; fresh refresh replaces and retires stale selected labels. Existing cancellation/denial fences and25-per-read/32planline bounds remain.",
+      "cases": [
+        "task-material-planning-C02",
+        "task-material-planning-C05",
+        "task-material-planning-C08"
+      ],
+      "directedRed": {
+        "failed": 1,
+        "passed": 17
+      },
+      "directedGreen": 18,
+      "allFrontendCases": 2100,
+      "runtimeModules": 110,
+      "coverage": {
+        "lines": {
+          "total": 6401,
+          "covered": 6401,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8811,
+          "covered": 8811,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 1915,
+          "covered": 1915,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 7909,
+          "covered": 7909,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "strictTypes": "both pass",
+      "independentCoverageAndAcceptedFixture": "2/2pass",
+      "expandedOriginalJourneys": {
+        "startTime": "2026-11-21T01:47:39.315Z",
+        "duration": 60890.632,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "newCandidate": "0.0.0-edge.70",
+      "finalGates": "New immutable identity, installed upgrade, final same-head full productCI/review/BranchSync and destination acceptance required.",
+      "compiledOld69Red": {
+        "failed": 4,
+        "durationMs": 729537.159,
+        "retries": 0,
+        "failure": "Earlier unselected products absent afterMore; original selector waits hit180stestdeadline. Full trace/report/screenshot originals retained."
+      },
+      "catalog": {
+        "startTime": "2026-11-21T01:47:40.906Z",
+        "duration": 30373.429,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "newCompiledUIFiles": {
+        "index.html": "749973a568f77ddc6d3b381f1682bfbb42741670276eb865ab0dc7b2982b94d5",
+        "assets/index-CAYlPSUq.js": "36491fe471fdf5acf97d0063a85beda9c061a2876ec36db04887a5f68b569b45",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        ".vite/manifest.json": "fc24a51943fdb802972e4dc81a2e3e64c885a561739e309b5334ceba2f0ee8a3"
+      },
+      "wheelUIEquality": "four files equal",
+      "originalClosedBodyRetention": "All4raw upstream page bodies retained in full original report; no reread/retry/substitution.",
+      "sourceState": "Local correction qualified; new70immutablebuild/native/finalCI/review anddestination stillrequired.",
+      "precedingUIInventory": {
+        "candidate": "0.0.0-edge.69",
+        "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+        "files": {
+          ".vite/manifest.json": "8e343a1d46667db1778219d10b6f1dd6cb89784eeadc45605758b7d764409eb7",
+          "assets/index-C07fSFmw.js": "c1aa565f547d3be1a1fbe3b7e7092a3c02fa466fecd2046ccaa7b1ca79c5d585",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "index.html": "d77374eba867d93ac7b180a16adfe571fb4d4712916973fa4918fb421ab5c020"
+        },
+        "historicalOnly": true
+      },
+      "newImmutableCandidate": {
+        "schemaVersion": 1,
+        "version": "0.0.0-edge.70",
+        "sourceCommit": "259814f37495fddff03d47460a93735ca1db4e4d",
+        "sourceArchiveSHA256": "54518fe1ac8beaca4b869fb7e069072f924e7d7e1e2010eb763c7f801f76a02a",
+        "storageSchema": 35,
+        "wheelSHA256": "b4bcd647b63b21d55fec28eb040b0b1d95c7062cd938d3955fc0151d0d743aa9",
+        "pythonFiles": 231,
+        "uiFiles": 4,
+        "archiveWheelInstalledBuilderEquality": "passed",
+        "normalLocalLinuxWholeWheelEquality": "passed",
+        "native": "Required; stopped69QAdata retained for normal70upgrade with existing2products.",
+        "localFinalImage": {
+          "candidate": "0.0.0-edge.70",
+          "runtimeSource": "259814f37495fddff03d47460a93735ca1db4e4d",
+          "imageTag": "domus-150-edge70:pinned",
+          "imageId": "sha256:fdafef74ea21a49e1c1ba44da446b42548ea646db4251b9609c9db610848f310",
+          "architecture": "arm64",
+          "pythonFiles": 231,
+          "uiFiles": 4,
+          "archiveWheelInstalledEquality": "passed",
+          "versionAndSourceLabels": "passed"
+        }
+      },
+      "runtimeSource": "259814f37495fddff03d47460a93735ca1db4e4d"
+    },
+    "installedEdge69": {
+      "version": "0.0.0-edge.69",
+      "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+      "packagingHead": "874a1ec91000b082e239f3a942b52f6d2fe3c849",
+      "exactVersionAndFirstStart": "passed; local public origin saved beforehand",
+      "products": 2,
+      "taskCompletions": 3,
+      "reopenings": 3,
+      "stockMovements": {
+        "intakes": 2,
+        "consumptions": 2
+      },
+      "finalStock": [
+        "0",
+        "0",
+        "0"
+      ],
+      "initialGuardProbe": "XHR continued instead of failed; one normal explicit settlement committed, not accepted as fault retention. Original preserved.",
+      "qualifiedDetailFailure": {
+        "failedOwnGET": 1,
+        "posts": 0,
+        "selectedPageAndEnabledCursorRetained": true,
+        "availableTaskRetained": true
+      },
+      "explicitRetry": {
+        "posts": 1,
+        "confirmedQuantity": "1",
+        "currentWorkAndCycleUnchanged": true,
+        "historicalCycleFieldsUnchanged": true,
+        "selectedIntentAndCursorRetained": true
+      },
+      "mobileTouch": {
+        "locale": "es",
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "originalCursorGETs": 1,
+        "posts": 0,
+        "reachedDistinctPendingIntent": true,
+        "mainClientWidth": 390,
+        "mainScrollWidth": 390
+      },
+      "observerLimit": "A network gaps recorded; no full A campaign completeness claim. Critical B windows independently complete. Totals verified in actual visible movement UI.",
+      "overrides": "cleared; English restored",
+      "state": "stopped; owned data/journals retained for normal successor upgrade",
+      "nativePaging": "not claimed; isolated28product source and both images qualify this boundary",
+      "finalAcceptance": "Head69 not accepted: valid paging finding and actual backend failure remain."
+    },
+    "automationDraftConcurrencyObserver": {
+      "failedHead": "874a1ec91000b082e239f3a942b52f6d2fe3c849",
+      "run": 44846296332,
+      "job": 136666718134,
+      "passed": 5638,
+      "failed": 1,
+      "actualFailure": "Concurrent standalone loser503/storage_busy; expected409/revision_conflict. Winner200/revision2 assertion passed. Exact SQLite stage/physical cause not inferred.",
+      "coverage": {
+        "modules": 231,
+        "statements": 18045,
+        "branches": 4876,
+        "all100": true
+      },
+      "forcedRed": {
+        "failed": 2,
+        "passed": 2,
+        "productionBusyMs": 250
+      },
+      "directedGreen": 4,
+      "wholeDraftAndContentionQualification": {
+        "passed": 25,
+        "seconds": 7.79
+      },
+      "assertions": "Busy loser has no receipt; after both contenders finish, explicit exact frozen original retry must409. Exact winner replay, initial original, changed-payload refusal,2immutable revisions,1newaudit,no task/stock/points/pendingdelivery effects.",
+      "productionTimeoutAndAutomaticRetryPolicyUnchanged": true,
+      "owningAutomationCase": "automation-drafts-C03 unchanged",
+      "expectedNextFullBackendCount": 5641,
+      "fullNewHeadBackend": "required"
+    }
+  },
+  "sourceBrowserStorageIsolation": {
+    "precedingHead": "5560638b763bea29a3c379b83b6a63a49f8f0e8a",
+    "originalCI": {
+      "run": 44824718426,
+      "job": 136614598853,
+      "artifact": 14678685345,
+      "passed": 116,
+      "failed": 6,
+      "notRun": 3,
+      "globalLimitMs": 1200000,
+      "catalogExecuted": false
+    },
+    "observations": {
+      "errorBodies": "storage_busy on calendar/current-access reads",
+      "matchingUnconfirmedWriteServer200Ms": [
+        7558.3,
+        10125.8,
+        18743.3
+      ],
+      "fiveSecondSetupWatchdog": "SQLite._transaction COMMIT",
+      "physicalHostCause": "Not established; no syscall or continuous-duration inference."
+    },
+    "correction": {
+      "scope": "Only source browser disposable databases; private job-owned Linux tmpfs parent and guarded always-cleanup. Ordinary default retained.",
+      "unchanged": [
+        "Production storage and timeout",
+        "125 original cases, individual deadlines, global limit and zero retries",
+        "Backend, both images and installed persistent-storage validation",
+        "231 Python/four UI runtime files and immutable68 pin",
+        "Full selected SDD, case identities and accepted Edge57 fixture"
+      ]
+    },
+    "localSource": {
+      "platform": "Darwin",
+      "stats": {
+        "startTime": "2026-11-20T23:26:42.731Z",
+        "duration": 448163.50999999995,
+        "expected": 125,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "singlePassedAttemptAtRetryZero": true,
+      "retainedOriginals": 59,
+      "privateParentRetiredAfterServicesClosed": true,
+      "targetLinuxWholeSuiteClaimed": false
+    },
+    "linuxProbe": {
+      "platform": "Linux",
+      "filesystem": "tmpfs",
+      "realFileSQLiteFullSynchronousCommitAndConnectionRestart": true,
+      "ownPrivateRootRetired": true,
+      "unrelatedSyntheticSentinelUnchanged": true,
+      "destructiveInputsRejected": [
+        "wrong prefix",
+        "symbolic root",
+        "non-private mode",
+        "nested git",
+        "different owner"
+      ],
+      "noHostDirectoriesOrNetworkMounted": true,
+      "exactWorkflowPrepareBashSyntaxPassed": true,
+      "exactCleanupPythonSyntaxPassed": true,
+      "cleanupSourceSHA256": "aaa99a7a9df1fa64901f053f3e55008050077441ddeba078efcae4af4e32050c",
+      "ephemeralContainerAutomaticallyRetired": true,
+      "cleanupGuardsSurvivePythonOptimization": true
+    },
+    "finalAcceptance": "New same-head whole productCI, review and destination gates required; no product failure waiver.",
+    "followingLinuxCampaign": {
+      "head": "a292bc3e625eb2157d8b6ed63168a13e7a8c59c3",
+      "run": 44839328859,
+      "frontendJob": 136653166689,
+      "entryStats": {
+        "passed": 123,
+        "failed": 2,
+        "skipped": 0,
+        "flaky": 0,
+        "durationMs": 671893.569
+      },
+      "precedingSixFailedCasesNowPassed": true,
+      "privateFilesystem": "tmpfs",
+      "preparationAndCleanup": "both success",
+      "observerFailure": "Two browser-owned Response bodies expired after actual200GET; original trace bodies each contain1item and next_cursor. Capture original upstream bytes before forwarding, no reread/retry/substitution; all UI/effect assertions retained.",
+      "backend": {
+        "tests": 5639,
+        "modules": 231,
+        "allCoverage100": true
+      },
+      "amd64": {
+        "container": 52,
+        "browser": 70,
+        "skipped": 0,
+        "flaky": 0
+      },
+      "aarch64": {
+        "container": 52,
+        "browser": 70,
+        "skipped": 0,
+        "flaky": 0
+      },
+      "aggregate": "failure; not accepted"
+    }
   }
 }

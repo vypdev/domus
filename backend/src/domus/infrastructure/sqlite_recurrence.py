@@ -14,7 +14,9 @@ from domus.domain.recurrence_records import (
 )
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.relative_recurrence import RelativeSchedule
-from domus.domain.storage import Installation, validate_identifier
+from domus.domain.restoration import RetainedOperation
+from domus.domain.storage import CommandKey, Installation, validate_identifier
+from domus.infrastructure.sqlite_history import _CURRENT, SQLiteHistory, _evidence, _same
 from domus.infrastructure.sqlite_history import _record as retained_operation
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_records import (
@@ -118,6 +120,39 @@ def slot_headers(value: ScheduledSlot) -> dict[str, object]:
 class SQLiteRecurrences(SQLiteRelativeRecurrences):
     connection: sqlite3.Connection
     installation: Installation
+
+    def creation(self, command: CommandKey) -> RetainedOperation | None:
+        """One indexed current/retained request, independent of an edited task definition."""
+        if command.action not in ("recurrence.fixed.create", "recurrence.relative.create"):
+            raise InvalidInput("invalid_recurrence_create")
+        row = self.connection.execute(
+            _CURRENT + "WHERE r.household_id=? AND r.actor_id=? AND r.action=? AND r.command_key=? "
+            "AND a.household_id=r.household_id AND a.actor_id=r.actor_id AND a.action=r.action "
+            "AND a.command_key=r.command_key AND a.created_at=r.created_at "
+            "AND o.household_id=r.household_id AND o.event_type=r.action "
+            "AND o.created_at=r.created_at",
+            (command.household_id, command.actor_id, command.action, command.key),
+        ).fetchone()
+        retained = SQLiteHistory(self.connection).get(command)
+        if row is not None:
+            try:
+                evidence = _evidence(row)
+            except InvalidInput:
+                raise StorageFailure("invalid_recurrence_operation") from None
+            if retained is not None and (
+                not retained.current or not _same(retained.evidence, evidence)
+            ):
+                raise StorageFailure("invalid_retained_projection")
+            return RetainedOperation(
+                evidence, True, None if retained is None else retained.archived_by
+            )
+        if (retained is not None and retained.current) or self.connection.execute(
+            "SELECT 1 FROM receipts WHERE household_id=? AND actor_id=? AND action=? "
+            "AND command_key=?",
+            (command.household_id, command.actor_id, command.action, command.key),
+        ).fetchone() is not None:
+            raise StorageFailure("invalid_recurrence_operation")
+        return retained
 
     def has_current_schedule(self, household_id: str, definition_id: str) -> bool:
         return self.current_schedule_id(household_id, definition_id) is not None

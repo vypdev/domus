@@ -447,6 +447,11 @@ test('household-browser-C18: a signed-out language choice has no identity or mut
 
 
 test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
+  {type:'materialHistory',more:'true'}, {type:'materialHistory',more:true,actor:'forged'},
+  {type:'materialPlan',action:'future'}, {type:'materialPlan',action:'load',referenceId:'injected'},
+  {type:'materialPlan',action:'edit',referenceId:'soap',input:1}, {type:'materialPlan',action:'edit',referenceId:'soap',input:'x'.repeat(65)},
+  {type:'settleMaterial',occurrenceId:'work-1',intentId:'intent-1',cycleId:'cycle-1',revision:'1',quantity:'1'},
+  {type:'settleMaterial',occurrenceId:'work-1',intentId:'../intent',cycleId:'cycle-1',revision:'1'},
   {type: 'create', title: 'Task', description: '', priority: 'normal', householdId: 'forged'},
   {type: 'create', title: 'Task', description: '', priority: 'normal', basePointsMinor: '225'},
   {type: 'assign', occurrenceId: 'work-1', revision: '1', assigneeIds: ['same', 'same']},
@@ -465,6 +470,11 @@ test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
 });
 test('closed task events preserve semantic user inputs and exact material quantities', () => {
   const inputs = [{type:'createCategory', label:'Garden'}, {type:'renameCategory', categoryId:'garden', revision:'9007199254740993', label:'Garden'},
+    {type:'materialHistory',more:false}, {type:'materialHistory',more:true},
+    {type:'materialPlan',action:'load'}, {type:'materialPlan',action:'more'}, {type:'materialPlan',action:'clear'}, {type:'materialPlan',action:'add',referenceId:'soap'},
+    {type:'materialPlan',action:'remove',referenceId:'soap'}, {type:'materialPlan',action:'edit',referenceId:'soap',input:'0,25'},
+    {type:'settleMaterial',occurrenceId:'work-1',intentId:'intent-1',cycleId:'cycle-1',revision:'7'},
+    {type:'settleMaterial',occurrenceId:'work-1',intentId:'intent-1',cycleId:'cycle-1',revision:'7',quantity:'0',reason:'Not used'},
     {type: 'assign', occurrenceId: 'work-1', revision: '9007199254740993', assigneeIds: ['member-1', 'peer']},
     {type: 'assign', occurrenceId: 'work-1', revision: '1', assigneeIds: []},
     {type: 'transition', occurrenceId: 'work-1', revision: '9007199254740993', target: 'blocked', reason: 'Waiting\n🧰'},
@@ -483,6 +493,9 @@ test('closed task events preserve semantic user inputs and exact material quanti
 test('the mounted task surface routes only owned semantic intents to its application controller', async () => {
   const f = fixture(); f.phase('active'); const {app} = await f.open(); expect(app.tasks?.access?.memberId).toBe('identity-1');
   const spies = {create: vi.spyOn(TaskController.prototype, 'create').mockResolvedValue(undefined),
+    materialHistory:vi.spyOn(TaskController.prototype,'materialHistory').mockResolvedValue(undefined),
+    materialPlan: vi.spyOn(TaskController.prototype,'materialPlan').mockResolvedValue(undefined),
+    settleMaterial: vi.spyOn(TaskController.prototype,'settleMaterial').mockResolvedValue(undefined),
     assign: vi.spyOn(TaskController.prototype, 'assign').mockResolvedValue(undefined),
     transition: vi.spyOn(TaskController.prototype, 'transition').mockResolvedValue(undefined),
     createCategory: vi.spyOn(TaskController.prototype, 'createCategory').mockResolvedValue(undefined),
@@ -499,6 +512,16 @@ test('the mounted task surface routes only owned semantic intents to its applica
     send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
     const review = {occurrenceId:'work-1',revision:'1',performerIds:['identity-1','other'],fingerprint:'c'.repeat(64)};
     const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
+      [{type:'materialHistory',more:false},'materialHistory',[false]],
+      [{type:'materialHistory',more:true},'materialHistory',[true]],
+      [{type:'materialPlan',action:'load'},'materialPlan',['load']],
+      [{type:'materialPlan',action:'more'},'materialPlan',['more']],
+      [{type:'materialPlan',action:'clear'},'materialPlan',['clear','','']],
+      [{type:'materialPlan',action:'add',referenceId:'soap'},'materialPlan',['add','soap','']],
+      [{type:'materialPlan',action:'edit',referenceId:'soap',input:'0,25'},'materialPlan',['edit','soap','0,25']],
+      [{type:'materialPlan',action:'remove',referenceId:'soap'},'materialPlan',['remove','soap','']],
+      [{type:'settleMaterial',occurrenceId:'work-1',intentId:'intent-1',cycleId:'cycle-1',revision:'7'},'settleMaterial',['work-1','intent-1','cycle-1','7',undefined,undefined]],
+      [{type:'settleMaterial',occurrenceId:'work-1',intentId:'intent-1',cycleId:'cycle-1',revision:'7',quantity:'0',reason:'Not used'},'settleMaterial',['work-1','intent-1','cycle-1','7','0','Not used']],
       [{type: 'assign', occurrenceId: 'work-1', revision: '9007199254740993', assigneeIds: ['identity-1', 'other']},
         'assign', ['work-1', '9007199254740993', ['identity-1', 'other']]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined, undefined]],

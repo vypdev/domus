@@ -242,6 +242,9 @@ def test_both_actual_http_compositions_post_correct_and_recover_original_results
     }
     posted = api.client.post(path, json=body, headers=api.headers("post-material"))
     assert posted.status_code == 200, posted.text
+    original = api.client.get("/api/v1/tasks/requests/task.material.settle/post-material")
+    assert original.status_code == 200, original.text
+    assert original.json()["operation_id"] == posted.json()["operation_id"]
     value = posted.json()["result"]["material"]
     corrected = api.client.post(
         path,
@@ -423,6 +426,8 @@ def test_actual_restore_recovers_historical_settlement_without_intent_or_cycle_e
         assert restored.operation_id == receipt.operation_id
         query = queries(selected.database, child.actor.current())
         assert query.operation(receipt.operation_id).receipt.historical
+        original_view = query.original("task.material.settle", "settlement")
+        assert original_view.receipt == restored
         item = next(
             value
             for value in query.history(work.occurrence_id).items

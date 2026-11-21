@@ -135,8 +135,28 @@ function reviewedAllocation(value: unknown): ReviewedAllocation {
 
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds', 'target']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds', 'target', 'action', 'referenceId', 'input', 'intentId', 'cycleId', 'quantity', 'more']);
     const type = item.type;
+    if (type === 'materialHistory') {fields(value,['type','more'],[]); check(typeof item.more === 'boolean'); return {type,more:item.more};}
+    if (type === 'materialPlan') {
+      const action = item.action;
+      if (action === 'load' || action === 'more' || action === 'clear') {fields(value, ['type','action'], []); return {type,action};}
+      check(action === 'add' || action === 'remove' || action === 'edit');
+      fields(value, ['type','action','referenceId', ...action === 'edit' ? ['input'] : []], []);
+      const referenceId = identifier(item.referenceId);
+      if (action === 'edit') {check(typeof item.input === 'string' && item.input.length <= 64); return {type,action,referenceId,input:item.input};}
+      return {type,action,referenceId};
+    }
+    if (type === 'settleMaterial') {
+      const correct = Object.hasOwn(item, 'quantity');
+      fields(value, ['type','occurrenceId','intentId','cycleId','revision', ...correct ? ['quantity','reason'] : []], []);
+      const command = taskCommand({action:'task.material.settle', occurrenceId:item.occurrenceId, intentId:item.intentId,
+        payload:{expected_revision:item.revision, cycle_id:item.cycleId,
+          ...correct ? {action:'correct', quantity:item.quantity, reason:item.reason} : {action:'post', reason:''}}});
+      check(command?.action === 'task.material.settle');
+      return {type, occurrenceId:command.occurrenceId, intentId:command.intentId, cycleId:command.payload.cycle_id,
+        revision:command.payload.expected_revision, ...command.payload.action === 'correct' ? {quantity:command.payload.quantity, reason:command.payload.reason} : {}};
+    }
     if (type === 'assign') {
       fields(value, ['type', 'occurrenceId', 'revision', 'assigneeIds'], []);
       return {type, occurrenceId: identifier(item.occurrenceId), revision: revisionValue(item.revision), assigneeIds: taskAssignees(item.assigneeIds)};
@@ -714,6 +734,13 @@ export function mountEntry(page: EntryPage): PageMount {
       try {
         const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail); if (intent === null) return;
         switch (intent.type) {
+          case 'materialHistory': await active.taskWork(controller => controller.materialHistory(intent.more)); break;
+          case 'materialPlan':
+            if (intent.action === 'load' || intent.action === 'more') await active.taskWork(controller => controller.materialPlan(intent.action));
+            else await active.materialDraft(intent.action, 'referenceId' in intent ? intent.referenceId : '', 'input' in intent ? intent.input : '');
+            break;
+          case 'settleMaterial': await active.taskWork(controller => controller.settleMaterial(
+            intent.occurrenceId, intent.intentId, intent.cycleId, intent.revision, intent.quantity, intent.reason)); break;
           case 'refresh': await active.refresh(); break;
           case 'more': await active.taskWork(controller => controller.more()); break;
           case 'select': await active.taskWork(controller => controller.select(intent.occurrenceId)); break;

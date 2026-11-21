@@ -25,6 +25,428 @@ async function saveAdministration(widget: Locator) {
   await expect(widget.getByRole('heading', {name: 'Original request processed', exact: true})).toBeVisible();
   await widget.getByRole('button', {name: 'Close editor', exact: true}).click();
 }
+
+for (const mode of ['native','standalone'] as const) for (const locale of ['en','es'] as const) {
+  test.describe(`material workflow ${mode} ${locale}`, () => {
+  test.use({hasTouch:locale==='es',viewport:{width:locale==='es'?390:1280,height:844}});
+  test(`plan, review and explicitly reconcile materials in ${mode} ${locale}`, async ({page,context,request}, info) => {
+    test.setTimeout(180_000);
+    const t=(en:string,es:string)=>locale==='en'?en:es;
+    const activate=async(control:Locator)=>{await expect(control).toBeVisible();await expect(control).toBeEnabled();
+      if(locale==='es')await control.tap();else await control.press('Enter');};
+    if(locale==='es') await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:locale==='es'?'dark':'light'});
+    expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
+    const setup=page.waitForRequest(value=>value.url()===base(mode)+'/api/v1/household'&&value.method()==='POST');
+    let catalogReads=0, proofReads=0;
+    page.on('request',value=>{const path=new URL(value.url()).pathname;if(value.method()==='GET'&&(path.endsWith('/auth/session')||path.endsWith('/household')))proofReads++;});
+    page.on('request',value=>{if(new URL(value.url()).pathname===(mode==='native'?prefix:'')+'/api/v1/inventory'&&value.method()==='GET')catalogReads++;});
+    const tasks=await open(page,context,mode);
+    const setupHeaders=await(await setup).allHeaders();
+    const headers={'X-Domus-Context':setupHeaders['x-domus-context'],'X-CSRF-Token':setupHeaders['x-csrf-token'],Origin:origin(mode)};
+    const api=base(mode)+'/api/v1/';
+    const write=async(key:string,body:unknown,path='inventory/commands',method:'post'|'put'='post')=>{
+      const response=await page.request[method](api+path,{headers:{...headers,'Idempotency-Key':key},data:body});
+      expect(response.status(),await response.text()).toBe(200);return (await response.json()).result;
+    };
+    if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+    const title=tasks.getByRole('textbox',{name:t('Title','Título'),exact:true});
+    await title.fill('QA 150 title only'); await activate(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:'QA 150 title only',exact:true})).toBeVisible();
+    expect(catalogReads).toBe(0);
+    for(let i=0;i<28;i++)await write('material-product-'+i,{action:'inventory.register-product',name:'QA 150 product '+String(i).padStart(2,'0'),base_unit:i<2?'millilitre':'piece'});
+    const firstResponse=await page.request.get(api+'inventory?limit=25',{headers}); expect(firstResponse.ok()).toBe(true);
+    const first=await firstResponse.json(); expect(first.products).toHaveLength(25); expect(first.next_cursor).toBeTruthy();
+    const lastResponse=await page.request.get(api+'inventory?limit=25&cursor='+encodeURIComponent(first.next_cursor),{headers}); expect(lastResponse.ok()).toBe(true);
+    const last=await lastResponse.json(); expect(last.products).toHaveLength(3);
+    const [used,unused]=first.products.filter((value:{base_unit:string})=>value.base_unit==='piece');
+    const short=last.products[0];
+    await write('initial-used',{action:'inventory.intake',product_id:used.product_id,quantity:'5'});
+    await write('initial-unused',{action:'inventory.intake',product_id:unused.product_id,quantity:'5'});
+    const expand=async()=>{
+      const summary=tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..');
+      await expect(summary).toBeVisible();
+      if(!await title.isVisible())await activate(summary);
+      await expect(title).toBeVisible();
+    };
+    await expand(); await title.fill('QA 150 material workflow');
+    const description=tasks.getByRole('textbox',{name:t('Description','Descripción'),exact:true});await description.fill('Retain this draft across optional catalog failure');
+    const plan=tasks.locator('domus-task-material-plan');
+    await page.route(api+'inventory?limit=25',route=>route.abort('failed'),{times:1});
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await expect(plan.getByRole('alert')).toContainText(t('could not be loaded','No se han podido cargar'));
+    await expect(title).toHaveValue('QA 150 material workflow');await expect(description).toHaveValue('Retain this draft across optional catalog failure');
+    await activate(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true}));
+    const combo=plan.getByRole('combobox',{name:t('Pantry product','Producto de Despensa'),exact:true});await expect(combo).toBeFocused();
+    const choose=async(name:string)=>{await activate(combo); const option=plan.getByRole('option').filter({hasText:name});
+      if(locale==='es')await option.tap();else{
+        const target=await option.getAttribute('id');await combo.press('Home');
+        const count=await plan.getByRole('option').count();
+        for(let index=0;index<count&&await combo.getAttribute('aria-activedescendant')!==target;index++)await combo.press('ArrowDown');
+        await expect(combo).toHaveAttribute('aria-activedescendant',target!);await combo.press('Enter');
+      }
+      await expect(plan.locator('li').last().getByText(name,{exact:true})).toBeVisible();
+      await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last()).toBeFocused();};
+    await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+    await expect(title).toHaveValue('QA 150 material workflow');
+    const denyCatalogOnce=()=>page.route(api+'inventory?limit=25',async route=>{
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+      const catalog=await response.json();
+      // Model an authoritative read that no longer grants Inventory management.
+      await route.fulfill({response,json:{...catalog,may_manage:false}});
+    },{times:1});
+    await denyCatalogOnce();await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await expect(plan.getByRole('alert')).toContainText(t('No material plan has been added','No se ha añadido ningún plan de materiales'));
+    await expect(combo).toHaveCount(0);await expect(title).toHaveValue('QA 150 material workflow');
+    await expect(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true})).toBeDisabled();
+    await plan.screenshot({path:info.outputPath('empty-denied-material-plan-'+locale+'.png')});
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));await expand();
+    await activate(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true}));
+    await choose(used.name);await denyCatalogOnce();
+    await activate(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true}));
+    await expect(plan.getByRole('alert')).toContainText(t('Private choices are hidden','Las opciones privadas están ocultas'));
+    await expect(plan.getByText(used.name,{exact:true})).toHaveCount(0);
+    await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+    await expect(title).toBeFocused();await expect(title).toBeInViewport();
+    await expect(title).toHaveValue('QA 150 material workflow');
+    await expect(description).toHaveValue('Retain this draft across optional catalog failure');
+    await expect(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true})).toBeEnabled();
+    await page.screenshot({path:info.outputPath('denied-plan-cleared-title-focus-'+locale+'.png')});
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));await expand();
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
+    await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await choose(unused.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await choose(short.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveCount(3);
+    await plan.screenshot({path:info.outputPath('material-plan-'+locale+'.png')});
+    let creations=0,creationKey='',creationBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/definitions',async route=>{
+      creations++;creationKey=route.request().headers()['idempotency-key'];
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+      creationBody=await response.json();await route.abort('connectionreset');
+    });
+    await activate(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
+    await page.unroute(api+'tasks/definitions');await page.reload();
+    await expect(tasks.getByRole('button',{name:'QA 150 material workflow',exact:true})).toBeVisible();
+    if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+    const originals:Record<string,any>[]=[];
+    await page.route(api+'tasks/requests/task.create/'+creationKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(response.status()).toBe(200);originals.push(await response.json());await route.fulfill({response});});
+    await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
+    await expect(tasks.getByRole('heading',{name:'QA 150 material workflow',exact:true})).toBeVisible();
+    expect(creations).toBe(1);expect(originals).toHaveLength(1);expect(originals[0].operation_id).toBe(creationBody!.operation_id);
+    const oid=creationBody!.result.occurrence_id;
+    await tasks.getByLabel(used.name,{exact:true}).fill('1');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('1');
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    let outcomes=tasks.locator('domus-task-material-outcomes').first();
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toBeVisible();
+    await expect(outcomes.getByText(t('Not used · no stock movement','Sin utilizar · sin movimiento de existencias'),{exact:true})).toBeVisible();
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    for(const colorScheme of ['light','dark'] as const){await page.emulateMedia({colorScheme});await outcomes.screenshot({path:info.outputPath('material-outcomes-'+locale+'-'+colorScheme+'.png')});}
+    const readWork=async()=>{const response=await page.request.get(api+'tasks/occurrences/'+oid,{headers});expect(response.ok()).toBe(true);return response.json();};
+    const before=await readWork(), firstPending=before.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(before.work.state).toBe('completed');expect(before.materials.map((value:{state:string})=>value.state).sort()).toEqual(['not_used','pending_regularization','posted']);
+    const reopen=async(reason:string)=>{
+      await tasks.getByLabel(t('Reason','Motivo'),{exact:true}).fill(reason);
+      await activate(tasks.getByRole('button',{name:t('Reopen task','Reabrir tarea'),exact:true}));
+      await expect(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true})).toBeVisible();
+    };
+    await reopen('QA 150 retain the first pending completion');
+    await tasks.getByLabel(used.name,{exact:true}).fill('0');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('1');
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const second=await readWork(), secondPending=second.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(second.cycle.cycle_id).not.toBe(before.cycle.cycle_id);expect(secondPending.intent_id).not.toBe(firstPending.intent_id);
+    await reopen('QA 150 retain the second pending completion');
+    const reopened=await readWork();expect(reopened.work.state).toBe('available');expect(reopened.cycle).toBeNull();expect(reopened.materials).toEqual([]);
+    await write('refill-shortfall',{action:'inventory.intake',product_id:short.product_id,quantity:'5'});
+    await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:t('Earlier material usage','Consumos anteriores'),exact:true})).toBeFocused();
+    outcomes=tasks.locator('#material-history-heading').locator('..').locator('domus-task-material-outcomes');
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const pageResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/material-history?limit=1',{headers});expect(pageResponse.ok()).toBe(true);
+    const firstPage=await pageResponse.json();expect(firstPage.items).toHaveLength(1);expect(firstPage.next_cursor).toBeTruthy();
+    const pending=firstPage.items[0].materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect([firstPending.intent_id,secondPending.intent_id]).toContain(pending.intent_id);
+    for(const failure of [
+      {path:api+'tasks/occurrences/'+oid,button:t('Review earlier usage','Revisar consumos anteriores')},
+      {path:api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor=*',button:t('Next closed completion','Siguiente realización cerrada')},
+    ]){
+      let failedReads=0;
+      await page.route(failure.path,route=>{failedReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');},{times:1});
+      await activate(tasks.getByRole('button',{name:failure.button,exact:true}));
+      await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+      expect(failedReads).toBe(1);
+      await expect(tasks.getByRole('heading',{name:'QA 150 material workflow',exact:true})).toBeVisible();
+      await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+      expect(await outcomes.locator('li').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-material-intent')))).toEqual(
+        firstPage.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+      await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    }
+    await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    await expand();await title.fill('QA 150 catalog read retains earlier usage');
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await choose(used.name);
+    await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).fill('3');
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+    await title.fill('');await activate(tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..'));
+    const postedBefore=firstPage.items[0].materials.filter((value:{state:string})=>value.state==='posted').length;
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('closed-material-usage-'+locale+'.png')});
+    let settlements=0,settlementKey='',settlementBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials/'+pending.intent_id+'/settlement',async route=>{
+      settlements++;settlementKey=route.request().headers()['idempotency-key'];expect(route.request().postDataJSON().expected_revision).toBe(pending.revision);
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);settlementBody=await response.json();await route.abort('connectionreset');});
+    let failedDetailReads=0;
+    await page.route(api+'tasks/occurrences/'+oid,route=>{
+      failedDetailReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');
+    },{times:1});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+    expect(failedDetailReads).toBe(1);expect(settlements).toBe(0);expect(await readWork()).toEqual(reopened);
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    expect(await outcomes.locator('li').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-material-intent')))).toEqual(
+      firstPage.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('detail-preflight-retains-closed-page-'+locale+'.png')});
+    let failedPreflightReads=0;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials?cycle_id='+encodeURIComponent(pending.cycle_id),route=>{
+      failedPreflightReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');
+    },{times:1});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+    expect(failedPreflightReads).toBe(1);expect(settlements).toBe(0);expect(await readWork()).toEqual(reopened);
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    expect(await outcomes.locator('li').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-material-intent')))).toEqual(
+      firstPage.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('historical-preflight-retains-closed-page-'+locale+'.png')});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
+    const settlementOriginals:Record<string,any>[]=[];
+    await page.route(api+'tasks/requests/task.material.settle/'+settlementKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(response.status()).toBe(200);settlementOriginals.push(await response.json());await route.fulfill({response});});
+    await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(postedBefore+1);
+    expect(settlements).toBe(1);expect(settlementOriginals).toHaveLength(1);expect(settlementOriginals[0].operation_id).toBe(settlementBody!.operation_id);
+    expect(await readWork()).toEqual(reopened);
+    const historyResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/materials?cycle_id='+pending.cycle_id,{headers});expect(historyResponse.ok()).toBe(true);
+    const history=await historyResponse.json();expect(history.cycle.cycle_id).toBe(pending.cycle_id);expect(history.cycle.closed_at).not.toBeNull();
+    expect(history.materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id)).toMatchObject({line_id:pending.line_id,confirmed_quantity:'1',movement_id:settlementBody!.result.material.movement_id});
+    const moreHistory=tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true});
+    await expect(moreHistory).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('recovered-material-continuation-'+locale+'.png')});
+    await activate(moreHistory);
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const laterResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor='+encodeURIComponent(firstPage.next_cursor),{headers});expect(laterResponse.ok()).toBe(true);
+    const laterPage=await laterResponse.json();expect(laterPage.items).toHaveLength(1);expect(laterPage.next_cursor).toBeNull();
+    const laterPending=laterPage.items[0].materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(laterPending.intent_id).not.toBe(pending.intent_id);
+    expect(new Set([pending.cycle_id,laterPending.cycle_id])).toEqual(new Set([before.cycle.cycle_id,second.cycle.cycle_id]));
+    const laterPosted=laterPage.items[0].materials.filter((value:{state:string})=>value.state==='posted').length;
+    let laterSends=0,laterBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials/'+laterPending.intent_id+'/settlement',async route=>{
+      laterSends++;const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);laterBody=await response.json();await route.fulfill({response});});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(laterPosted+1);
+    expect(laterSends).toBe(1);expect(laterBody!.result.material.movement_id).not.toBe(settlementBody!.result.material.movement_id);expect(await readWork()).toEqual(reopened);
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('second-closed-material-settled-'+locale+'.png')});
+    await info.attach('creation-original',{body:JSON.stringify({committed:creationBody,original:originals[0]}),contentType:'application/json'});
+    await info.attach('settlement-original',{body:JSON.stringify({committed:settlementBody,original:settlementOriginals[0]}),contentType:'application/json'});
+    await info.attach('closed-material-pages',{body:JSON.stringify({firstPage,laterPage,laterBody}),contentType:'application/json'});
+    // Explicitly retire three resolved originals; unconfirmed entries are never evicted.
+    const dismiss=tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true});
+    const savedRequests=tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')});
+    const openSavedRequests=async()=>{
+      await expect(savedRequests).toBeVisible();
+      if(!await savedRequests.locator('..').evaluate(element=>(element as HTMLDetailsElement).open))await activate(savedRequests);
+    };
+    for(let index=0;index<3;index++){
+      await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      await openSavedRequests();await expect(dismiss).toHaveCount(8-index);await activate(dismiss.first());
+    }
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+    await openSavedRequests();await expect(dismiss).toHaveCount(5);
+    outcomes=tasks.locator('domus-task-material-outcomes').first();
+    // Settling the current completion must preserve the selected closed page and its cursor.
+    await activate(savedRequests);
+    await tasks.getByLabel(used.name,{exact:true}).fill('0');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('4');
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const currentBefore=await readWork(), currentPending=currentBefore.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(currentBefore.work.state).toBe('completed');
+    expect([before.cycle.cycle_id,second.cycle.cycle_id]).not.toContain(currentPending.cycle_id);
+    await write('current-cycle-refill',{action:'inventory.intake',product_id:short.product_id,quantity:'4'});
+    const closedPages:{body:Buffer;value:Record<string,any>}[]=[];
+    await page.route(api+'tasks/occurrences/'+oid+'/material-history?limit=1',async route=>{
+      expect(route.request().method()).toBe('GET');
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+      const body=await response.body();closedPages.push({body,value:JSON.parse(body.toString('utf8'))});
+      await route.fulfill({response,body});
+    },{times:1});
+    await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
+    await expect.poll(()=>closedPages.length).toBe(1);
+    const selectedClosed=closedPages[0].value;expect(selectedClosed.items).toHaveLength(1);expect(selectedClosed.next_cursor).toBeTruthy();
+    await info.attach('selected-closed-history-original',{body:closedPages[0].body,contentType:'application/json'});
+    const closedOutcomes=tasks.locator('#material-history-heading').locator('..').locator('domus-task-material-outcomes');
+    await expect(closedOutcomes.locator('li')).toHaveCount(selectedClosed.items[0].materials.length);
+    const displayedHistoryIds=()=>closedOutcomes.locator('li').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-material-intent')));
+    await expect.poll(displayedHistoryIds).toEqual(selectedClosed.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    let currentSends=0,currentKey='',currentBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials/'+currentPending.intent_id+'/settlement',async route=>{
+      currentSends++;currentKey=route.request().headers()['idempotency-key'];
+      expect(route.request().postDataJSON()).toMatchObject({expected_revision:currentPending.revision});
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);currentBody=await response.json();
+      if(mode==='standalone')await route.abort('connectionreset');else await route.fulfill({response});
+    });
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    const currentOriginals:Record<string,any>[]=[];
+    if(mode==='standalone'){
+      await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
+      await page.route(api+'tasks/requests/task.material.settle/'+currentKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
+        expect(response.status()).toBe(200);currentOriginals.push(await response.json());await route.fulfill({response});});
+      await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
+      await expect.poll(()=>currentOriginals.length).toBe(1);expect(currentOriginals[0].operation_id).toBe(currentBody!.operation_id);
+    }
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(1);
+    const currentAfter=await readWork();expect(currentAfter.work).toEqual(currentBefore.work);expect(currentAfter.cycle).toEqual(currentBefore.cycle);
+    expect(currentAfter.materials.find((value:{intent_id:string})=>value.intent_id===currentPending.intent_id)).toMatchObject({quantity:'4',confirmed_quantity:'4',state:'posted',movement_id:currentBody!.result.material.movement_id});
+    expect(currentSends).toBe(1);
+    await expect(closedOutcomes.locator('li')).toHaveCount(selectedClosed.items[0].materials.length);
+    await expect.poll(displayedHistoryIds).toEqual(selectedClosed.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    await expect(moreHistory).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('current-settlement-retains-closed-page-'+locale+'.png')});
+    let continuationReads=0;
+    await page.route(api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor='+encodeURIComponent(selectedClosed.next_cursor),route=>{continuationReads++;return route.continue();},{times:1});
+    await activate(moreHistory);await expect.poll(()=>continuationReads).toBe(1);
+    const continuedResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor='+encodeURIComponent(selectedClosed.next_cursor),{headers});expect(continuedResponse.ok()).toBe(true);
+    const continuedClosed=await continuedResponse.json();expect(continuedClosed.items).toHaveLength(1);expect(continuedClosed.next_cursor).toBeNull();
+    expect(continuedClosed.items[0].cycle.cycle_id).not.toBe(selectedClosed.items[0].cycle.cycle_id);
+    expect(new Set([selectedClosed.items[0].cycle.cycle_id,continuedClosed.items[0].cycle.cycle_id])).toEqual(new Set([before.cycle.cycle_id,second.cycle.cycle_id]));
+    await expect(closedOutcomes.locator('li')).toHaveCount(continuedClosed.items[0].materials.length);
+    await expect.poll(displayedHistoryIds).toEqual(continuedClosed.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    expect(currentSends).toBe(1);
+    await info.attach('current-settlement-preserves-closed-history',{body:JSON.stringify({currentBefore,currentAfter,selectedClosed,continuedClosed,committed:currentBody,originals:currentOriginals}),contentType:'application/json'});
+    // Retire these two resolved requests explicitly, retaining the capacity checks below.
+    for(let index=0;index<2;index++){
+      await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      await openSavedRequests();await expect(dismiss).toHaveCount(7-index);await activate(dismiss.first());
+    }
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+    await openSavedRequests();await expect(dismiss).toHaveCount(5);
+    const policyReply=await page.request.get(api+'tasks/policy',{headers}), policy=await policyReply.json();
+    await write('separate-recording-policy',{expected_revision:policy.revision,rules:{...policy.rules,material_recording:'separate_recording'}},'tasks/policy','put');
+    await expand();await title.fill('QA 150 missing actual quantity');
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));await choose(used.name);
+    await activate(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:'QA 150 missing actual quantity',exact:true})).toBeVisible();
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    await expect(outcomes.getByText(t('Actual quantity not recorded','Cantidad utilizada sin registrar'),{exact:true})).toBeVisible();
+    await outcomes.getByRole('textbox',{name:t('Actual quantity','Cantidad utilizada'),exact:true}).fill('0');
+    await outcomes.getByRole('textbox',{name:t('Reason for recording','Motivo del registro'),exact:true}).fill('QA 150 nothing used');
+    await activate(outcomes.getByRole('button',{name:t('Record actual usage','Registrar consumo real'),exact:true}));
+    await expect(outcomes.getByText(t('Not used · no stock movement','Sin utilizar · sin movimiento de existencias'),{exact:true})).toBeVisible();
+    await expect(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true})).toHaveCount(0);
+    const recordedHeading=outcomes.getByRole('heading',{name:t('Material consumption','Consumo de materiales'),exact:true});
+    await expect(recordedHeading).toBeFocused();
+    const recordedBounds=await recordedHeading.boundingBox();
+    const recordedNavigation=await page.getByRole('navigation',{name:t('Household navigation','Navegación del hogar'),exact:true}).boundingBox();
+    expect(recordedBounds).not.toBeNull();expect(recordedNavigation).not.toBeNull();
+    expect(recordedBounds!.y,'The focused material outcome must clear the sticky navigation').toBeGreaterThanOrEqual(recordedNavigation!.y+recordedNavigation!.height);
+    await outcomes.screenshot({path:info.outputPath('material-zero-recorded-'+locale+'.png')});
+    const scheduled:Record<string,any>[]=[];
+    for(const kind of ['fixed','relative'] as const){
+      await expand();await title.fill('QA 150 '+kind+' material plan');
+      await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+      const decimal=[...first.products,...last.products].find((value:{base_unit:string})=>value.base_unit==='millilitre');
+      const product=kind==='fixed'?used:decimal;
+      if(!first.products.some((value:{product_id:string})=>value.product_id===product.product_id))await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
+      await choose(product.name);
+      const quantityField=plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last();
+      const field=await quantityField.elementHandle(), reads=proofReads;
+      await quantityField.fill('');
+      await quantityField.pressSequentially(kind==='fixed'?'2':locale==='es'?'1,25':'1.25');
+      await expect(quantityField).toBeFocused();
+      expect(await quantityField.evaluate((current,original)=>current===original,field)).toBe(true);
+      expect(proofReads).toBe(reads);
+      await tasks.getByRole('combobox',{name:t('Scheduling','Programación'),exact:true}).selectOption(kind);
+      await tasks.getByLabel(t('First date','Primera fecha'),{exact:true}).fill(new Date(Date.now()+30*86_400_000).toISOString().slice(0,10));
+      if(kind==='fixed')await tasks.getByLabel(t('Recurrence rule','Regla de recurrencia'),{exact:true}).fill('FREQ=DAILY;COUNT=2');
+      const path=api+'tasks/recurrence/creation/'+kind;
+      await page.route(path,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);scheduled.push(await response.json());await route.fulfill({response});});
+      const create=tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true});
+      {
+        // The added reopening fills the eight-record journal before either scheduled creation.
+        await activate(create);await expect(tasks.getByRole('alert')).toContainText(t('make room','espacio'));
+        await expect(title).toHaveValue('QA 150 '+kind+' material plan');
+        await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveValue(kind==='fixed'?'2':locale==='es'?'1,25':'1.25');
+        if(!await tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first().isVisible()) await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
+        await activate(tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first());
+      }
+      let failedPostCreateReads=0;
+      if(kind==='fixed')await page.route(api+'tasks/occurrences?limit=25',route=>{
+        failedPostCreateReads++;return route.abort('failed');
+      },{times:1});
+      await activate(create);
+      await expect.poll(()=>scheduled.length).toBe(kind==='fixed'?1:2);
+      await expect(tasks.getByText(t('The schedule was saved. Its first task will appear when recurrence processing runs.',
+        'Se ha guardado la programación. La primera tarea aparecerá cuando se procese la recurrencia.'),{exact:true})).toBeVisible();
+      await expect(title).not.toBeVisible();
+      const receipt=scheduled.at(-1)!;
+      const definition=await page.request.get(api+'tasks/definitions/'+receipt.result.definition_id,{headers});expect(definition.ok()).toBe(true);
+      const saved=await definition.json();expect(saved.materials).toHaveLength(1);expect(saved.materials[0]).toMatchObject({planned_quantity:kind==='fixed'?'2':'1.25',binding:{reference_id:product.reference_id,unit_id:product.base_unit,location_id:'pantry'}});
+      await page.unroute(path);
+      if(kind==='fixed'){
+        await expect.poll(()=>failedPostCreateReads).toBe(1);
+        await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+        await expect(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeFocused();
+        await expect(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeInViewport();
+        await page.screenshot({path:info.outputPath('post-create-read-recovery-'+locale+'.png')});
+        await expand();await expect(title).toHaveValue('');await expect(plan.locator('li')).toHaveCount(0);
+        await expect(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true})).toBeVisible();
+        await plan.screenshot({path:info.outputPath('committed-plan-retired-after-read-failure-'+locale+'.png')});
+        await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+        await expand();await title.fill('QA 150 unrelated retained draft');
+        await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+        await choose(product.name);
+        const laterQuantity=plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true});
+        await laterQuantity.fill('3');
+        let originalChecks=0,failedOriginalReads=0;
+        const originalPath=api+'tasks/recurrence/creation/requests/recurrence.fixed.create/*';
+        await page.route(originalPath,route=>{originalChecks++;expect(route.request().method()).toBe('GET');return route.continue();});
+        await page.route(api+'tasks/occurrences?limit=25',route=>{failedOriginalReads++;return route.abort('failed');},{times:1});
+        const savedCheck=tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).last();
+        if(!await savedCheck.isVisible())await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
+        await activate(savedCheck);
+        await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+        expect(originalChecks).toBe(1);expect(failedOriginalReads).toBe(1);expect(scheduled).toHaveLength(1);
+        await expect(title).toHaveValue('QA 150 unrelated retained draft');await expect(laterQuantity).toHaveValue('3');
+        const recovery=tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true});
+        await expect(recovery).toBeFocused();
+        await page.screenshot({path:info.outputPath('long-draft-original-read-recovery-'+locale+'.png')});
+        const recoveryBounds=await recovery.boundingBox();
+        const navigationBounds=await page.getByRole('navigation',{name:t('Household navigation','Navegación del hogar'),exact:true}).boundingBox();
+        expect(recoveryBounds).not.toBeNull();expect(navigationBounds).not.toBeNull();
+        expect(recoveryBounds!.y,'The focused recovery control must clear the sticky navigation').toBeGreaterThanOrEqual(navigationBounds!.y+navigationBounds!.height);
+        await laterQuantity.fill('4');await expect(laterQuantity).toBeFocused();
+        await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+        await page.unroute(originalPath);
+        await activate(recovery);
+      }
+    }
+    await info.attach('scheduled-material-originals',{body:JSON.stringify(scheduled),contentType:'application/json'});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  });
+  });
+}
 for (const mode of ['native', 'standalone'] as const) {
   for (const locale of ['en', 'es'] as const) {
     test(`category recovery, filter and stale draft in ${mode} ${locale}`, async ({page, context, request}) => {

@@ -20,8 +20,10 @@ from domus.application.task_authorization import (
     TaskAccess,
     TaskActor,
     TaskCommandAuthorization,
+    TaskMaterialAccess,
     recorded_authorization,
     recorded_request,
+    recorded_schedule_authorization,
 )
 from domus.application.task_category_commands import CategoryCatalog, category_catalog
 from domus.application.task_facts import (
@@ -89,6 +91,7 @@ class TaskWorkspaceView:
     can_manage_points: bool
     schedule_policy: TimePolicy | None = None
     can_configure: bool = False
+    can_link_materials: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -338,6 +341,7 @@ class TaskMaterialsView:
     occurrence_id: str
     cycle: TaskCycle
     materials: tuple[MaterialOutcome, ...]
+    allowed_actions: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -681,7 +685,62 @@ class TaskQueries:
                 occurrence_id,
                 cycle,
                 tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),
+                self._material_actions(unit, work, cycle),
             )
+
+    def material_history(
+        self, occurrence_id: str, *, limit: int = 1, cursor: str | None = None
+    ) -> TaskPage[TaskMaterialsView]:
+        with self.transactions.read() as unit:
+            self._read(unit)
+            validate_identifier(occurrence_id)
+            if type(limit) is not int or not 1 <= limit <= 5:
+                raise InvalidInput("invalid_page_size")
+            binding, after = self._context(
+                "material_history",
+                limit,
+                JsonDocument.from_value({"occurrence_id": occurrence_id}),
+                cursor,
+            )
+            work = unit.tasks.occurrence(self.household_id, occurrence_id)
+            if work is None:
+                raise NotFound("task_occurrence_missing")
+            # At most one current cycle can occur in this indexed, bounded batch.
+            rows = unit.tasks.cycles(self.household_id, occurrence_id, limit=limit + 2, after=after)
+            closed = tuple(value for value in rows if value.cycle_id != work.current_cycle_id)
+            if any(value.closed_at is None for value in closed):
+                raise StorageFailure("invalid_task_cycle")
+            page = self._page(closed, limit, binding, lambda value: value.cycle_id)
+            return TaskPage(
+                tuple(
+                    TaskMaterialsView(
+                        occurrence_id,
+                        cycle,
+                        tuple(
+                            material_outcome(value) for value in cycle_materials(unit, work, cycle)
+                        ),
+                        self._material_actions(unit, work, cycle),
+                    )
+                    for cycle in page.items
+                ),
+                page.next_cursor,
+            )
+
+    def _material_actions(
+        self, unit: UnitOfWork, work: TaskOccurrence, cycle: TaskCycle
+    ) -> tuple[str, ...]:
+        pending = tuple(
+            value
+            for value in cycle_materials(unit, work, cycle)
+            if value.pending_reason is not None
+        )
+        if pending and _possible(
+            lambda: TaskMaterialAccess(TaskAccess(self.human), unit, self.household_id).require(
+                pending[0], MaterialAction.POST
+            )
+        ):
+            return ("materials.settle",)
+        return ()
 
     def history(
         self, occurrence_id: str, *, limit: int = 25, cursor: str | None = None
@@ -806,6 +865,17 @@ class TaskQueries:
                 if can_create and self.schedule_data_identity is not None
                 else None,
                 can_configure=catalog.can_manage,
+                can_link_materials=can_create
+                and _possible(
+                    lambda: HouseholdAccess(self.human).require(
+                        unit, self.household_id, Permission.HOUSEHOLD_READ
+                    )
+                )
+                and _possible(
+                    lambda: TaskMaterialAccess(
+                        TaskAccess(self.human), unit, self.household_id
+                    ).link_actor(self.household_id)
+                ),
             )
 
     def _operation_access(self, unit: UnitOfWork) -> None:
@@ -847,6 +917,7 @@ class TaskQueries:
             "task.complete",
             "task.verify",
             "task.reopen",
+            "task.material.settle",
         }:
             raise Forbidden("permission_denied")
         command = CommandKey(self.household_id, self.human.ha_user_id, action, key)
@@ -867,7 +938,13 @@ class TaskQueries:
             receipt = unit.receipts.get(command)
             if receipt is None:
                 raise NotFound("operation_missing")
-            return OperationView(receipt, unit.outbox.delivered(receipt.operation_id) is True)
+            row = unit.recurrence.creation(command)
+            if row is None or replace(receipt, restoration=None) != row.evidence.receipt:
+                raise StorageFailure("invalid_recurrence_operation")
+            recorded_schedule_authorization(TaskAccess(self.human), row.evidence).require(
+                command, unit
+            )
+            return OperationView(receipt, row.evidence.delivered)
 
     def _actions(
         self,
@@ -879,7 +956,7 @@ class TaskQueries:
         cycle: TaskCycle | None,
     ) -> tuple[str, ...]:
         if work.revision == 2**63 - 1:
-            return ()
+            return () if cycle is None else self._material_actions(unit, work, cycle)
         access = TaskAccess(self.human)
         result = []
         manage = _possible(
@@ -931,4 +1008,6 @@ class TaskQueries:
                 result.extend(("approve", "reject"))
             if manage:
                 result.append("reopen")
+        if cycle is not None:
+            result.extend(self._material_actions(unit, work, cycle))
         return tuple(result)

@@ -166,6 +166,13 @@ export class HouseholdController {
       }
     }, false);
   }
+  /** Local planner edits retain the live field and never obtain or renew proof. */
+  materialDraft(action: 'add' | 'edit' | 'remove' | 'clear', referenceId = '', input = ''): Promise<void> {
+    if (this.closed || this.view.busy) return Promise.resolve();
+    this.tick();
+    if (this.tasks === null) return Promise.resolve();
+    return this.taskCurrent!.materialPlan(action, referenceId, input);
+  }
   /** Retire shared proof and owned views, preserving journals for deliberate reauthentication. */
   expire(): void {
     if (this.closed) return;

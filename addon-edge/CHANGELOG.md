@@ -1,5 +1,76 @@
 # Changelog
 
+## 0.0.0-edge.70
+
+- Keep earlier products selectable while browsing additional material catalog pages.
+
+## 0.0.0-edge.69
+
+- Keep the selected task and earlier material usage when the first settlement detail read fails.
+- Preserve the next closed completion without preparing or sending a consumption write.
+
+## 0.0.0-edge.68
+
+- Explain denied material access even before any product is selected.
+- Return focus to the retained task title when clearing an unavailable material plan.
+- Keep earlier usage and its next page after a temporary settlement preflight failure.
+
+## 0.0.0-edge.67
+
+- Keep current material settlement available when the task itself cannot accept another revision.
+- Leave revision-dependent task actions disabled at their existing limit.
+
+## 0.0.0-edge.66
+
+- Preserve the displayed earlier material usage and its next page when settling the current completion.
+- Keep that history continuation when recovering the original settlement after a lost reply.
+
+## 0.0.0-edge.65
+
+- Keep focused material choices and outcomes visible below fixed navigation.
+
+## 0.0.0-edge.64
+
+- Respect a newer keyboard target when a material control has a pending focus continuation.
+- Retain the selected task, earlier usage and next page after a transient history-read failure.
+
+## 0.0.0-edge.63
+
+- Keep displayed earlier material usage when opening, refreshing or paging material choices.
+- Preserve the next closed completion while preparing an unrelated task plan.
+
+## 0.0.0-edge.62
+
+- Keep the focused read-recovery control visible below fixed navigation inside Home Assistant.
+- Preserve an unrelated open material draft while checking an already saved creation.
+
+## 0.0.0-edge.61
+
+- Clear the submitted material plan when creation is committed, even if reading the result fails.
+- Preserve a later unrelated plan when checking an already saved creation.
+- Focus Refresh tasks after a failed post-create read and retain focus while editing the next draft.
+
+## 0.0.0-edge.60
+
+- Keep the next closed completion reachable after settling earlier material usage.
+- Preserve this continuation when recovering the original settlement after an interrupted reply.
+- Retain the original cycle and intent identities without changing the reopened task.
+
+## 0.0.0-edge.59
+
+- Keep earlier material usage visible and explicitly recoverable after reopening a task.
+- Clear the submitted material plan after recovering a committed task creation.
+- Keep quantity edits focused without reloading household proof on each keystroke.
+- Show exact planned completion decimals with the Spanish separator.
+- Include optional Pantry plans, per-line outcomes and published ha-ui next.4 from the unaccepted Edge.58 preview.
+
+## 0.0.0-edge.58
+
+- Plan Pantry materials during ordinary, fixed and relative task creation.
+- Show per-line actual consumption and explicitly settle pending usage or record a missing quantity.
+- Retain drafts and exact original requests across failures, conflicts and recovery.
+- Use published ha-ui next.4 so long mobile product menus preserve their scroll position.
+
 ## 0.0.0-edge.57
 
 - Remove shared household/workspace facts when a protected response rejects the current session.

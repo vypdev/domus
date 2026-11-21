@@ -19,7 +19,8 @@ from domus.domain.recurrence_time import (
 )
 from domus.domain.relative_lifecycle import RelativeClosure, RelativeEventOutcome
 from domus.domain.relative_recurrence import RelativeProgress, RelativeSchedule, RelativeSlot
-from domus.domain.storage import Installation
+from domus.domain.restoration import RetainedOperation
+from domus.domain.storage import CommandKey, Installation
 from domus.domain.task_events import TaskSourceRecord
 
 
@@ -45,6 +46,8 @@ class NominalExpansion(Protocol):
 class RecurrenceRepository(Protocol):
     @property
     def installation(self) -> Installation: ...
+
+    def creation(self, command: CommandKey) -> RetainedOperation | None: ...
 
     def frontier(self, household_id: str) -> RecurrenceFrontier | None: ...
     def save_frontier(self, value: RecurrenceFrontier, expected_revision: int) -> None: ...

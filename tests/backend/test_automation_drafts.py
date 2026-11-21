@@ -5,7 +5,7 @@ import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from dataclasses import replace
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
 from test_automation_preview import ACTION, CONTEXT, RULE, USER, leaf, preview
@@ -24,6 +24,7 @@ from domus.domain.errors import InvalidInput
 from domus.domain.identity import MAX_REVISION, MemberStatus, Permission, PermissionRule
 from domus.domain.storage import JsonDocument
 from domus.domain.task_values import TaskContent
+from domus.infrastructure.sqlite_automation_drafts import SQLiteAutomationDrafts
 
 DRAFTS = "/api/v1/automation/drafts"
 
@@ -227,7 +228,8 @@ def test_openapi_draft_revision_pattern_matches_the_exact_signed_range(api):
     assert re.fullmatch(pattern, str(10**19)) is None
 
 
-def test_concurrent_draft_edits_and_original_request_replay(api):
+@pytest.mark.parametrize("held_writer", [False, True])
+def test_concurrent_draft_edits_and_original_request_replay(api, monkeypatch, held_writer):
     api.user(USER, True)
     first = save(api, "initial").json()
     rule_id = first["result"]["rule_id"]
@@ -245,18 +247,50 @@ def test_concurrent_draft_edits_and_original_request_replay(api):
         )
         for key in ("first-edit", "second-edit")
     ]
+    before_effects = effects(api)
+    with api.store.read() as unit:
+        before_audit_count = len(unit.audit.entries("home"))
     start = Barrier(2)
+    release_writer = Event()
+    append = SQLiteAutomationDrafts.append
+
+    def held_append(repository, household_id, draft):
+        if draft.revision == 2:
+            assert repository.connection.in_transaction
+            assert repository.connection.execute("PRAGMA busy_timeout").fetchone()[0] == 250
+            assert release_writer.wait(timeout=5)
+        append(repository, household_id, draft)
+
+    if held_writer:
+        monkeypatch.setattr(SQLiteAutomationDrafts, "append", held_append)
 
     def edit(item):
         key, headers, body = item
         start.wait(timeout=10)
-        return key, api.client.post(DRAFTS, headers=headers, json=body)
+        try:
+            return key, api.client.post(DRAFTS, headers=headers, json=body)
+        finally:
+            release_writer.set()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = sorted(pool.map(edit, contenders), key=lambda item: item[1].status_code)
-    (winner, accepted), (_, rejected) = results
+    (winner, accepted), (loser, rejected) = results
     assert accepted.status_code == 200 and accepted.json()["result"]["revision"] == "2"
+    if held_writer:
+        assert rejected.status_code == 503
+    if rejected.status_code == 503:
+        assert rejected.json()["code"] == "storage_busy"
+        assert rejected.headers["Retry-After"] == "1"
+        missing = read(api, f"{DRAFTS}/requests/{loser}")
+        assert (missing.status_code, missing.json()["code"]) == (404, "operation_missing")
+        # Both contenders have finished. Explicitly retry only the same frozen original.
+        _, headers, body = next(item for item in contenders if item[0] == loser)
+        rejected = api.client.post(DRAFTS, headers=headers, json=body)
     assert (rejected.status_code, rejected.json()["code"]) == (409, "revision_conflict")
+    missing = read(api, f"{DRAFTS}/requests/{loser}")
+    assert (missing.status_code, missing.json()["code"]) == (404, "operation_missing")
+    _, headers, body = next(item for item in contenders if item[0] == winner)
+    assert api.client.post(DRAFTS, headers=headers, json=body).json() == accepted.json()
     assert read(api, f"{DRAFTS}/requests/{winner}").json() == accepted.json()
     wrong_payload = save(api, winner, rule_id=rule_id, revision="1")
     assert (wrong_payload.status_code, wrong_payload.json()["code"]) == (
@@ -266,6 +300,11 @@ def test_concurrent_draft_edits_and_original_request_replay(api):
     latest = read(api, f"{DRAFTS}/{rule_id}").json()
     assert latest["revision"] == "2" and latest["action"]["title"] == winner
     assert read(api, f"{DRAFTS}/requests/initial").json() == first
+    assert effects(api) == before_effects
+    with api.store.read() as unit:
+        audit = unit.audit.entries("home")
+        assert len(audit) == before_audit_count + 1
+        assert sum(entry.operation_id == accepted.json()["operation_id"] for entry in audit) == 1
     with closing(sqlite3.connect(api.store.path)) as connection:
         rows = connection.execute(
             "SELECT revision,definition FROM automation_draft_revisions "

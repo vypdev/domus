@@ -2,6 +2,7 @@ import {afterEach, expect, test, vi} from 'vitest';
 import {HTTP_TIMEOUT_MS} from '../src/adapters/http-transport';
 import {HttpTaskServer} from '../src/adapters/task-http';
 import {taskCommand} from '../src/domain/tasks';
+import {revisionValue} from '../src/domain/administration';
 import type {TaskCommand} from '../src/domain/tasks';
 import type {JournalContext} from '../src/domain/journal';
 
@@ -48,6 +49,77 @@ function fixture(mode: 'native' | 'standalone' = 'standalone') {
     if (!value.url) Object.defineProperty(value, 'url', {value: target.origin + path}); return value;};
   return {target, transport, server: new HttpTaskServer(target, network)};
 }
+
+function materialReceipt(action = 'post', quantity = '2') {
+  const corrected=action==='correct',effectRevision=corrected?2:1;
+  return {...receipt(2), result:{...receipt(2).result, revision:'$revision', material_action:action,
+    material:{intent_id:'intent-1',cycle_id:'cycle-1',line_id:'line-1',revision:corrected&&quantity!=='0'?9:8,effect_revision:effectRevision,
+      submitted_quantity:corrected?null:quantity, quantity, state:quantity==='0'?'not_used':corrected?'corrected':'posted',
+      pending_reason:null,movement_id:quantity==='0'?null:'movement-1',message:'Saved.',action_required:null,
+      confirmed_quantity:quantity==='0'?null:quantity,confirmed_effect_revision:quantity==='0'?null:effectRevision,posted_at:quantity==='0'?null:100},
+    material_source:{household_id:'home',occurrence_id:'work-1',cycle_id:'cycle-1',intent_id:'intent-1',line_id:'line-1',
+      definition_revision:1,performer_ids:['member-1']}}};
+}
+test.each(['native','standalone'] as const)('%s material post and initial zero recording bind original identities without inventing a task revision', async mode => {
+  const f=fixture(mode);
+  for (const action of ['post','correct'] as const) {
+    const payload=action==='post'?{action,reason:''}:{action,reason:'Unused <soap>',quantity:'0'};
+    const command=taskCommand({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
+      payload:{expected_revision:'7',cycle_id:'cycle-1',...payload}})!;
+    const request={key:'original-key',command}, raw=materialReceipt(action,action==='post'?'2':'0');
+    f.transport.mockResolvedValueOnce(reply({csrf_token:'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
+    const saved=await f.server.send(request,context);
+    expect(saved).toMatchObject({kind:'receipt',action:'task.material.settle',intentId:'intent-1',material:{revision:'8',quantity:action==='post'?'2':'0'}});
+    expect(saved).toMatchObject({material:{effectRevision:action==='correct'?'2':'1'}});
+    expect(saved).not.toHaveProperty('revision'); expect(saved).not.toHaveProperty('state');
+    const [path,init]=f.transport.mock.calls.at(-1)!;
+    expect(path).toBe(f.target.applicationBase+'api/v1/tasks/occurrences/work-1/materials/intent-1/settlement');
+    expect(init.method).toBe('POST'); expect(JSON.parse(String(init.body))).toEqual({expected_revision:7,cycle_id:'cycle-1',...payload});
+    f.transport.mockResolvedValueOnce(reply({...raw,action:'task.material.settle',command_key:'original-key',delivery:'pending'}));
+    expect(await f.server.original({...request,operationId:'op-1'},context).result).toMatchObject({operationId:'op-1'});
+    expect(f.transport.mock.calls.at(-1)![1].method).toBe('GET');
+    expect(f.transport.mock.calls.at(-1)![0]).toBe(f.target.applicationBase+'api/v1/tasks/requests/task.material.settle/original-key');
+  }
+});
+test.each(['matching','intent','cycle','line','revision','scope_occurrence','scope_cycle','scope_intent','scope_line','definition','performers','home','cycle_definition','action','consumer','quantity'])(
+  'a material correction receipt validates the %s case against the original command', async kind => {
+    const f=fixture(), raw=materialReceipt('correct');
+    const request={key:'original-key',command:taskCommand({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
+      payload:{expected_revision:'7',cycle_id:'cycle-1',action:'correct',quantity:'2',reason:'Initial actual use'}})!};
+    const value=raw.result;
+    if(kind==='intent')value.material.intent_id='other';
+    if(kind==='cycle')value.material.cycle_id='other';
+    if(kind==='line')value.material.line_id='other';
+    if(kind==='revision')value.material.revision=6;
+    if(kind==='scope_occurrence')value.material_source.occurrence_id='other';
+    if(kind==='scope_cycle')value.material_source.cycle_id='other';
+    if(kind==='scope_intent')value.material_source.intent_id='other';
+    if(kind==='scope_line')value.material_source.line_id='other';
+    if(kind==='definition')value.material_source.definition_revision=2;
+    if(kind==='performers')value.material_source.performer_ids=['other'];
+    if(kind==='home')value.material_source.household_id='other';
+    if(kind==='cycle_definition')value.cycle!.definition_revision=2;
+    if(kind==='action')value.material_action='post';
+    if(kind==='consumer')value.consumer_delivery='confirmed';
+    if(kind==='quantity')value.material.quantity='3';
+    f.transport.mockResolvedValueOnce(reply({csrf_token:'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
+    const result=await f.server.send(request,context);
+    if(kind==='matching')expect(result).toMatchObject({kind:'receipt',material:{revision:'9',effectRevision:'2',submittedQuantity:null,quantity:'2',state:'corrected'}});
+    else expect(result).toEqual({kind:'uncertain'});
+    expect(f.transport).toHaveBeenCalledTimes(2);
+  });
+test('the current linking hint is an explicit server boolean and malformed outcome quantities are rejected', async () => {
+  const f=fixture();
+  for(const can_link_materials of [true,false]) {
+    f.transport.mockResolvedValueOnce(reply({household_id:'home',member_id:'member-1',can_create:true,can_link_materials}));
+    expect((await f.server.access(context).result).canLinkMaterials).toBe(can_link_materials);
+  }
+  const request={key:'original-key',command:taskCommand({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
+    payload:{expected_revision:'7',cycle_id:'cycle-1',action:'post',reason:''}})!};
+  const raw=materialReceipt(); raw.result.material.quantity='1.0';
+  f.transport.mockResolvedValueOnce(reply({...raw,action:'task.material.settle',command_key:'original-key',delivery:'pending'}));
+  await expect(f.server.original({...request,operationId:null},context).result).rejects.toThrow('invalid_response');
+});
 afterEach(() => vi.useRealTimers());
 
 test.each((['native', 'standalone'] as const).flatMap(mode =>
@@ -172,6 +244,7 @@ test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy a
   const start = kind === 'fixed' ? {kind: 'time', local: '2027-01-02T09:30'} : {kind: 'date', local: '2027-01-02'};
   const rule = kind === 'fixed' ? {rrule: 'FREQ=WEEKLY;BYDAY=SA'} : {interval_days: 17, visibility: 'at_verification'};
   const command = taskCommand({action: 'task.create', payload: {expected_revision: 0, title: 'Inspect filter', description: '', priority: 'normal',
+    materials:[{reference_id:'product-reference',planned_quantity:'1.25'}],
     overrides: {point_value_minor: 225}, schedule: {draft: {kind, start, ...rule}, policy: access.schedulePolicy}}})!;
   const request = {key: 'scheduled-request', command};
   const raw = {state: 'committed', archived_by: null, operation_id: 'scheduled-op', created_at: 100,
@@ -181,7 +254,8 @@ test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy a
   expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', occurrenceId: null, state: 'active', basePointsMinor: 225});
   const [path, init] = f.transport.mock.calls[2];
   expect(path).toBe('/api/v1/tasks/recurrence/creation/' + kind);
-  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal', overrides: {point_value_minor: 225}},
+  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal', overrides: {point_value_minor: 225},
+    materials:[{reference_id:'product-reference',planned_quantity:'1.25'}]},
     start, ...rule, policy: rawPolicy}));
   f.transport.mockResolvedValueOnce(reply({...raw, action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
   expect(await f.server.original({...request, operationId: null}, context).result).toMatchObject({operationId: 'scheduled-op'});
@@ -513,4 +587,54 @@ test('Overview rejects malformed, ambiguous and duplicate deadline rows', async 
   await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
   f.transport.mockResolvedValueOnce(reply({...emptyOverview, upcoming_maintenance: {total: 1, items: []}}));
   await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+});
+
+function materialHistoryWire() {
+  return {occurrence_id:'work-1',cycle:{...cycle(),closed_at:'$revision'},materials:[materialReceipt().result.material],allowed_actions:['materials.settle']};
+}
+function historyWork() {
+  return {occurrenceId:'work-1',definitionId:'definition-1',definitionRevision:revisionValue('1'),title:'QA Soap',description:'',priority:'normal' as const,
+    state:'available' as const,revision:revisionValue('3'),assigneeIds:[],dueAt:null,currentCycleId:null,cycle:null,allowedActions:[],
+    materials:[{lineId:'line-1',label:'Soap',plannedQuantity:'2',precision:0,unitId:'piece',locationId:'pantry'}],
+    materialRecording:'review_on_completion' as const,dependencyReviewRequired:false,pendingMaterials:false};
+}
+test.each(['native','standalone'] as const)('%s historical usage preserves its original cycle and requests one bounded page', async mode => {
+  const f=fixture(mode), work=historyWork(), wire=materialHistoryWire();
+  for (const cursor of [null,'opaque-cursor']) {
+    f.transport.mockResolvedValueOnce(reply({items:[wire],next_cursor:cursor}));
+    const result=await f.server.materialHistory(work,'home',cursor,context).result;
+    expect(result).toMatchObject({items:[{cycle:{cycleId:'cycle-1'},closedAt:REV,materialOutcomes:[{intentId:'intent-1',lineId:'line-1'}]}],nextCursor:cursor});
+    expect(f.transport.mock.calls.at(-1)![0]).toBe(f.target.applicationBase+'api/v1/tasks/occurrences/work-1/material-history?limit=1'+(cursor?'&cursor='+cursor:''));
+  }
+  f.transport.mockResolvedValueOnce(reply(wire));
+  expect((await f.server.materialCycle(work,'home','cycle-1',context).result).allowedActions).toEqual(['materials.settle']);
+  expect(f.transport.mock.calls.at(-1)![0]).toBe(f.target.applicationBase+'api/v1/tasks/occurrences/work-1/materials?cycle_id=cycle-1');
+  f.transport.mockResolvedValueOnce(reply({items:[],next_cursor:null}));
+  expect((await f.server.materialHistory(work,'home',null,context).result).items).toEqual([]);
+  expect(f.transport.mock.calls.every(call=>call[1].method==='GET')).toBe(true);
+  await expect(f.server.materialHistory(work,'home','',context).result).rejects.toThrow('invalid_response');
+  await expect(f.server.materialHistory(work,'home','x'.repeat(513),context).result).rejects.toThrow('invalid_response');
+});
+test.each(['work','home','cycle','open','line','duplicate_intent','duplicate_line','action','count','cursor','closed_time'] as const)(
+  'historical material %s substitution cannot enter a current task projection', async kind => {
+    const f=fixture(), wire=materialHistoryWire();
+    const raw:Record<string,any>={items:[wire],next_cursor:null};
+    if(kind==='work')wire.occurrence_id='foreign';
+    if(kind==='home')wire.cycle.household_id='foreign';
+    if(kind==='cycle')wire.materials[0].cycle_id='foreign';
+    if(kind==='open')wire.cycle.closed_at=null as unknown as string;
+    if(kind==='line')wire.materials[0].line_id='foreign';
+    if(kind==='duplicate_intent')wire.materials.push({...wire.materials[0]});
+    if(kind==='duplicate_line')wire.materials.push({...wire.materials[0],intent_id:'other'});
+    if(kind==='action')wire.allowed_actions=['complete'];
+    if(kind==='count')raw.items.push({...wire});
+    if(kind==='cursor')raw.next_cursor='';
+    if(kind==='closed_time')wire.cycle.closed_at='invalid';
+    f.transport.mockResolvedValueOnce(reply(raw));
+    await expect(f.server.materialHistory(historyWork(),'home',null,context).result).rejects.toThrow('invalid_response');
+  });
+test('direct material cycle lookup rejects another valid cycle even when its outcomes agree', async () => {
+  const f=fixture(), wire=materialHistoryWire();
+  f.transport.mockResolvedValueOnce(reply(wire));
+  await expect(f.server.materialCycle(historyWork(),'home','other-cycle',context).result).rejects.toThrow('invalid_response');
 });

@@ -4,6 +4,7 @@ import {TaskController} from '../application/task-controller';
 import type {TaskView} from '../application/task-controller';
 import {TaskSessionJournal} from '../adapters/task-journal';
 import {HttpTaskServer} from '../adapters/task-http';
+import {HttpInventoryServer} from '../adapters/inventory-http';
 import {HouseholdController} from '../application/household-controller';
 import {AdministrationController} from '../application/administration-controller';
 import type {AdministrationView} from '../application/administration-controller';
@@ -59,7 +60,8 @@ export class EntryRuntime {
     const entry = new EntryController(this.target.deployment, server, new SessionJournal(storage), clock, entropy);
     return {clock, controller: new HouseholdController(entry, () => new AdministrationController(this.target.deployment,
       server, new HttpAdministrationServer(this.target, this.browser.transport), new AdministrationSessionJournal(storage), clock, entropy), () => new TaskController(this.target.deployment,
-      server, new HttpTaskServer(this.target, this.browser.transport), new TaskSessionJournal(storage), clock, entropy))};
+      server, new HttpTaskServer(this.target, this.browser.transport), new TaskSessionJournal(storage), clock, entropy,
+      new HttpInventoryServer(this.target, this.browser.transport)))};
   }
   get view(): EntryView {return this.current.controller.view;}
   get administration(): AdministrationView | null {return this.current.controller.administration;}
@@ -76,6 +78,9 @@ export class EntryRuntime {
     };
   }
   taskWork(work: (controller: TaskController) => Promise<void>): Promise<void> {return this.perform(controller => controller.taskWork(work));}
+  materialDraft(action: 'add' | 'edit' | 'remove' | 'clear', referenceId = '', input = ''): Promise<void> {
+    return this.perform(controller => controller.materialDraft(action, referenceId, input));
+  }
   private publish(): void {
     try {this.changed(this.view, this.administration, this.tasks);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
   }

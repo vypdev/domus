@@ -16,7 +16,7 @@ import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {AdministrationView} from '../application/administration-controller';
 import type {TaskView} from '../application/task-controller';
 import type {TaskRecord} from '../application/task-ports';
-import {categoryLabel, hasTaskText, taskAssignees, taskQuantity, taskScheduleDraft, taskText, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
+import {categoryLabel, hasTaskText, taskAssignees, taskQuantityInput as quantityInput, taskScheduleDraft, taskText, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
 import type {Revision} from '../domain/administration';
 import type {TaskCategory, TaskDetail, TaskMaterialUsage, TaskPriority, TaskProgressTarget, TaskScheduleDraft} from '../domain/tasks';
 import {language} from './messages';
@@ -30,7 +30,15 @@ import type {ReviewedAllocation} from '../domain/point-allocation';
 import type {ParticipantName} from './allocation-details';
 import './domus-allocation-preview';
 import './domus-allocation-settings';
+import './domus-task-material-plan';
+import './domus-task-material-outcomes';
+import type {MaterialPlanIntent} from './domus-task-material-plan';
+import type {MaterialRecordingDrafts, MaterialSettlementIntent} from './domus-task-material-outcomes';
+import {materialMessage, materialSource, materialUnit} from './task-material-messages';
 export type TaskIntent = Readonly<{type: 'refresh' | 'more' | 'claim'}>
+  | Readonly<{type:'materialHistory'; more:boolean}>
+  | Readonly<{type:'materialPlan'} & MaterialPlanIntent>
+  | Readonly<{type:'settleMaterial'} & MaterialSettlementIntent>
   | Readonly<{type: 'select'; occurrenceId: string}>
   | Readonly<{type: 'assign'; occurrenceId: string; revision: Revision; assigneeIds: readonly string[]}>
   | Readonly<{type: 'transition'; occurrenceId: string; revision: Revision; target: TaskProgressTarget; reason: string}>
@@ -53,18 +61,10 @@ function validCategoryLabel(value: string): boolean {
 function validBlockingReason(value: string): boolean {
   try {taskText(value, TASK_TEXT_LIMITS.reason, true, true); return true;} catch {return false;}
 }
-function quantityInput(value: string, precision: number): string | null {
-  const trimmed = value.trim();
-  if (trimmed.length > 64 || !/^[0-9]+(?:[.,][0-9]+)?$/u.test(trimmed)) return null;
-  const [whole, fraction = ''] = trimmed.replace(',', '.').split('.');
-  const integer = whole.replace(/^0+(?=[0-9])/u, ''), decimal = fraction.replace(/0+$/u, '');
-  if (decimal.length > precision) return null;
-  try {return taskQuantity(integer + (decimal ? '.' + decimal : ''));} catch {return null;}
-}
 /** Render only verified task facts; emitted intents never select an actor or grant a permission. */
 export class DomusTasks extends LitElement {
   static properties = {administration: {attribute: false}, assignmentDraft: {state: true}, assignmentError: {state: true},
-    progressDraft: {state: true}, progressError: {state: true},
+    progressDraft: {state: true}, progressError: {state: true}, materialDrafts: {state: true},
     allocation: {attribute: false}, participantNames: {attribute: false}, view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
     categoryDraft: {state: true}, categoryName: {state: true}, categoryEdit: {state: true}, manageOpen: {state: true},
     basePointsDraft: {state: true}, basePointsError: {state: true},
@@ -125,17 +125,19 @@ export class DomusTasks extends LitElement {
   private submittedAssignment: AssignmentDraft | null = null;
   private assignmentFocus: string | null = null;
   private declare progressDraft: ProgressDraft | null;
+  private declare materialDrafts: MaterialRecordingDrafts;
   private declare progressError: boolean;
   private submittedProgress: ProgressDraft | null = null;
   private progressFocus: string | null = null;
-  private lastForm: 'create' | 'review' | 'category' | 'assignment' | 'progress' = 'create';
+  private materialFocus: 'choices' | 'last-row' | 'outcomes' | 'history' | null = null;
+  private lastForm: 'create' | 'review' | 'category' | 'assignment' | 'progress' | 'material' = 'create';
   private focusDetail = false;
   constructor() {super(); this.allocation = null; this.participantNames = []; this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
     this.priorityDraft = 'normal'; this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
     this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;
     this.basePointsDraft = ''; this.basePointsError = null;
     this.administration = null; this.assignmentDraft = null; this.assignmentError = false;
-    this.progressDraft = null; this.progressError = false;
+    this.progressDraft = null; this.progressError = false; this.materialDrafts = {};
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.manageOpen = false;}
   private text(key: TaskMessageKey): string {return taskMessage(key, this.language);}
   private get blocked(): boolean {return this.view?.busy !== false || this.view.readOnly || this.view.records === null
@@ -149,6 +151,8 @@ export class DomusTasks extends LitElement {
   }
   private reset(): void {
     this.resetProgress();
+    this.materialDrafts = {};
+    this.materialFocus = null;
     this.assignmentDraft = null; this.submittedAssignment = null; this.assignmentFocus = null; this.assignmentError = false;
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.submittedCategory = null; this.manageOpen = false;
     this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
@@ -164,6 +168,8 @@ export class DomusTasks extends LitElement {
       || next != null && this.draftScope !== null && next !== this.draftScope) this.reset();
     if (next != null) this.draftScope = next;
     const detail = this.view?.detail, key = detail ? JSON.stringify([next, detail.occurrenceId, detail.revision]) : null;
+    const previousDetail = changed.get('view')?.detail;
+    if (detail && previousDetail && detail.occurrenceId !== previousDetail.occurrenceId) this.materialDrafts = {};
     const outcome = this.view?.outcome;
     if (detail && this.assignmentDraft && (detail.occurrenceId !== this.assignmentDraft.occurrenceId || !detail.allowedActions.includes('assign'))) {
       this.assignmentDraft = null; this.submittedAssignment = null; this.assignmentFocus = null;
@@ -210,10 +216,19 @@ export class DomusTasks extends LitElement {
   }
   protected updated(changed: PropertyValues): void {
     this.lang = language(this.language, 'en');
+    const current = this.retired ? null : this.view;
+    if (changed.has('view') && current?.phase === 'ready' && current.notice === 'unavailable'
+        && current.detail === null && changed.get('view')?.notice !== 'unavailable') {
+      this.focusDetail = false; this.assignmentFocus = null; this.progressFocus = null; this.materialFocus = null;
+      const recovery = this.renderRoot.querySelector<HTMLButtonElement>('.task-header button')!;
+      recovery.focus();
+      recovery.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
+      return;
+    }
     if (this.focusDetail) {this.focusDetail = false; this.shadowRoot?.querySelector<HTMLElement>('#selected-task-title')?.focus();}
     if (changed.has('view') && this.view?.notice === 'invalid_input') {
       const field = {create: '#task-title', category: '#task-category-label', assignment: '#assignment-editor',
-        review: '#task-reason', progress: '#task-progress-editor'}[this.lastForm];
+        review: '#task-reason', progress: '#task-progress-editor', material: 'domus-task-material-outcomes'}[this.lastForm];
       this.shadowRoot?.querySelector<HTMLElement>(field)?.focus();
     }
     if (this.assignmentFocus !== null) {
@@ -236,11 +251,33 @@ export class DomusTasks extends LitElement {
     if (changed.has('view') && outcome?.kind === 'rejected' && outcome.reason === 'points_precision_two_required')
       this.renderRoot.querySelector<HTMLElement>('#task-base-points')?.focus();
     if (changed.has('quantityError') && this.quantityError) this.shadowRoot?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
+    if (this.materialFocus !== null && this.view?.phase === 'ready') {
+      const focus = this.materialFocus;
+      this.materialFocus = null;
+      if (focus === 'history') this.renderRoot.querySelector<HTMLElement>('#material-history-heading')?.focus();
+      const component = this.renderRoot.querySelector<LitElement>(focus === 'outcomes' ? 'domus-task-material-outcomes' : 'domus-task-material-plan');
+      if (focus !== 'history' && component) {
+        void component.updateComplete.then(() => {
+          const fields = component.renderRoot.querySelectorAll<HTMLElement>('vyp-ha-field');
+          const target = (focus === 'last-row' ? fields.item(fields.length - 1) : focus === 'outcomes'
+            ? component.renderRoot.querySelector<HTMLElement>('vyp-ha-field, h4')
+            : component.renderRoot.querySelector<HTMLElement>('vyp-ha-select:not([disabled])')
+              ?? component.renderRoot.querySelector<HTMLElement>('vyp-ha-button:not([disabled])'))
+            ?? this.renderRoot.querySelector<HTMLElement>('#task-title');
+          const root = this.renderRoot as ShadowRoot, focused = root.activeElement;
+          requestAnimationFrame(() => {
+            if (target?.isConnected && root.activeElement === focused) {
+              target.focus(); target.scrollIntoView({block: 'center', inline: 'nearest'});
+            }
+          });
+        });
+      }
+    }
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.reset();}
   private intent(detail: TaskIntent): void {
     if (this.retired || this.view?.phase !== 'ready' || this.view.busy) return;
-    if (['create', 'createCategory', 'renameCategory', 'archiveCategory', 'claim', 'assign', 'transition', 'complete', 'verify', 'reopen'].includes(detail.type) && this.blocked) return;
+    if (['create', 'createCategory', 'renameCategory', 'archiveCategory', 'claim', 'assign', 'transition', 'complete', 'verify', 'reopen', 'settleMaterial'].includes(detail.type) && this.blocked) return;
     this.dispatchEvent(new CustomEvent<TaskIntent>('domus-task-intent', {detail: Object.freeze(detail), bubbles: true, composed: true}));
   }
   private scheduleDraft(form: HTMLFormElement): TaskScheduleDraft | undefined {
@@ -290,10 +327,13 @@ export class DomusTasks extends LitElement {
     const descriptionInvalid = Array.from(this.descriptionDraft).length > TASK_TEXT_LIMITS.description;
     const canSetPoints = this.view!.access!.canConfigure === true;
     const stalePoints = !canSetPoints && this.basePointsDraft.trim() !== '';
+    const plan = this.view!.materialPlan;
+    const invalidPlan = plan !== null && plan !== undefined && plan.rows.length > 0
+      && (!plan.canLink || plan.rows.some(row => row.choice === null || quantityInput(row.input, row.choice.unit === 'piece' ? 0 : 6) === null));
     return html`<details class="card new-task" ?open=${this.createOpen || this.view!.page?.items.length === 0}
       @toggle=${(event: Event) => {const target = event.target as HTMLDetailsElement; if (target.isConnected) this.createOpen = target.open;}}><summary><h3 id="new-task-title">${this.text('newTask')}</h3></summary>
       <form novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.lastForm = 'create';
-        if (stalePoints) return;
+        if (stalePoints || invalidPlan) return;
         this.titleRequired = !hasTaskText(this.titleDraft);
         if (this.titleRequired || titleTooLong || descriptionInvalid || this.staleCategory) {
           this.shadowRoot?.querySelector<HTMLElement>(this.titleRequired || titleTooLong ? '#task-title' : descriptionInvalid ? '#task-description' : '#task-category')?.focus(); return;
@@ -322,12 +362,18 @@ export class DomusTasks extends LitElement {
           @change=${(event: Event) => {this.priorityDraft = (event.target as HTMLSelectElement).value as TaskPriority;}}>
           ${TASK_PRIORITIES.map(priority => html`<option value=${priority} .selected=${this.priorityDraft === priority}>${this.text(`priority_${priority}`)}</option>`)}</select></div>
         ${this.scheduleFields()}
+        <domus-task-material-plan .view=${this.view?.materialPlan ?? null} .language=${this.language} .disabled=${this.blocked}
+          @domus-material-plan-intent=${(event: CustomEvent<MaterialPlanIntent>) => {
+            this.createOpen = true;
+            if (event.detail.action !== 'edit') this.materialFocus = event.detail.action === 'add' ? 'last-row' : 'choices';
+            event.stopPropagation(); this.intent({type:'materialPlan', ...event.detail});
+          }}></domus-task-material-plan>
         ${this.view?.access?.categoryCatalog ? this.categorySelector() : nothing}
         ${canSetPoints ? this.basePointsField() : nothing}
         ${stalePoints ? html`<p role="alert">${this.text('basePointsUnavailable')}</p>
           <button type="button" @click=${() => {this.basePointsDraft = ''; this.basePointsError = null;}}>
             ${this.text('clearBasePoints')}</button>` : nothing}
-        <button type="submit" class="primary" ?disabled=${this.blocked || titleTooLong || descriptionInvalid || this.staleCategory || stalePoints}>${this.text('create')}</button>
+        <button type="submit" class="primary" ?disabled=${this.blocked || titleTooLong || descriptionInvalid || this.staleCategory || stalePoints || invalidPlan}>${this.text('create')}</button>
       </form></details>`;
   }
   private basePointsField() {
@@ -624,6 +670,31 @@ export class DomusTasks extends LitElement {
         <small>${this.text('performed')}: ${taskInstant(work.cycle.performedAt, this.language)}</small></p>` : nothing}
       ${work.dependencyReviewRequired ? html`<p class="note warning" role="status">${this.text('dependencyReview')}</p>` : nothing}
       ${work.pendingMaterials ? html`<p class="note warning" role="status">${this.text('pendingMaterials')}</p>` : nothing}
+      <domus-task-material-outcomes .work=${work} .drafts=${this.materialDrafts} .disabled=${this.blocked} .language=${this.language}
+        @domus-material-recording-draft=${(event: CustomEvent<{intentId:string; draft:MaterialRecordingDrafts[string]}>) => {
+          event.stopPropagation(); this.materialDrafts = {...this.materialDrafts, [event.detail.intentId]:event.detail.draft};
+        }} @domus-material-settlement-intent=${(event: CustomEvent<MaterialSettlementIntent>) => {
+          event.stopPropagation(); this.lastForm = 'material'; this.materialFocus = 'outcomes'; this.intent({type:'settleMaterial', ...event.detail});
+        }}></domus-task-material-outcomes>
+      ${work.materials.length ? html`<section aria-labelledby="material-history-heading"><h4 id="material-history-heading" tabindex="-1">${materialMessage('history',this.language)}</h4>
+        <p>${materialMessage('historyHelp',this.language)}</p>
+        <vyp-ha-button .state=${buttonState({label:materialMessage('historyLoad',this.language)})} ?disabled=${this.view!.busy}
+          @click=${() => {this.materialFocus='history'; this.intent({type:'materialHistory',more:false});}}></vyp-ha-button>
+        ${this.view!.materialHistory?.items.map(value => html`<section><h5>${materialMessage('completion',this.language)}: ${taskInstant(value.cycle.performedAt,this.language)}</h5>
+          <p>${materialMessage('closed',this.language)}: ${taskInstant(value.closedAt!,this.language)}</p>
+          <domus-task-material-outcomes .work=${{...work,cycle:value.cycle,materialOutcomes:value.materialOutcomes,allowedActions:value.allowedActions}}
+            .drafts=${this.materialDrafts} .disabled=${this.blocked} .language=${this.language}
+            @domus-material-recording-draft=${(event: CustomEvent<{intentId:string;draft:MaterialRecordingDrafts[string]}>) => {
+              event.stopPropagation(); this.materialDrafts = {...this.materialDrafts,[event.detail.intentId]:event.detail.draft};
+            }} @domus-material-settlement-intent=${(event: CustomEvent<MaterialSettlementIntent>) => {
+              event.stopPropagation(); this.lastForm='material'; this.materialFocus='history'; this.intent({type:'settleMaterial',...event.detail});
+            }}></domus-task-material-outcomes>
+        </section>`)}
+        ${this.view!.materialHistory?.items.length === 0 ? html`<p role="status">${materialMessage('historyEmpty',this.language)}</p>` : nothing}
+        ${this.view!.materialHistory?.nextCursor ? html`<vyp-ha-button
+          .state=${buttonState({label:materialMessage('historyMore',this.language)})} ?disabled=${this.view!.busy}
+          @click=${() => {this.materialFocus='history'; this.intent({type:'materialHistory',more:true});}}></vyp-ha-button>` : nothing}
+      </section>` : nothing}
       ${this.progress(work)}
       <div class="task-work-actions" ?hidden=${this.progressDraft !== null}>
       ${this.assignment(work)}
@@ -632,6 +703,8 @@ export class DomusTasks extends LitElement {
       ${work.allowedActions.includes('complete') ? html`<form id="complete-form" class="task-fields" novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.complete();}}>
         <p>${this.text('completionHelp')}</p>${work.materials.length ? work.materialRecording === 'review_on_completion' ? html`<fieldset><legend>${this.text('materials')}</legend>
           <p class="help">${this.text('quantityHelp')}</p>${work.materials.map((material, index) => html`<div class="material"><label for=${'material-' + index}>${material.label || this.text('quantity')}</label>
+            <p>${materialUnit(material.unitId, this.language, material.plannedQuantity)} · ${materialSource(material.locationId, this.language)}
+              · ${materialMessage('planned', this.language)}: ${this.language === 'es' ? material.plannedQuantity.replace('.', ',') : material.plannedQuantity}</p>
             <input id=${'material-' + index} inputmode="decimal" type="text" maxlength="64" .value=${live(this.quantities[material.lineId] ?? '')}
               ?disabled=${this.view!.busy} aria-invalid=${this.quantityError === material.lineId ? 'true' : 'false'} aria-describedby=${this.quantityError === material.lineId ? 'quantity-error' : 'quantity-help'}
               @input=${(event: InputEvent) => {this.quantities = {...this.quantities, [material.lineId]: (event.target as HTMLInputElement).value}; this.quantityError = null;}}>
@@ -668,12 +741,13 @@ export class DomusTasks extends LitElement {
         title: this.text('progressSaved'), message: this.text('progressSavedBody')})}></vyp-ha-feedback>
         <details><summary>${this.text('technical')}</summary><p>${this.text('operation')}: <code>${result.operationId}</code></p></details></section>`;
     const assignmentSaved = kind === 'saved' && result.kind === 'receipt' && result.action === 'task.assign';
-    const body = assignmentSaved ? 'assignmentSavedBody' : kind === 'saved' && result.kind === 'receipt' && result.state === 'active' ? 'scheduleSaved' : `${kind}Body` as const;
+    const body = assignmentSaved ? 'assignmentSavedBody' : kind === 'saved' && result.kind === 'receipt' && result.action !== 'task.material.settle' && result.state === 'active' ? 'scheduleSaved' : `${kind}Body` as const;
     const precisionRequired = result.kind === 'rejected' && result.reason === 'points_precision_two_required';
     return html`<section class="note" role="status"><h3>${this.text(assignmentSaved ? 'assignmentSaved' : kind)}</h3>
-      ${precisionRequired ? nothing : html`<p>${this.text(body)}</p>`}
+      ${precisionRequired ? nothing : html`<p>${kind === 'saved' && result.kind === 'receipt' && result.action === 'task.material.settle'
+        ? materialMessage('saved', this.language) : this.text(body)}</p>`}
       ${result.kind === 'rejected' && !precisionRequired ? html`<p>${this.text(`notice_${result.reason}`)}</p>` : nothing}
-      ${result.kind === 'receipt' && result.basePointsMinor !== undefined ? html`<dl><dt>${this.text('basePoints')}</dt>
+      ${result.kind === 'receipt' && result.action !== 'task.material.settle' && result.basePointsMinor !== undefined ? html`<dl><dt>${this.text('basePoints')}</dt>
         <dd>${displayPoints(result.basePointsMinor, this.language)}</dd></dl>` : nothing}
       ${result.kind === 'receipt' ? html`<details><summary>${this.text('technical')}</summary><p>${this.text('operation')}: <code>${result.operationId}</code></p></details>` : nothing}</section>`;
   }

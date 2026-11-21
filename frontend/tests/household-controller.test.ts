@@ -482,6 +482,7 @@ function taskWorkspace(mode: 'native' | 'standalone' = 'standalone') {
     revision: revisionValue('1'), state: 'available', cycle: null, archivedBy: null};
   const server = {access: vi.fn(() => read({householdId: 'home', memberId: member.memberId, canCreate: true, canReviewSchedule: true})),
     list: vi.fn(() => read({items: [work], nextCursor: null})), detail: vi.fn(() => read(work)), original: vi.fn(() => read(result)),
+    materialHistory:vi.fn<TaskServer['materialHistory']>(),materialCycle:vi.fn<TaskServer['materialCycle']>(),
     send: vi.fn<TaskServer['send']>(async () => result)};
   const controllers: TaskController[] = [], factory = vi.fn(() => {const value = new TaskController(mode, identity, server, new TaskSessionJournal(f.storage), f.clock, f.entropy);
     controllers.push(value); return value;});
@@ -539,4 +540,29 @@ test('unavailable administration metadata does not turn independently protected 
   const f = taskWorkspace(); f.server.capabilities.mockReturnValue({result: Promise.reject(new EntryReadError('unavailable')), cancel: vi.fn()});
   await f.workspace.refresh(); expect(f.workspace.tasks?.page?.items[0].title).toBe('Clean'); expect(f.workspace.administration?.notice).toBe('unavailable');
   f.workspace.close();
+});
+
+test('local material draft edits retain the visible task controller without reading or renewing proof', async () => {
+  const f=taskWorkspace(); await f.workspace.refresh();
+  const task=f.taskControllers[0], edit=vi.spyOn(task,'materialPlan');
+  const calls=[f.entryServer.session.mock.calls.length,f.identity.session.mock.calls.length,f.taskIdentity.session.mock.calls.length];
+  const view=f.workspace.tasks;
+  for(const action of ['add','edit','remove','clear'] as const) {
+    await f.workspace.materialDraft(action,'soap','1,25');
+    expect(edit).toHaveBeenLastCalledWith(action,'soap','1,25');
+    expect(f.workspace.tasks?.phase).toBe('ready'); expect(f.workspace.tasks?.scopeKey).toBe(view?.scopeKey);
+  }
+  expect([f.entryServer.session.mock.calls.length,f.identity.session.mock.calls.length,f.taskIdentity.session.mock.calls.length]).toEqual(calls);
+  expect(f.taskServer.send).not.toHaveBeenCalled();f.workspace.close();
+});
+test.each(['not_started','closed','expired','busy'] as const)('a %s task workspace cannot edit material drafts', async state => {
+  const f=taskWorkspace();
+  if(state==='not_started') {await f.workspace.materialDraft('clear');expect(f.taskFactory).not.toHaveBeenCalled();return;}
+  await f.workspace.refresh();const edit=vi.spyOn(f.taskControllers[0],'materialPlan');
+  if(state==='closed')f.workspace.close();
+  if(state==='expired')f.setNow(100000);
+  let pending:Promise<void>|null=null, resolve!:(value:VerifiedEntrySession|null)=>void;
+  if(state==='busy') {const read=deferred<VerifiedEntrySession|null>();resolve=read.resolve;f.taskIdentity.session.mockReturnValue(read);pending=f.workspace.taskWork(controller=>controller.refresh());}
+  await f.workspace.materialDraft('clear');expect(edit).not.toHaveBeenCalled();
+  if(pending){resolve(f.taskProof);await pending;}f.workspace.close();
 });

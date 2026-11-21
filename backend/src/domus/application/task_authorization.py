@@ -413,6 +413,58 @@ def recorded_authorization(
     )
 
 
+def recorded_schedule_authorization(
+    access: TaskAccess, evidence: OperationEvidence
+) -> TaskCommandAuthorization:
+    """Recover only original creation selectors; never resolve or execute its material plan."""
+    receipt = evidence.receipt
+    kind = {
+        "recurrence.fixed.create": (
+            "recurrence.fixed.created",
+            {"version", "task", "pattern", "policy"},
+        ),
+        "recurrence.relative.create": (
+            "recurrence.relative.created",
+            {"version", "task", "initial", "interval_days", "policy", "visibility"},
+        ),
+    }.get(receipt.command.action)
+    detail = evidence.audit.detail.decode()
+    request = detail.get("request")
+    if (
+        kind is None
+        or set(detail) != {"transition", "request", "result"}
+        or detail["transition"] != kind[0]
+        or not isinstance(request, dict)
+        or set(request) != kind[1]
+        or type(request["version"]) is not int
+        or request["version"] != 1
+        or JsonDocument.from_value(request).fingerprint != receipt.payload_fingerprint
+        or detail["result"] != receipt.result.decode()
+        or evidence.event.payload
+        != JsonDocument.from_value({"version": 1, "kind": kind[0], **receipt.result.decode()})
+    ):
+        raise StorageFailure("invalid_recurrence_operation")
+    task = request["task"]
+    if not isinstance(task, dict) or not _request_shape(task, CreateTask):
+        raise StorageFailure("invalid_recurrence_operation")
+    overrides = task["overrides"]
+    if not isinstance(overrides, dict) or set(overrides) != {
+        item.name for item in fields(TaskOverrides)
+    }:
+        raise StorageFailure("invalid_recurrence_operation")
+    try:
+        validate_recorded_material_request(task)
+    except InvalidInput, TypeError, ValueError:
+        raise StorageFailure("invalid_recurrence_operation") from None
+    return TaskCommandAuthorization(
+        access,
+        receipt.command.household_id,
+        receipt.command.action,
+        needs_material_link="materials" in task,
+        needs_configuration=any(value is not None for value in overrides.values()),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class TaskMaterialAccess(TaskMaterialAuthority):
     """Current authority for task-linked material actions; A36 includes confirmed correction."""

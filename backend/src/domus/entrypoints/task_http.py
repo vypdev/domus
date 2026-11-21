@@ -77,6 +77,7 @@ from domus.entrypoints.task_dto import (
     DependencyReviewBody,
     DependencyReviewsQuery,
     Identifier,
+    MaterialHistoryQuery,
     MaterialSettlementBody,
     MaterialsQuery,
     OccurrenceBody,
@@ -104,6 +105,7 @@ TaskWorkspaceAction = Literal[
     "task.complete",
     "task.verify",
     "task.reopen",
+    "task.material.settle",
 ]
 
 
@@ -450,6 +452,18 @@ def create_task_router(
         occurrence_id: Identifier, request: Request, query: Annotated[MaterialsQuery, Query()]
     ) -> TaskMaterialsView:
         return context(request).queries().materials(occurrence_id, query.cycle_id)
+
+    @router.get(
+        "/occurrences/{occurrence_id}/material-history", response_model=TaskPage[TaskMaterialsView]
+    )
+    def material_history(
+        occurrence_id: Identifier, request: Request, query: Annotated[MaterialHistoryQuery, Query()]
+    ) -> TaskPage[TaskMaterialsView]:
+        return (
+            context(request)
+            .queries()
+            .material_history(occurrence_id, limit=query.limit, cursor=query.cursor)
+        )
 
     @router.get(
         "/occurrences/{occurrence_id}/dependency-reviews",

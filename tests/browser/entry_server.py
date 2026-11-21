@@ -7,6 +7,7 @@ flag is used by the product. The native wrapper represents the outer trusted Sup
 
 import argparse
 import base64
+import faulthandler
 import hashlib
 import html
 import io
@@ -14,10 +15,13 @@ import json
 import os
 import secrets
 import sqlite3
+import sys
 import tempfile
 from contextlib import ExitStack
 from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
+from threading import Timer
+from time import monotonic
 from types import SimpleNamespace
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlencode
@@ -25,6 +29,7 @@ from urllib.parse import parse_qs, urlencode
 import uvicorn
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
@@ -182,7 +187,10 @@ class Fixture:
             self.runtime.close()
         if self.directory is not None:
             self.directory.cleanup()
-        self.directory = tempfile.TemporaryDirectory(prefix=f"domus-entry-browser-{self.mode}-")
+        self.directory = tempfile.TemporaryDirectory(
+            prefix=f"domus-entry-browser-{self.mode}-",
+            dir=os.environ.get("DOMUS_BROWSER_FIXTURE_ROOT"),
+        )
         parent = Path(self.directory.name)
         # Own fixtures use the actual private directory contract, including BSD group inheritance.
         os.chown(parent, -1, os.getegid())
@@ -485,6 +493,67 @@ class Fixture:
         await self.runtime.app(scope, receive, send)
 
 
+def observe_http(app: ASGIApp, mode: str, prefix: str) -> ASGIApp:
+    async def observed(scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await app(scope, receive, send)
+            return
+        path = scope["path"].removeprefix(prefix)
+        if not path.startswith("/api/v1/"):
+            await app(scope, receive, send)
+            return
+        method, started = scope["method"], monotonic()
+        phase, status = "accepted", 0
+        setup = method == "POST" and path == "/api/v1/household"
+        keys = [v for k, v in scope["headers"] if k.lower() == b"idempotency-key"]
+        key_digest = hashlib.sha256(keys[0]).hexdigest()[:12] if len(keys) == 1 else "none"
+
+        def report(event: str) -> None:
+            print(
+                f"fixture_http {event} mode={mode} method={method} path={path} "
+                f"key_digest={key_digest} phase={phase} status={status} "
+                f"elapsed_ms={(monotonic() - started) * 1000:.1f}",
+                file=sys.stderr,
+                flush=True,
+            )
+
+        def pending() -> None:
+            report("pending")
+            # Stack locations only: no request headers, bodies, credentials or frame locals.
+            faulthandler.dump_traceback(file=sys.stderr)
+
+        async def received() -> Message:
+            nonlocal phase
+            message = await receive()
+            phase = message["type"]
+            return message
+
+        async def sent(message: Message) -> None:
+            nonlocal phase, status
+            phase = message["type"]
+            if message["type"] == "http.response.start":
+                status = message["status"]
+            await send(message)
+
+        watchdog = Timer(5, pending) if setup else None
+        if watchdog is not None:
+            watchdog.daemon = True
+            report("begin")
+            watchdog.start()
+        try:
+            await app(scope, received, sent)
+        except BaseException:
+            report("raised")
+            raise
+        finally:
+            if watchdog is not None:
+                watchdog.cancel()
+            if setup or status >= 500 or monotonic() - started >= 5:
+                report("end")
+
+    return observed
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("native", "standalone"), required=True)
@@ -492,6 +561,9 @@ def main() -> None:
     parser.add_argument("--origin-port", type=int)
     args = parser.parse_args()
     image = os.environ.get("DOMUS_BROWSER_IMAGE")
+    print(
+        f"fixture_bootstrap begin mode={args.mode} image={bool(image)}", file=sys.stderr, flush=True
+    )
     if image:
         from image_bridge import ImageBridge
 
@@ -506,8 +578,9 @@ def main() -> None:
     else:
         fixture = Fixture(args.mode, args.port, args.origin_port)
     try:
+        print(f"fixture_bootstrap serving mode={args.mode}", file=sys.stderr, flush=True)
         uvicorn.run(
-            fixture,
+            observe_http(fixture, args.mode, PREFIX),
             host="127.0.0.1",
             port=args.port,
             access_log=False,
