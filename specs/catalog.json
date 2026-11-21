@@ -825,7 +825,10 @@
         "docs/contracts/household-api.openapi.json",
         "docs/contracts/native-household-api.openapi.json",
         "docs/evidence/shopping-manual-annotations-qualification.md",
-        "docs/evidence/shopping-manual-annotations.json"
+        "docs/evidence/shopping-manual-annotations.json",
+        "addon-edge/README.md",
+        "addon-edge/DOCS.md",
+        "addon-edge/CHANGELOG.md"
       ],
       "readiness": {
         "state": "draft",
