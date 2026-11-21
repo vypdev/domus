@@ -3,7 +3,7 @@
 import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
 from test_automation_drafts import DRAFTS, effects, read, save
@@ -11,7 +11,7 @@ from test_automation_preview import ACTION, CONTEXT, USER, leaf
 from test_inventory_catalog_http import post, register
 from test_task_runtime import api as api
 
-from domus.application.automation_execution import RUN_AUTOMATION
+from domus.application.automation_execution import RUN_AUTOMATION, SET_AUTOMATION_CONTROL
 from domus.domain.errors import StorageFailure
 from domus.domain.identity import MAX_REVISION, MemberStatus, Permission, PermissionRule
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
@@ -54,6 +54,51 @@ def result(response):
 
 def denied(response, status, code):
     assert (response.status_code, response.json()["code"]) == (status, code), response.text
+
+
+def hold_receipt_writer(monkeypatch, action, key):
+    entered = Event()
+    release = Event()
+    add = SQLiteReceipts.add
+
+    def held_add(repository, receipt):
+        add(repository, receipt)
+        if receipt.command.action == action and receipt.command.key == key:
+            assert repository.connection.in_transaction
+            assert repository.connection.execute("PRAGMA busy_timeout").fetchone()[0] == 250
+            entered.set()
+            assert release.wait(timeout=5)
+
+    monkeypatch.setattr(SQLiteReceipts, "add", held_add)
+    return entered, release
+
+
+def busy(response):
+    denied(response, 503, "storage_busy")
+    assert response.headers["Retry-After"] == "1"
+
+
+def audit(api):
+    with api.store.read() as unit:
+        return unit.audit.entries("home")
+
+
+def one_task_effect(api, before, execution):
+    rows, pending = effects(api)
+    previous_rows, previous_pending = before
+    assert len(rows[0]) == len(previous_rows[0]) + 1 == 1
+    assert len(rows[1]) == len(previous_rows[1]) + 1 == 1
+    assert rows[2:] == previous_rows[2:]
+    assert pending[:-1] == previous_pending
+    assert len(pending) == len(previous_pending) + 1
+    assert pending[-1].event_id == execution["task_operation_id"]
+    assert pending[-1].event_type == "task.create"
+    with api.store.read() as unit:
+        receipt = unit.receipts.get_operation("home", USER, execution["task_operation_id"])
+        assert receipt.command.action == "task.create"
+        assert receipt.result.decode()["occurrence_id"] == execution["task_occurrence_id"]
+        work = unit.tasks.occurrence("home", execution["task_occurrence_id"])
+        assert work.definition_snapshot.content.title == ACTION["title"]
 
 
 def test_enable_exact_revision_and_keep_it_through_draft_edits(api):
@@ -215,63 +260,159 @@ def test_suspended_member_cannot_admit_a_rule(api):
     denied(run(api, rule_id, "suspended"), 403, "permission_denied")
 
 
-def test_duplicate_concurrent_requests_retain_one_task_and_receipt(api):
+@pytest.mark.parametrize("held_writer", [False, True])
+def test_duplicate_concurrent_requests_retain_one_task_and_receipt(api, monkeypatch, held_writer):
     rule_id = initial_draft(api)
     result(configure(api, rule_id, "enable"))
     barrier = Barrier(2)
     headers = api.headers("duplicate") | CONTEXT
+    body = {"rule_revision": "1", "control_revision": "1"}
+    writer = hold_receipt_writer(monkeypatch, RUN_AUTOMATION, "duplicate") if held_writer else None
+    before = effects(api)
+    before_audit = audit(api)
 
-    def invoke():
+    def invoke(contender):
         barrier.wait(timeout=5)
-        return api.client.post(
-            f"{DRAFTS}/{rule_id}/runs",
-            json={"rule_revision": "1", "control_revision": "1"},
-            headers=headers,
-        )
+        if writer is not None and contender == 1:
+            assert writer[0].wait(timeout=5)
+        try:
+            return api.client.post(f"{DRAFTS}/{rule_id}/runs", json=body, headers=headers)
+        finally:
+            if writer is not None and contender == 1:
+                writer[1].set()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        first = executor.submit(invoke)
-        second = executor.submit(invoke)
+        first = executor.submit(invoke, 0)
+        second = executor.submit(invoke, 1)
         replies = first.result(), second.result()
+    statuses = sorted(response.status_code for response in replies)
+    assert statuses in ([200, 200], [200, 503])
+    if held_writer:
+        assert statuses == [200, 503]
+    accepted = next(response for response in replies if response.status_code == 200)
+    execution = result(accepted)
+    one_task_effect(api, before, execution)
+    after = effects(api), audit(api)
+    assert after[1][: len(before_audit)] == before_audit
+    added = after[1][len(before_audit) :]
+    assert len(added) == 2
+    assert {entry.operation_id for entry in added} == {
+        accepted.json()["operation_id"],
+        execution["task_operation_id"],
+    }
+    assert read(api, f"{REQUESTS}/run/duplicate").json() == accepted.json()
+    completed = []
+    for response in replies:
+        if response.status_code == 503:
+            busy(response)
+            # The winner committed this same key. Retry its unchanged original once.
+            response = api.client.post(f"{DRAFTS}/{rule_id}/runs", json=body, headers=headers)
+        assert result(response) == execution
+        assert response.json() == accepted.json()
+        assert (effects(api), audit(api)) == after
+        completed.append(response)
+    replies = tuple(completed)
     assert result(replies[0]) == result(replies[1])
     assert replies[0].json() == replies[1].json()
     assert len(effects(api)[0][1]) == 1
     denied(run(api, rule_id, "duplicate", control="2"), 409, "idempotency_conflict")
+    assert read(api, f"{REQUESTS}/run/duplicate").json() == accepted.json()
+    assert (effects(api), audit(api)) == after
 
 
-def test_disable_serializes_against_manual_admission(api):
+@pytest.mark.parametrize("held_action", [None, RUN_AUTOMATION, SET_AUTOMATION_CONTROL])
+def test_disable_serializes_against_manual_admission(api, monkeypatch, held_action):
     rule_id = initial_draft(api)
     result(configure(api, rule_id, "enable"))
     barrier = Barrier(2)
     run_headers = api.headers("race-run") | CONTEXT
     disable_headers = api.headers("race-disable") | CONTEXT
+    run_body = {"rule_revision": "1", "control_revision": "1"}
+    disable_body = {"rule_revision": "1", "expected_control_revision": "1", "enabled": False}
+    before = effects(api)
+    before_audit = audit(api)
+    held_key = "race-run" if held_action == RUN_AUTOMATION else "race-disable"
+    writer = (
+        hold_receipt_writer(monkeypatch, held_action, held_key) if held_action is not None else None
+    )
 
     def invoke(path, payload, headers):
         barrier.wait(timeout=5)
-        return api.client.post(f"{DRAFTS}/{rule_id}/{path}", json=payload, headers=headers)
+        action = RUN_AUTOMATION if path == "runs" else SET_AUTOMATION_CONTROL
+        if writer is not None and action != held_action:
+            assert writer[0].wait(timeout=5)
+        try:
+            return api.client.post(f"{DRAFTS}/{rule_id}/{path}", json=payload, headers=headers)
+        finally:
+            if writer is not None and action != held_action:
+                writer[1].set()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        requested = executor.submit(
-            invoke, "runs", {"rule_revision": "1", "control_revision": "1"}, run_headers
-        )
+        requested = executor.submit(invoke, "runs", run_body, run_headers)
         disabled = executor.submit(
             invoke,
             "execution",
-            {"rule_revision": "1", "expected_control_revision": "1", "enabled": False},
+            disable_body,
             disable_headers,
         )
         run_response, disable_response = requested.result(), disabled.result()
 
+    if held_action == RUN_AUTOMATION:
+        assert (run_response.status_code, disable_response.status_code) == (200, 503)
+    elif held_action == SET_AUTOMATION_CONTROL:
+        assert (run_response.status_code, disable_response.status_code) == (503, 200)
+    if run_response.status_code == 503:
+        busy(run_response)
+        assert disable_response.status_code == 200
+        denied(read(api, f"{REQUESTS}/run/race-run"), 404, "operation_missing")
+        unchanged = effects(api), audit(api)
+        # Disable already committed. The same run original must still be rejected.
+        run_response = api.client.post(
+            f"{DRAFTS}/{rule_id}/runs", json=run_body, headers=run_headers
+        )
+        assert (effects(api), audit(api)) == unchanged
+    if disable_response.status_code == 503:
+        busy(disable_response)
+        assert run_response.status_code == 200
+        assert read(api, f"{REQUESTS}/run/race-run").json() == run_response.json()
+        unchanged_effects, previous_audit = effects(api), audit(api)
+        # The admitted task stays intact while disabling the same control explicitly.
+        disable_response = api.client.post(
+            f"{DRAFTS}/{rule_id}/execution", json=disable_body, headers=disable_headers
+        )
+        assert result(disable_response)["enabled"] is False
+        assert effects(api) == unchanged_effects
+        current_audit = audit(api)
+        assert current_audit[: len(previous_audit)] == previous_audit
+        assert len(current_audit) == len(previous_audit) + 1
+        assert current_audit[-1].operation_id == disable_response.json()["operation_id"]
     assert result(disable_response)["enabled"] is False
+    assert read(api, f"{REQUESTS}/configure/race-disable").json() == disable_response.json()
+    state = read(api, f"{DRAFTS}/{rule_id}/execution").json()
+    assert state["control"]["control_revision"] == "2" and state["control"]["enabled"] is False
     denied(run(api, rule_id, "after-disable"), 409, "automation_disabled")
     if run_response.status_code == 200:
         assert result(run_response)["task_occurrence_id"]
         assert len(effects(api)[0][1]) == 1
         assert read(api, f"{REQUESTS}/run/race-run").json() == run_response.json()
+        execution = result(run_response)
+        one_task_effect(api, before, execution)
+        expected_operations = {
+            run_response.json()["operation_id"],
+            execution["task_operation_id"],
+            disable_response.json()["operation_id"],
+        }
     else:
         denied(run_response, 409, "automation_disabled")
         assert len(effects(api)[0][1]) == 0
         denied(read(api, f"{REQUESTS}/run/race-run"), 404, "operation_missing")
+        assert effects(api) == before
+        expected_operations = {disable_response.json()["operation_id"]}
+    current_audit = audit(api)
+    assert current_audit[: len(before_audit)] == before_audit
+    added = current_audit[len(before_audit) :]
+    assert len(added) == len(expected_operations)
+    assert {entry.operation_id for entry in added} == expected_operations
 
 
 def test_failed_run_receipt_rolls_back_the_ordinary_task(api, monkeypatch):

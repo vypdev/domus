@@ -29,3 +29,32 @@ same transaction that admits the request. The ordinary task receipt is linked to
 the outer run result. Retrying a committed identity returns its original receipt.
 A restored historical receipt preserves the result and operation ID, and the UI
 labels it as historical. The task link is available for a current committed result.
+
+## Temporary storage contention
+
+[Domus #152](https://github.com/vypdev/domus/issues/152) qualifies the existing
+storage contention contract without changing the application, its SQLite timeout,
+or automatic retry behavior. The [second destination CI attempt after #151](https://github.com/vypdev/domus/actions/runs/44857739112/attempts/2)
+reported 5,640 passed tests and one failure: the duplicate-run test required both
+concurrent requests to return immediately with HTTP 200, although one request
+received the documented HTTP 503 `storage_busy` response. The first attempt timed
+out; the available observations do not establish its physical cause.
+
+The command tests retain their original unrestricted races and additionally hold
+a real SQLite receipt writer in its uncommitted transaction. An event releases
+that writer only after the competing HTTP call finishes, exercising the actual
+250 ms busy timeout in both standalone and Ingress. No response is replaced with a
+fabricated success or rejection.
+
+| Case | Required observations |
+| --- | --- |
+| Duplicate run | One accepted automation receipt and ordinary task receipt, exactly one definition, occurrence and pending task event, and their two audit entries. A contender may return 503 only with `storage_busy` and `Retry-After: 1`. After both calls finish, one explicit retry of its unchanged body and idempotency key must return the exact accepted original without another effect or audit entry. Reusing the key for a different request still returns `idempotency_conflict`. |
+| Run before disable | The admitted task and original receipt survive. If disabling temporarily returns 503, one explicit unchanged retry disables the control without changing task, stock or pending effects; only the disable audit entry is added. A later run is rejected. |
+| Disable before run | A temporarily rejected run has no original receipt. One explicit unchanged retry after the disable commits returns `automation_disabled`, with no task, event or run audit entry. The control remains disabled at revision 2. |
+
+The controlled reproduction retained the old immediate-success assertions and
+failed six forced-contention cases, while the four unrestricted races passed.
+With the corrected observations, all ten race cases passed. The complete command
+file and existing storage-contention HTTP tests then passed all 36 cases. These
+local results do not substitute for the complete CI and review of the contributing
+commit or the exact destination commit after its normal merge.
