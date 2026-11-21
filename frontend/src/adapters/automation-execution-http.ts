@@ -25,11 +25,13 @@ function configuration(value: unknown, id: string): AutomationConfiguration {
   const latest = {id, latestRevision, latestTitle,
     ...(row.latest_manual === false ? {latestManual: false as const} : {})};
   if (row.control === null) return {...latest, control: null};
-  const info = fields(row.control, ['rule_revision', 'control_revision', 'enabled', 'title'], []);
+  const info = fields(row.control, ['rule_revision', 'control_revision', 'enabled', 'title'], ['trigger']);
+  check(info.trigger === undefined || info.trigger === 'daily');
   const ruleRevision = revisionValue(info.rule_revision);
   check(BigInt(ruleRevision) <= BigInt(latestRevision));
   const control = {ruleRevision, controlRevision: revisionValue(info.control_revision),
-    enabled: boolean(info.enabled), title: taskText(info.title, 160, true)};
+    enabled: boolean(info.enabled), title: taskText(info.title, 160, true),
+    ...(info.trigger === 'daily' ? {trigger: 'daily' as const} : {})};
   return {...latest, control};
 }
 

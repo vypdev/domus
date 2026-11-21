@@ -233,9 +233,15 @@ class AutomationSimulation:
     conditions: tuple[ConditionDecision, ...]
 
 
-def simulate(rule: AutomationRule, below_minimum: Callable[[str], bool]) -> AutomationSimulation:
-    if rule.trigger != "manual":
-        raise InvalidInput("automation_requires_manual_trigger")
+@dataclass(frozen=True, slots=True)
+class AutomationConditionResult:
+    matched: bool
+    conditions: tuple[ConditionDecision, ...]
+
+
+def evaluate_conditions(
+    condition: Condition | None, below_minimum: Callable[[str], bool]
+) -> AutomationConditionResult:
     decisions: list[ConditionDecision] = []
 
     def evaluate(condition: Condition, path: tuple[int, ...]) -> bool:
@@ -255,7 +261,14 @@ def simulate(rule: AutomationRule, below_minimum: Callable[[str], bool]) -> Auto
             decisions.append(ConditionDecision(path, condition.kind, matched))
         return matched
 
-    would_create = rule.condition is None or evaluate(rule.condition, ())
+    matched = condition is None or evaluate(condition, ())
+    return AutomationConditionResult(matched, tuple(decisions))
+
+
+def simulate(rule: AutomationRule, below_minimum: Callable[[str], bool]) -> AutomationSimulation:
+    if rule.trigger != "manual":
+        raise InvalidInput("automation_requires_manual_trigger")
+    result = evaluate_conditions(rule.condition, below_minimum)
     return AutomationSimulation(
-        rule.version, rule.trigger, rule.task.title, would_create, tuple(decisions)
+        rule.version, rule.trigger, rule.task.title, result.matched, result.conditions
     )

@@ -13,6 +13,22 @@ from domus.domain.task_values import OccurrenceState, TaskRequirement, TaskRules
 from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
 
 
+def occurrence_result(work: TaskOccurrence) -> JsonDocument:
+    return JsonDocument.from_value(
+        {
+            "definition_id": work.definition_snapshot.definition_id,
+            "definition_revision": work.definition_snapshot.revision,
+            "occurrence_id": work.occurrence_id,
+            "revision": work.revision,
+            "state": work.state.value,
+            "assignee_ids": list(work.assignee_ids),
+            "state_reason": work.state_reason,
+            "prerequisite_ids": list(work.prerequisite_ids),
+            "required_subtask_ids": list(work.required_subtask_ids),
+        }
+    )
+
+
 def cycle_materials(
     unit: UnitOfWork, work: TaskOccurrence, cycle: TaskCycle
 ) -> tuple[MaterialIntent, ...]:

@@ -365,6 +365,11 @@ jobs:
         run: >-
           docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
           --build-arg BUILD_ARCH=${{ matrix.arch }} -t "$DOMUS_IMAGE_PREFIX:edge" addon-edge
+      - name: Build the immutable previous schema-35 daily-draft application
+        run: >-
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t "$DOMUS_IMAGE_PREFIX:schema35" tests/fixtures/schema35-app
       - name: Build the immutable published schema-8 image for profile migration compatibility
         run: >-
           docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
@@ -423,6 +428,7 @@ jobs:
           DOMUS_SCHEMA8_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema8
           DOMUS_SCHEMA9_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema9
           DOMUS_SCHEMA14_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema14
+          DOMUS_SCHEMA35_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema35
         run: uv run pytest tests/containers --no-cov
       - name: Retain native calendar coverage
         uses: actions/upload-artifact@v7.0.2

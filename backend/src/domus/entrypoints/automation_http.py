@@ -7,7 +7,7 @@ from fastapi import APIRouter, Body, Query, Request
 from fastapi.params import Depends
 from pydantic import Field, model_validator
 
-from domus.application.automation_drafts import DraftPage, SaveDraft
+from domus.application.automation_drafts import DraftSummary, SaveDraft
 from domus.application.automation_execution import (
     RUN_AUTOMATION,
     SET_AUTOMATION_CONTROL,
@@ -179,6 +179,12 @@ class DailyAutomationDraftDetail(DailyProposalBody, DraftIdentity):
     pass
 
 
+class AutomationDraftPageDetail(StrictModel):
+    drafts: tuple[DraftSummary, ...]
+    next_cursor: str | None
+    may_save: bool = Field(default=True, exclude_if=lambda value: value is True)
+
+
 type RevisionText = Annotated[str, Field(pattern=_revision_pattern(allow_zero=False))]
 type ControlRevisionText = Annotated[str, Field(pattern=_revision_pattern(allow_zero=True))]
 
@@ -199,6 +205,7 @@ class AutomationControlDetail(StrictModel):
     control_revision: RevisionText
     enabled: bool
     title: str = Field(min_length=1, max_length=160)
+    trigger: Literal["manual", "daily"] = "manual"
 
 
 class AutomationExecutionDetail(StrictModel):
@@ -251,9 +258,12 @@ def create_automation_router(
     ) -> DailyAutomationTimes:
         return context(request).automation_schedule().daily(query.time)
 
-    @router.get("/drafts", response_model=DraftPage)
-    def drafts(request: Request, query: Annotated[PageQuery, Query()]) -> DraftPage:
-        return context(request).automation_drafts.list(limit=query.limit, cursor=query.cursor)
+    @router.get("/drafts", response_model=AutomationDraftPageDetail)
+    def drafts(request: Request, query: Annotated[PageQuery, Query()]) -> AutomationDraftPageDetail:
+        page = context(request).automation_drafts.list(limit=query.limit, cursor=query.cursor)
+        return AutomationDraftPageDetail(
+            drafts=page.drafts, next_cursor=page.next_cursor, may_save=page.may_save
+        )
 
     @router.get(
         "/drafts/{rule_id}", response_model=AutomationDraftDetail | DailyAutomationDraftDetail
@@ -314,6 +324,7 @@ def create_automation_router(
                 control_revision=str(control.control_revision),
                 enabled=control.enabled,
                 title=control.title,
+                trigger=control.trigger,
             ),
         )
 

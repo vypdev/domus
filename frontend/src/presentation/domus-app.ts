@@ -15,6 +15,10 @@ import type {AutomationPreviewView} from '../application/automation-preview';
 import './domus-automation-drafts';
 import './domus-automation-execution';
 import './domus-automation-run-history';
+import './domus-automation-daily';
+import './domus-automation-daily-history';
+import type {DailyView} from '../application/automation-daily';
+import type {DailyHistoryView} from '../application/automation-daily-history';
 import './domus-automation-schedule-preview';
 import type {SchedulePreviewView} from '../application/automation-schedule-preview';
 import type {AutomationRunHistoryView} from '../application/automation-run-history';
@@ -59,7 +63,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
   static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
-    taskOverview: {attribute: false}, automationPreview: {attribute: false}, automationDrafts: {attribute: false}, automationExecution: {attribute: false}, automationRunHistory: {attribute: false}, automationSchedulePreview: {attribute: false}, stockAttention: {attribute: false}, shoppingAttention: {attribute: false}, familyOverview: {attribute: false},
+    taskOverview: {attribute: false}, automationPreview: {attribute: false}, automationDrafts: {attribute: false}, automationExecution: {attribute: false}, automationRunHistory: {attribute: false}, automationSchedulePreview: {attribute: false}, automationDaily: {attribute: false}, automationDailyHistory: {attribute: false}, stockAttention: {attribute: false}, shoppingAttention: {attribute: false}, familyOverview: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
@@ -71,6 +75,8 @@ export class DomusApp extends LitElement {
   declare automationExecution: AutomationExecutionView | null;
   declare automationRunHistory: AutomationRunHistoryView | null;
   declare automationSchedulePreview: SchedulePreviewView | null;
+  declare automationDaily: DailyView | null;
+  declare automationDailyHistory: DailyHistoryView | null;
   declare stockAttention: StockAttentionView | null;
   declare shoppingAttention: ShoppingAttentionView | null;
   declare familyOverview: FamilyOverviewView | null;
@@ -100,6 +106,7 @@ export class DomusApp extends LitElement {
     this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.taskOverview = null; this.automationPreview = null; this.nameDraft = ''; this.zoneDraft = '';
     this.automationDrafts = null; this.automationExecution = null; this.automationRunHistory = null; this.automationSchedulePreview = null;
+    this.automationDaily = null; this.automationDailyHistory = null;
     this.stockAttention = null; this.shoppingAttention = null; this.familyOverview = null;
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
@@ -303,7 +310,9 @@ export class DomusApp extends LitElement {
             .timeLocked=${drafts?.state === 'ready' && drafts.trigger === 'daily' && draftEditorLocked}>
           </domus-automation-schedule-preview>
         </domus-automation-drafts>
+        <domus-automation-daily .view=${this.automationDaily} .language=${this.language}></domus-automation-daily>
         <domus-automation-execution .view=${this.automationExecution} .language=${this.language}></domus-automation-execution>
+        <domus-automation-daily-history .view=${this.automationDailyHistory} .language=${this.language}></domus-automation-daily-history>
         <domus-automation-run-history .view=${this.automationRunHistory} .language=${this.language}></domus-automation-run-history>
         <domus-administration .view=${this.administration} .language=${this.language}
           .pending=${view?.busy===true&&(decision?.state==='active'||this.administration!==null)}

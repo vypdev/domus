@@ -11,17 +11,17 @@ export interface AutomationRun {
   readonly historical: boolean;
   readonly taskOccurrenceId: string | null;
 }
-export interface AutomationRunPage {
-  readonly items: readonly AutomationRun[];
+export interface AutomationRunPage<Run = AutomationRun> {
+  readonly items: readonly Run[];
   readonly next: string | null;
 }
-export interface AutomationRunHistoryServer {
-  page(scope: DraftScope, ruleId: string, after: string | null): EntryRead<AutomationRunPage | 'expired'>;
+export interface AutomationRunHistoryServer<Run = AutomationRun> {
+  page(scope: DraftScope, ruleId: string, after: string | null): EntryRead<AutomationRunPage<Run> | 'expired'>;
 }
 export type AutomationRunHistoryIntent = 'open' | 'close' | 'older' | 'latest' | 'retry';
-export interface AutomationRunHistoryView {
+export interface AutomationRunHistoryView<Run = AutomationRun> {
   readonly phase: 'closed' | 'loading' | 'ready' | 'unavailable' | 'expired' | 'denied';
-  readonly items: readonly AutomationRun[];
+  readonly items: readonly Run[];
   readonly hasOlder: boolean;
   readonly timeZone: string;
 }
@@ -32,15 +32,15 @@ export interface AutomationRunHistoryScope extends DraftScope {
 
 type Selection = Readonly<{scope: AutomationRunHistoryScope; ruleId: string; timeZone: string}>;
 
-export class AutomationRunHistoryController {
+export class AutomationRunHistoryController<Run = AutomationRun> {
   private selection: Selection | null = null;
-  private request: EntryRead<AutomationRunPage | 'expired'> | null = null;
-  private view: AutomationRunHistoryView | null = null;
+  private request: EntryRead<AutomationRunPage<Run> | 'expired'> | null = null;
+  private view: AutomationRunHistoryView<Run> | null = null;
   private next: string | null = null;
   private attempted: string | null = null;
 
-  constructor(private readonly server: AutomationRunHistoryServer,
-    private readonly publish: (view: AutomationRunHistoryView | null) => void) {}
+  constructor(private readonly server: AutomationRunHistoryServer<Run>,
+    private readonly publish: (view: AutomationRunHistoryView<Run> | null) => void) {}
 
   bind(scope: AutomationRunHistoryScope | null, ruleId: string | null, timeZone: string | null): void {
     const previous = this.selection;
@@ -63,7 +63,7 @@ export class AutomationRunHistoryController {
     this.publish(this.view);
   }
 
-  private show(phase: AutomationRunHistoryView['phase'], items: readonly AutomationRun[], timeZone: string): void {
+  private show(phase: AutomationRunHistoryView<Run>['phase'], items: readonly Run[], timeZone: string): void {
     this.view = {phase, items, hasOlder: this.next !== null, timeZone};
     this.publish(this.view);
   }
@@ -93,7 +93,7 @@ export class AutomationRunHistoryController {
   }
 
   private async load({scope, ruleId, timeZone}: Selection, cursor: string | null,
-    prior: readonly AutomationRun[]): Promise<void> {
+    prior: readonly Run[]): Promise<void> {
     this.attempted = cursor;
     const request = this.server.page(scope, ruleId, cursor);
     this.request = request;

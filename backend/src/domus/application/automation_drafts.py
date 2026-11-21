@@ -13,11 +13,13 @@ from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
+from domus.application.task_authorization import TaskAccess
 from domus.application.task_ports import TaskCursors
 from domus.domain.automation import AutomationDraft, AutomationRule
-from domus.domain.errors import InvalidInput, NotFound
+from domus.domain.errors import Forbidden, InvalidInput, NotFound
 from domus.domain.identity import (
     HumanIdentity,
+    Permission,
     effective_role,
     validate_revision,
 )
@@ -63,6 +65,7 @@ class DraftSummary:
 class DraftPage:
     drafts: tuple[DraftSummary, ...]
     next_cursor: str | None
+    may_save: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,12 +109,19 @@ class AutomationDrafts:
                 if len(drafts) > limit
                 else None
             )
+            try:
+                TaskAccess(human).require(unit, home, Permission.TASKS_CREATE)
+            except Forbidden:
+                may_save = False
+            else:
+                may_save = True
             return DraftPage(
                 tuple(
                     DraftSummary(item.rule_id, str(item.revision), item.rule.task.title)
                     for item in drafts[:limit]
                 ),
                 next_cursor,
+                may_save,
             )
 
     def reopen(self, rule_id: str) -> AutomationDraft:

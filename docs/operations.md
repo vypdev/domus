@@ -1,6 +1,8 @@
 # Proposed setup and operations guide
 
-This guide describes intended operation. No Domus artifact is installed or deployed yet.
+This guide covers current Edge workflows and remaining intended operation. The
+[installation guide](installation-home-assistant.md) identifies qualified artifacts;
+an implementation or test declaration alone does not establish installed acceptance.
 
 ## Recommended setup
 
@@ -28,6 +30,45 @@ Invalid or unknown configuration versions block the affected operation and prese
 Administrator mapping defaults to all_ha_administrators; setup_administrator and selected_ha_user are explicit alternatives. Verify current HA identity/administrator status through the reviewed adapter, retain grant provenance and revoke invalid inherited grants. Household role profiles and member exceptions are configurable through current administrator authority; known suspension and hard domain constraints remain enforced. Changing a mapping or profile through Domus cannot remove its last active effective administrator. External HA account loss requires the reviewed authenticated recovery procedure, never a browser-order fallback.
 
 Reopening a prerequisite preserves already-completed downstream work and points and raises dependency_attention. Approved unfulfilled redemptions without backing enter funding_hold with approval/reservation retained; delivery cannot proceed until funding is sufficient or an explicit authorized resolution occurs. Disabling a rule fences new admissions and subsequent steps while recording the result of already-started atomic commands. Restart/re-enable does not silently resume its cancelled queue or waits.
+
+## Daily automation operation and recovery
+
+The daily worker belongs to the Domus process in Ingress and standalone. It uses a
+rule-owned `task.create` grant, never a member's saved credential or global admin role.
+Each turn observes at most 25 rules and 25 pending effects; queue admission is bounded
+to 100 per rule and 1,000 per household. No new scheduler setting is required.
+Closing the process stops and joins this worker before storage is released.
+
+Review the saved revision, approved timing and current household timing in **Daily
+automation**. Household timing changes continue under the approved policy until
+explicit adoption. If timing data is unavailable, refresh the review or deliberately
+adopt a resolvable current policy. Revocation remains available even when neither
+policy resolves. A current automation administrator can revoke without task creation.
+
+On startup, missed unadmitted times are persistently skipped; already admitted work
+retains its original facts. A delayed poll during a running process stays eligible.
+Disablement cancels waiting work, and a later grant does not restart it. Unknown
+control results recover by their original request key; do not create a replacement
+request to discover whether a change committed. A committed task or control receipt
+remains successful when a following read fails.
+
+Cancelling an admitted trigger commits its terminal original receipt, audit and
+acknowledged outbox with the queue/control change in one writer. This applies to
+disablement, a replacement grant, a switch to manual and worker rejection of a
+stale grant. Restoring an earlier admitted checkpoint cannot resume that cancelled
+trigger. An original task outcome is retained if it committed before cancellation.
+
+SQLite schema 36 adds daily schedules/grants and scheduled runs while preserving
+schema-35 manual controls, inactive daily drafts and original receipts. Migration
+from representative schema 35 and 20 data is transactional. Snapshot activation
+retains valid admitted work and projects original terminal outcomes without
+redelivery. A historical queued admission alone cannot resume cancelled work.
+An older incompatible image must refuse the upgraded database before mutation.
+Rollback uses a protected compatible image and cold private-data copy together;
+never relabel the schema header or run an old image against upgraded data.
+
+See the [daily qualification map](evidence/daily-automation-execution-qualification.md)
+for exercised cases and the separate image/installed acceptance gates.
 
 ## Inventory catalog and movement history
 

@@ -6,6 +6,7 @@ import {taskText} from '../domain/tasks';
 
 export interface AutomationPreviewScope extends InventoryScope {
   readonly householdId: string;
+  readonly authorization?: string;
 }
 export interface AutomationPreviewDraft {
   readonly title: string;
@@ -55,7 +56,7 @@ export class AutomationPreviewController {
   bind(scope: AutomationPreviewScope | null, visible = false): void {
     visible = scope !== null && visible;
     const same = scope?.key === this.scope?.key;
-    if (same && this.visible === visible) return;
+    if (same && this.scope?.authorization === scope?.authorization && this.visible === visible) return;
     this.pending?.cancel();
     this.pending = null;
     if (!same) {this.ready = null; this.replacement = null;}

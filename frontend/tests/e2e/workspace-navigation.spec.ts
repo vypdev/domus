@@ -1744,7 +1744,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await trigger.press('Enter');
     await trigger.press('End');
     await trigger.press('Enter');
-    await expect(drafts.getByText(/Daily drafts stay inactive/u)).toBeVisible();
+    await expect(drafts.getByText(/Saving a daily draft does not enable it/u)).toBeVisible();
     let dailyKey = '';
     await page.route(draftsURL, async route => {
       if (route.request().method() !== 'POST') return route.continue();
@@ -1870,7 +1870,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
     await expect(history.getByRole('listitem')).toHaveCount(0);
     await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
-    await expect(drafts.getByText(/Los borradores diarios permanecen inactivos/u)).toBeVisible();
+    await expect(drafts.getByText(/Guardar un borrador diario no lo habilita/u)).toBeVisible();
     await expect(schedule.getByRole('textbox',{name:'Hora de cada día',exact:true})).toHaveValue('07:30');
     await drafts.screenshot({path:info.outputPath('daily-draft-es-narrow.png')});
     await history.getByRole('button',{name:'Mostrar historial',exact:true}).tap();
@@ -1879,5 +1879,72 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(history.getByRole('listitem')).toHaveCount(0);
     await history.getByRole('button',{name:'Mostrar historial',exact:true}).tap();
     await expect(history.getByText('No tienes ejecuciones manuales para esta regla.',{exact:true})).toBeVisible();
+
+    // The saved daily revision uses the same protected server and compiled bundle.
+    // A committed reply may be lost without authorizing another grant request.
+    await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    await page.getByRole('combobox',{name:'Idioma',exact:true}).selectOption('en');
+    await page.setViewportSize({width:1280,height:900});
+    await page.emulateMedia({colorScheme:'light'});
+    const daily = page.locator('domus-automation-daily');
+    const dailyHistory = page.locator('domus-automation-daily-history');
+    const enableDaily = daily.getByRole('button',{name:'Enable this daily revision',exact:true});
+    await expect(daily.getByText('Daily automation is disabled.',{exact:true})).toBeVisible();
+    await expect(daily.getByText('Create task · ' + draftTitle,{exact:true})).toBeVisible();
+    await enableDaily.press('Enter');
+    const dailyConfirmation = daily.getByRole('heading',{name:'Confirm daily automation',exact:true});
+    await expect(dailyConfirmation).toBeFocused();
+    await daily.getByRole('button',{name:'Cancel',exact:true}).press('Enter');
+    await expect(enableDaily).toBeFocused();
+    await enableDaily.press('Enter');
+    await daily.screenshot({path:info.outputPath('daily-enable-review-en-wide.png')});
+    const enableURL = draftsURL + '/' + rule.rule_id + '/daily/enable';
+    let dailyControlKey = '', dailyControlBody: string | null = null, dailyWrites = 0;
+    page.on('request', item => {if (item.url() === enableURL && item.method() === 'POST') dailyWrites++;});
+    await page.route(enableURL, async route => {
+      dailyControlKey = (await route.request().allHeaders())['idempotency-key'];
+      dailyControlBody = route.request().postData();
+      expect(route.request().postDataJSON()).toMatchObject({rule_revision:'2'});
+      const committed = await route.fetch();
+      expect(committed.ok(),await committed.text()).toBe(true);
+      await route.abort('failed');
+    }, {times:1});
+    await daily.getByRole('button',{name:'Confirm',exact:true}).press('Enter');
+    const recoverDaily = daily.getByRole('button',{name:'Check original daily request',exact:true});
+    await expect(recoverDaily).toBeEnabled();
+    expect(dailyControlKey).toMatch(/^req_[a-f0-9]{32}$/u);
+    expect(dailyControlBody).not.toBeNull();
+    await page.reload();
+    await expect(recoverDaily).toBeEnabled();
+    const dailyOriginal = page.waitForResponse(base + 'api/v1/automation/daily/requests/enable/' + dailyControlKey);
+    await recoverDaily.press('Enter');
+    expect((await dailyOriginal).ok()).toBe(true);
+    await expect(daily.getByRole('heading',{name:'Daily permission granted.',exact:true})).toBeFocused();
+    await expect(daily.getByText(/^Daily automation is enabled\./u)).toBeVisible();
+    expect(dailyWrites).toBe(1);
+    await drafts.getByRole('button',{name:'Open ' + draftTitle,exact:true}).press('Enter');
+    await expect(daily.getByText(/^Daily automation is enabled\./u)).toBeVisible();
+    await dailyHistory.getByRole('button',{name:'Show daily history',exact:true}).press('Enter');
+    await expect(dailyHistory.getByRole('button',{name:'Recent daily runs',exact:true})).toBeEnabled();
+
+    // Saving a manual draft does not replace the grant or hide its daily controls.
+    const triggerAfterRecovery = drafts.getByRole('combobox',{name:'Trigger',exact:true});
+    await triggerAfterRecovery.press('Enter');
+    await triggerAfterRecovery.press('Home');
+    await triggerAfterRecovery.press('Enter');
+    const manualSave = page.waitForResponse(response => response.url() === draftsURL && response.request().method() === 'POST');
+    await drafts.getByRole('button',{name:'Save draft',exact:true}).press('Enter');
+    expect((await manualSave).ok()).toBe(true);
+    await expect(daily.getByText(/^Daily automation is enabled\./u)).toBeVisible();
+    await expect(daily.getByText('Revision 2 · Every day at 07:30',{exact:true})).toBeVisible();
+    await page.getByRole('combobox',{name:'Language',exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
+    await daily.getByRole('button',{name:'Deshabilitar automatización diaria',exact:true}).tap();
+    await expect(daily.getByRole('heading',{name:'Confirmar automatización diaria',exact:true})).toBeFocused();
+    await daily.screenshot({path:info.outputPath('daily-disable-review-es-narrow-dark.png')});
+    await daily.getByRole('button',{name:'Confirmar',exact:true}).tap();
+    await expect(daily.getByRole('heading',{name:'Permiso diario revocado.',exact:true})).toBeFocused();
+    expect(dailyWrites).toBe(1);
   });
 }

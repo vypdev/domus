@@ -10,7 +10,7 @@ from domus.application.task_category_commands import require_active_category
 from domus.application.task_material_commands import TaskMaterialCommands
 from domus.application.task_material_ports import MissingTaskInventory, TaskInventory
 from domus.application.task_requests import CreateTask
-from domus.domain.errors import IntegrationUnavailable
+from domus.domain.errors import Forbidden, IntegrationUnavailable
 from domus.domain.storage import JsonDocument, JsonObject
 from domus.domain.task_values import TaskRules
 from domus.domain.tasks import HouseholdTaskPolicy, TaskDefinition
@@ -31,8 +31,10 @@ class TaskCreation:
     inventory_factory: Callable[[UnitOfWork], TaskInventory] | None = None
 
     def materials(
-        self, unit: UnitOfWork, access: TaskAccess, household_id: str
+        self, unit: UnitOfWork, access: TaskAccess | None, household_id: str
     ) -> TaskMaterialCommands:
+        if access is None:
+            raise Forbidden("permission_denied")
         try:
             inventory = (
                 MissingTaskInventory()
@@ -50,7 +52,7 @@ class TaskCreation:
         )
 
     def definition(
-        self, unit: UnitOfWork, access: TaskAccess, household_id: str, request: CreateTask
+        self, unit: UnitOfWork, access: TaskAccess | None, household_id: str, request: CreateTask
     ) -> TaskDefinition:
         amount = request.overrides.point_value_minor
         if amount is not None:

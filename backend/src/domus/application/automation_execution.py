@@ -2,20 +2,22 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal
 
 from domus.application.automation_preview import (
     AutomationCommandAuthority,
     evaluate_rule,
     owned_product,
 )
+from domus.application.automation_scheduled_cancellation import ScheduledCancellations
 from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_commands import TaskCommands
 from domus.application.task_requests import CreateTask
-from domus.domain.automation import AutomationControl, AutomationDraft
-from domus.domain.errors import Conflict, InvalidInput, NotFound
+from domus.domain.automation import AutomationControl, AutomationDraft, DailyTrigger
+from domus.domain.errors import Conflict, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, validate_revision
 from domus.domain.storage import CommandKey, JsonDocument, JsonObject, Receipt, validate_identifier
 
@@ -76,6 +78,7 @@ class ConfiguredAutomation:
     control_revision: int
     enabled: bool
     title: str
+    trigger: Literal["manual", "daily"] = "manual"
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,12 +134,15 @@ class AutomationExecution:
             control = unit.automation_controls.get(home, rule_id)
             configured = None
             if control is not None:
-                saved = _manual_revision(unit, home, rule_id, control.rule_revision)
+                saved = unit.automation_drafts.revision(home, rule_id, control.rule_revision)
+                if saved is None:
+                    raise StorageFailure("invalid_automation_control_source")
                 configured = ConfiguredAutomation(
                     control.rule_revision,
                     control.control_revision,
                     control.enabled,
                     saved.rule.task.title,
+                    "manual" if saved.rule.trigger == "manual" else "daily",
                 )
             return AutomationExecutionState(
                 rule_id,
@@ -166,6 +172,16 @@ class AutomationExecution:
             control = AutomationControl(
                 request.rule_id, request.rule_revision, current_revision + 1, request.enabled
             )
+            if previous is not None:
+                prior_draft = unit.automation_drafts.revision(
+                    home, request.rule_id, previous.rule_revision
+                )
+                if prior_draft is None:
+                    raise StorageFailure("invalid_automation_control_source")
+                if isinstance(prior_draft.rule.trigger, DailyTrigger):
+                    ScheduledCancellations(
+                        self.transactions, self.scope, self.clock, self.identifiers
+                    ).pending(unit, request.rule_id)
             unit.automation_controls.save(home, control, current_revision)
             result = _control_result(control)
             fact = JsonDocument.from_value(result)

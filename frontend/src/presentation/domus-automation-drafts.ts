@@ -29,11 +29,12 @@ const COPY = {
     current: 'Current draft', operation: 'Operation ID', busy: 'Checking automation drafts…',
     noCondition: 'No stock condition',
     complex: 'This draft uses grouped conditions. You can open and preview the saved rule here.',
+    complexDaily: 'This saved daily rule uses grouped conditions. Review its daily schedule and execution permission below.',
     product: 'Stock below minimum', all: 'All conditions', any: 'Any condition', not: 'Negated condition',
     preview_saved: 'Preview saved rule', wouldCreate: 'Would create this task', noAction: 'No task would be created',
-    readOnly: 'Saving drafts is unavailable in the current read-only session.',
+    readOnly: 'Saving requires a writable session and permission to create tasks. Saved rules can still be opened.',
     trigger: 'Trigger', manual: 'Manual', daily: 'Daily',
-    inactiveDaily: 'Daily drafts stay inactive. Enter the saved time in the daily schedule preview.',
+    inactiveDaily: 'Saving a daily draft does not enable it or replace an enabled revision. Review the saved revision below to grant daily execution.',
     invalid_daily_time: 'Enter a daily time between 00:00 and 23:59 before saving.',
   },
   es: {
@@ -52,11 +53,12 @@ const COPY = {
     current: 'Borrador actual', operation: 'Identificador de operación', busy: 'Consultando borradores…',
     noCondition: 'Sin condición de existencias',
     complex: 'Este borrador usa condiciones agrupadas. Aquí puedes abrir y previsualizar la regla guardada.',
+    complexDaily: 'Esta regla diaria guardada usa condiciones agrupadas. Revisa su horario diario y su permiso de ejecución más abajo.',
     product: 'Existencias por debajo del mínimo', all: 'Todas las condiciones', any: 'Cualquier condición', not: 'Negación de la condición',
     preview_saved: 'Previsualizar regla guardada', wouldCreate: 'Se crearía esta tarea', noAction: 'No se crearía ninguna tarea',
-    readOnly: 'El guardado de borradores no está disponible en esta sesión de solo lectura.',
+    readOnly: 'Guardar requiere una sesión con escritura y permiso para crear tareas. Puedes abrir las reglas guardadas.',
     trigger: 'Activador', manual: 'Manual', daily: 'Diario',
-    inactiveDaily: 'Los borradores diarios permanecen inactivos. Introduce la hora en la vista previa del horario diario.',
+    inactiveDaily: 'Guardar un borrador diario no lo habilita ni sustituye una revisión habilitada. Revisa la revisión guardada más abajo para conceder la ejecución diaria.',
     invalid_daily_time: 'Introduce una hora diaria entre las 00:00 y las 23:59 antes de guardar.',
   },
 } as const;
@@ -152,10 +154,11 @@ export class DomusAutomationDrafts extends LitElement {
         || (view.competing.condition !== null && view.competing.condition.kind !== 'stock_below_minimum'))}</div>
     </div>`}
     ${view.locked === null ? nothing : html`<p><strong>${view.locked.title}</strong></p>
-      <p>${this.text('complex')}</p>
+      <p>${this.text(view.locked.dailyTime === undefined ? 'complex' : 'complexDaily')}</p>
       <ul>${view.locked.condition === null ? nothing : this.describe(view.locked.condition)}</ul>
-      <div class="actions">${this.button('preview_saved', {type: 'preview_saved'}, busy || !this.canEdit)}</div>
-      ${view.preview === null ? nothing : html`<p role="status">${this.text(view.preview ? 'wouldCreate' : 'noAction')}</p>`}`}
+      ${view.locked.dailyTime === undefined ? html`<div class="actions">
+        ${this.button('preview_saved', {type: 'preview_saved'}, busy || !this.canEdit)}</div>
+        ${view.preview === null ? nothing : html`<p role="status">${this.text(view.preview ? 'wouldCreate' : 'noAction')}</p>`}` : nothing}`}
     ${view.page.drafts.length === 0 ? html`<p>${this.text('empty')}</p>` : html`<ul class="drafts">
       ${view.page.drafts.map(draft => html`<li class="draft">
         <p><strong>${draft.title}</strong> · ${this.text('revision')} ${draft.revision}</p>

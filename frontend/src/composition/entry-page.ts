@@ -18,6 +18,12 @@ import {HttpAutomationExecution} from '../adapters/automation-execution-http';
 import {AutomationExecutionSessionJournal} from '../adapters/automation-execution-journal';
 import {AutomationExecutionController} from '../application/automation-execution';
 import type {AutomationExecutionIntent} from '../application/automation-execution';
+import {HttpDailyAutomation} from '../adapters/automation-daily-http';
+import {DAILY_AUTOMATION_JOURNAL_KEY, DailyAutomationSessionJournal} from '../adapters/automation-daily-journal';
+import {DailyAutomationController} from '../application/automation-daily';
+import type {DailyIntent, DailyScope} from '../application/automation-daily';
+import {HttpDailyAutomationHistory} from '../adapters/automation-daily-history-http';
+import type {ScheduledAutomationRun} from '../application/automation-daily-history';
 import type {StockAttention} from '../application/stock-attention';
 import type {ShoppingAttention} from '../application/shopping-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
@@ -269,6 +275,8 @@ export function mountEntry(page: EntryPage): PageMount {
   let automationExecution: AutomationExecutionController | null = null;
   let automationRunHistory: AutomationRunHistoryController | null = null;
   let automationSchedulePreview: AutomationSchedulePreviewController | null = null;
+  let automationDaily: DailyAutomationController | null = null;
+  let automationDailyHistory: AutomationRunHistoryController<ScheduledAutomationRun> | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
   let shoppingAttention: OverviewReadController<ShoppingAttention> | null = null;
   let familyOverview: OverviewReadController<FamilyWeek> | null = null;
@@ -278,7 +286,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); automationSchedulePreview?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); automationSchedulePreview?.bind(null); automationDaily?.bind(null, null); automationDailyHistory?.bind(null, null, null); error?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
@@ -288,7 +296,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); automationSchedulePreview?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); automationSchedulePreview?.bind(null); automationDaily?.bind(null, null); automationDailyHistory?.bind(null, null, null); app?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
@@ -549,23 +557,51 @@ export function mountEntry(page: EntryPage): PageMount {
     const automation = new AutomationPreviewController(new HttpAutomationPreview(source.target, browser.transport),
       inventoryServer, view => {element.automationPreview = view;});
     automationPreview = automation;
+    let syncDaily: () => void, syncManual: () => void;
     const execution = new AutomationExecutionController(new HttpAutomationExecution(source.target, browser.transport),
       new AutomationExecutionSessionJournal({getItem:key => browser.storage().getItem(key),
         setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
-      new BrowserEntropy(browser.random), view => {element.automationExecution = view;});
+      new BrowserEntropy(browser.random), view => {element.automationExecution = view; syncDaily();});
     automationExecution = execution;
     const runHistory = new AutomationRunHistoryController(new HttpAutomationRunHistory(source.target, browser.transport),
       view => {element.automationRunHistory = view;});
     automationRunHistory = runHistory;
+    const daily = new DailyAutomationController(new HttpDailyAutomation(source.target, browser.transport),
+      new DailyAutomationSessionJournal({getItem: key => browser.storage().getItem(key),
+        setItem: (key, value) => browser.storage().setItem(key, value), removeItem: key => browser.storage().removeItem(key)}),
+      new BrowserEntropy(browser.random), view => {element.automationDaily = view; syncManual();},
+      () => {void execution.handle('reload');});
+    automationDaily = daily;
+    const dailyHistory = new AutomationRunHistoryController(new HttpDailyAutomationHistory(source.target, browser.transport),
+      view => {element.automationDailyHistory = view;});
+    automationDailyHistory = dailyHistory;
     const dailyPreview = new AutomationSchedulePreviewController(
       new HttpAutomationSchedulePreview(source.target, browser.transport), view => {element.automationSchedulePreview = view;});
     automationSchedulePreview = dailyPreview;
     let executionScope: DraftScope | null = null;
     let historyScope: AutomationRunHistoryScope | null = null;
+    let dailyScope: DailyScope | null = null;
+    syncManual = () => {
+      const view = element.automationDrafts;
+      const scope = executionScope === null ? null : {...executionScope,
+        readOnly: executionScope.readOnly || (view?.state === 'ready' && view.page.maySave === false)
+          || element.automationDaily?.pending === true};
+      execution.bind(view?.state === 'ready' ? scope : null, view?.state === 'ready' ? view.selected : null);
+    };
+    syncDaily = () => {
+      const view = element.automationDrafts, configuration = element.automationExecution?.configuration;
+      const selected = view?.state === 'ready' ? view.selected : null;
+      const control = configuration?.id === selected?.id ? configuration?.control : null;
+      const activeDaily = control?.enabled && control.trigger === 'daily' ? control.ruleRevision : undefined;
+      const scope = dailyScope === null ? null : {...dailyScope,
+        readOnly: dailyScope.readOnly || element.automationExecution?.pending === true};
+      daily.bind(scope, selected === null ? null : {...selected, activeDaily});
+    };
     const syncExecution = (view: AutomationDraftView | null) => {
       const selected = view?.state === 'ready' ? view.selected : null;
-      execution.bind(view?.state === 'ready' ? executionScope : null, selected);
+      syncManual(); syncDaily();
       runHistory.bind(historyScope, selected?.id ?? null, element.view?.household?.timeZone ?? null);
+      dailyHistory.bind(historyScope, selected?.id ?? null, element.view?.household?.timeZone ?? null);
     };
     const drafts = new AutomationDraftController(new HttpAutomationDrafts(source.target, browser.transport),
       new AutomationDraftSessionJournal({getItem:key => browser.storage().getItem(key),
@@ -585,20 +621,19 @@ export function mountEntry(page: EntryPage): PageMount {
         const {context} = entry.session, {householdId} = entry.household;
         const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, member.memberId]);
         const visible = element.workspaceDestination === 'household', readOnly = entry.decision.readOnly;
-        const draftScope = {key, context, memberId: member.memberId, readOnly};
+        const authorization = JSON.stringify([member.revision, access.policyRevision, access.effectiveRole]);
+        const draftScope = {key, context, memberId: member.memberId, readOnly, authorization};
         executionScope = visible ? draftScope : null;
-        const automationGrants = ['automations.configure', 'tasks.create', 'tasks.read']
-          .map(permission => access.permissions.includes(permission));
-        const authorization = JSON.stringify([member.revision, access.policyRevision, access.effectiveRole, ...automationGrants]);
+        dailyScope = visible ? {...draftScope, readOnly, timing: JSON.stringify([entry.household.revision, entry.household.timeZone])} : null;
         historyScope = visible ? {...draftScope, authorization} : null;
         dailyPreview.bind(visible ? {
           key: JSON.stringify([key, authorization, entry.household.revision]), context, timeZone: entry.household.timeZone,
         } : null);
-        automation.bind({key, context, householdId, readOnly}, visible);
+        automation.bind({key, context, householdId, readOnly, authorization}, visible);
         drafts.bind(draftScope, visible);
         syncExecution(element.automationDrafts);
       } else {
-        executionScope = null; historyScope = null; dailyPreview.bind(null);
+        executionScope = null; historyScope = null; dailyScope = null; dailyPreview.bind(null);
         automation.bind(null); drafts.bind(null); syncExecution(null);
       }
     };
@@ -621,6 +656,17 @@ export function mountEntry(page: EntryPage): PageMount {
       if (event.target !== element) return;
       const intent = (event as CustomEvent<AutomationRunHistoryIntent>).detail;
       if (['open', 'close', 'older', 'latest', 'retry'].includes(intent)) void runHistory.handle(intent);
+    }, {signal: widget.signal});
+    element.addEventListener('domus-automation-daily-intent', event => {
+      if (event.target !== element) return;
+      const intent = (event as CustomEvent<DailyIntent>).detail;
+      if (['enable', 'disable', 'adopt', 'active', 'saved', 'reload', 'confirm', 'cancel', 'recover'].includes(intent))
+        void daily.handle(intent);
+    }, {signal: widget.signal});
+    element.addEventListener('domus-automation-daily-history-intent', event => {
+      if (event.target !== element) return;
+      const intent = (event as CustomEvent<AutomationRunHistoryIntent>).detail;
+      if (['open', 'close', 'older', 'latest', 'retry'].includes(intent)) void dailyHistory.handle(intent);
     }, {signal: widget.signal});
     element.addEventListener('domus-automation-schedule-preview-intent', event => {
       if (event.target !== element) return;
@@ -694,6 +740,7 @@ export function mountEntry(page: EntryPage): PageMount {
             storage.removeItem(CALENDAR_JOURNAL_KEY);
             storage.removeItem(RECURRENCE_JOURNAL_KEY);
             storage.removeItem(AUTOMATION_DRAFT_JOURNAL_KEY);
+            storage.removeItem(DAILY_AUTOMATION_JOURNAL_KEY);
             await signOut;
             break;
           }

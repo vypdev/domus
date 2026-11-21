@@ -95,7 +95,12 @@ def observe_runtime(factory, standalone):
 
 def observe_close(original, standalone):
     def close(runtime):
-        workers_stopped = not runtime.recurrence.is_running and not runtime.points_worker.is_running
+        workers_stopped = (
+            not runtime.recurrence.is_running
+            and not runtime.points_worker.is_running
+            and runtime.automation_worker is not None
+            and not runtime.automation_worker.is_running
+        )
         CLOSING.write_text("runtime cleanup entered")
         deadline = time.monotonic() + 8
         while not RELEASE.exists():

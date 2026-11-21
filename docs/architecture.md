@@ -68,6 +68,17 @@ There is no broker, microservice mesh, cloud backend, event-sourced reconstructi
 
 The owner confirmed a simple/default editor and optional advanced editor in the first release. Both edit one versioned declarative rule model, recorded in [ADR 0005](adr/0005-one-automation-engine.md). The [automation SDD](../specs/household-automation.md) owns typed triggers/conditions, bounded branching/repetition/parallel steps, durable waits, previews and execution traces. The HA integration maps native rule entrypoints to the same engine; it does not evaluate a second rule language.
 
+The [daily execution companion](../specs/automation-scheduled-execution.md) adds one
+owned polling worker to both compositions. Pure nominal-time planning uses the
+existing pinned recurrence adapter. Manual and scheduled rules share their condition
+evaluator and `TaskCreationCommand`; scheduled authority checks a current immutable
+rule grant instead of fabricating a human session. The SQLite writer commits trigger
+admission and cursor movement together, then task facts and both receipts together.
+An installation/channel/household boundary, current control and exact approved payload
+are checked before each effect. A monotone nominal frontier includes skipped dates,
+so timing adoption and a backward clock cannot revive them. Daily review, history
+and grant revocation require configuration access independently of manual invocation.
+
 Rules invoke authorized domain commands and cannot replace stock, points or recurrence policy. A run pins rule revision and command receipts, checks current grants before each side effect and resumes only eligible durable waits after restart. Disabling prevents new runs and later steps while an already-started atomic command finishes with its real result retained. Durable control revisions fence old workers, queues and waits; re-enable does not silently restart cancelled work. Changing editor cannot discard unsupported advanced fields. Resource bounds, fencing and external-effect proof remain engineering gates; no arbitrary scripting or raw SQL/network proxy is introduced.
 
 The UI follows the owner's selected Symphonia/Gateway direction without inheriting assumptions about iframe context. Only a validated public host contract may supply UI hints; messages never establish identity or permissions. Theme and locale fall back deterministically to member/browser preferences when HA exposes no tested public signal. Domus does not inspect parent DOM or private storage. Host-managed safe-area padding applies once, and non-root Ingress paths need reload/deep-link tests as well as asset resolution. Storybook fixtures and Playwright scenarios enforce these boundaries.

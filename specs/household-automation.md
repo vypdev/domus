@@ -1399,3 +1399,5 @@ candidate passes and is cleaned up. Verify destination CI and Branch Sync.
 Extend the typed rule, authorization and immutable-draft contract in
 `specs/household-automation.md`. Reuse the existing household clock and
 time-zone policy for daily schedule preview.
+
+The [daily scheduled execution companion](automation-scheduled-execution.md) defines reviewed Daily enablement, rule-owned narrow grants, durable actual execution and explicit timing adoption. Its 48-case minimum is additional to this owner's complete original45-case inventory and every later contribution and alias. Saving a Daily draft remains inactive by itself; manual behavior and the remaining first-release engine/advanced-editor scope are preserved. Implementation and verification outcomes are recorded separately from this prospective contract.

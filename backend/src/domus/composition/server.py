@@ -12,9 +12,11 @@ import uvicorn
 from fastapi import FastAPI
 
 from domus.application.authentication import Authentication
+from domus.application.automation_scheduled_runner import DailyAutomationTick
 from domus.application.points import PointsConsumer
 from domus.application.sessions import SessionGuard
 from domus.application.task_events import TaskEventSource
+from domus.composition.automation import automation_worker
 from domus.composition.ha_projections import attach_ha_projections
 from domus.composition.household import standalone_context
 from domus.composition.household_administration import administration_services
@@ -56,8 +58,13 @@ class AuthenticationRuntime:
 
     points: PointsConsumer | None = field(default=None, repr=False)
     points_worker: MaintenanceWorker[int] | None = field(default=None, repr=False)
+    automation_worker: MaintenanceWorker[DailyAutomationTick] | None = field(
+        default=None, repr=False
+    )
 
     def close(self) -> tuple[int, int]:
+        if self.automation_worker is not None:
+            self.automation_worker.close()
         if self.points_worker is not None:
             self.points_worker.close()
         if self.recurrence is not None:
@@ -196,13 +203,15 @@ def _compose(
         ha_tasks_digest,
         public_origin=config.public_origin,
     )
-    worker = points = points_worker = None
+    worker = points = points_worker = automations = None
     if store is not None:
         worker = recurrence_worker(store, installation)
         bind_lifespan(app, worker)
         points = PointsConsumer(store, installation, SystemClock())
         points_worker = MaintenanceWorker(points.tick, "points")
         bind_lifespan(app, points_worker)
+        automations = automation_worker(store, installation)
+        bind_lifespan(app, automations)
     return AuthenticationRuntime(
         app,
         identity,
@@ -210,6 +219,7 @@ def _compose(
         recurrence=worker,
         points=points,
         points_worker=points_worker,
+        automation_worker=automations,
     )
 
 

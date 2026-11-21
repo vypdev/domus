@@ -1,5 +1,6 @@
 """Preview one manual rule using only currently authorized household facts."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
 
@@ -7,8 +8,15 @@ from domus.application.authorization import HouseholdAccess
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.task_authorization import TaskAccess
-from domus.domain.automation import AutomationRule, AutomationSimulation, simulate
-from domus.domain.errors import Forbidden, NotFound
+from domus.domain.automation import (
+    AutomationConditionResult,
+    AutomationRule,
+    AutomationSimulation,
+    DailyTrigger,
+    evaluate_conditions,
+    simulate,
+)
+from domus.domain.errors import Forbidden, InvalidInput, NotFound
 from domus.domain.identity import HumanIdentity, Member, Permission
 from domus.domain.inventory import CatalogProduct
 from domus.domain.storage import CommandKey
@@ -52,7 +60,7 @@ class AutomationCommandAuthority:
             raise Forbidden("permission_denied")
 
 
-def evaluate_rule(unit: UnitOfWork, home: str, rule: AutomationRule) -> AutomationSimulation:
+def _stock_condition(unit: UnitOfWork, home: str) -> Callable[[str], bool]:
     stock = unit.inventory
 
     @cache
@@ -63,7 +71,19 @@ def evaluate_rule(unit: UnitOfWork, home: str, rule: AutomationRule) -> Automati
         )
         return stock.replenishment(home, product_id).needed(available) > 0
 
-    return simulate(rule, below_minimum)
+    return below_minimum
+
+
+def evaluate_rule(unit: UnitOfWork, home: str, rule: AutomationRule) -> AutomationSimulation:
+    return simulate(rule, _stock_condition(unit, home))
+
+
+def evaluate_scheduled_rule(
+    unit: UnitOfWork, home: str, rule: AutomationRule
+) -> AutomationConditionResult:
+    if not isinstance(rule.trigger, DailyTrigger):
+        raise InvalidInput("automation_requires_daily_trigger")
+    return evaluate_conditions(rule.condition, _stock_condition(unit, home))
 
 
 @dataclass(frozen=True, slots=True)

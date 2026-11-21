@@ -219,6 +219,7 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "frontend/stories/administration.stories.ts",
         "frontend/stories/calendar.stories.ts",
         "frontend/stories/tasks.stories.ts",
+        "frontend/stories/automation-daily.stories.ts",
         "frontend/playwright.config.ts",
         "frontend/playwright.entry.config.ts",
         "frontend/vite.config.ts",

@@ -14,13 +14,16 @@ from domus.application.task_authorization import (
     TaskCommandAuthorization,
 )
 from domus.application.task_category_commands import require_active_category
-from domus.application.task_creation import TaskCreation, task_creation_result
+from domus.application.task_changes import task_change as _change
+from domus.application.task_creation import TaskCreation
+from domus.application.task_creation_command import TaskCreationCommand
 from domus.application.task_facts import (
     current_cycle,
     definition_result,
     required_work,
     resolved_rules,
 )
+from domus.application.task_facts import occurrence_result as _result
 from domus.application.task_material_commands import TaskMaterialCommands, material_result
 from domus.application.task_material_ports import TaskInventory
 from domus.application.task_material_scope import MaterialScope
@@ -88,34 +91,6 @@ def _occurrence(unit: UnitOfWork, household_id: str, request: OccurrenceRequest)
     if work.revision != request.expected_revision:
         raise Conflict("revision_conflict")
     return work
-
-
-def _result(work: TaskOccurrence) -> JsonDocument:
-    return JsonDocument.from_value(
-        {
-            "definition_id": work.definition_snapshot.definition_id,
-            "definition_revision": work.definition_snapshot.revision,
-            "occurrence_id": work.occurrence_id,
-            "revision": work.revision,
-            "state": work.state.value,
-            "assignee_ids": list(work.assignee_ids),
-            "state_reason": work.state_reason,
-            "prerequisite_ids": list(work.prerequisite_ids),
-            "required_subtask_ids": list(work.required_subtask_ids),
-        }
-    )
-
-
-def _change(transition: str, request: TaskRequest, result: JsonDocument) -> Change:
-    detail = JsonDocument.from_value(
-        {
-            "transition": transition,
-            "request": request.document().decode(),
-            "result": result.decode(),
-        }
-    )
-    event = JsonDocument.from_value({"version": 1, "kind": transition, **result.decode()})
-    return Change(result, detail, event)
 
 
 def transition_occurrence(unit: UnitOfWork, household_id: str, request: TransitionTask) -> Change:
@@ -309,21 +284,14 @@ class TaskCommands:
             needs_material_link=request.materials is not None,
         )
 
-        def apply(target: UnitOfWork) -> Change:
-            item = TaskCreation(self.clock, self.identifiers, self.inventory_factory).definition(
-                target, access, self.household_id, request
-            )
-            work = item.new_occurrence(self.identifiers.new(), item.created_at)
-            target.tasks.save_occurrence(work, 0)
-            return _change(
-                "task.created", request, task_creation_result(_result(work).decode(), item)
-            )
-
-        commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
-        payload = request.document()
-        if unit is None:
-            return commands.execute(command, payload, apply)
-        return commands.in_unit(unit, command, payload, apply)
+        return TaskCreationCommand(
+            self.transactions,
+            authority,
+            self.clock,
+            self.identifiers,
+            access,
+            self.inventory_factory,
+        ).execute(command, request, unit)
 
     def assign(self, key: str, request: AssignTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:

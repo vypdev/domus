@@ -78,7 +78,10 @@ distinguishes completed source checks from the remaining installed and merge gat
   five upcoming times using the household's time zone and daylight-saving policy.
   [Inactive daily drafts](evidence/daily-automation-drafts-qualification.md) persist the proposed
   time with the task definition and preserve already-enabled manual revisions.
-  Scheduled admission, event triggers, multi-step execution, the advanced editor and additional
+  [Daily task execution](evidence/daily-automation-execution-qualification.md) adds deliberate
+  rule-owned grants, durable scheduled admission, future-only timing adoption and daily history.
+  Its image and installed acceptance are recorded separately in that qualification map.
+  Event triggers, multi-step execution, the advanced editor and additional
   Domus-owned HA entities and services remain open.
   The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
