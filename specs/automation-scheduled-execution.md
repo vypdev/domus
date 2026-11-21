@@ -1,6 +1,6 @@
 # Enable daily task automations with durable scheduled execution
 
-- Status: Implementation in progress
+- Status: Implemented
 - Catalog capability: household-automation
 - Date: 2026-11-21
 - Owners: Domus maintainers

@@ -1148,7 +1148,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: protected manual preview/execution/history and immutable daily drafts; rule-owned daily grants, durable admission/effects/history, startup suppression, explicit timing adoption, schema35/20 migration and source-browser recovery are implemented and locally qualified; terminal cancellation receipts survive actual restoration and rollback; exact CPU image and installed Edge155 acceptance pending",
+        "implementationEvidence": "partial: protected manual preview/execution/history and immutable daily drafts; rule-owned daily grants, durable admission/effects/history, startup suppression, explicit timing adoption, schema35/20 migration and source-browser recovery are implemented and locally qualified; terminal cancellation receipts survive actual restoration and rollback; both CPU jobs and installed Edge72 functional acceptance pass, with final-head checks and fresh native cleanup still pending",
         "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }

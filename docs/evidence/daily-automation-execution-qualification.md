@@ -24,16 +24,16 @@ The catalog has 37 stories, including eight daily states; its 57 browser cases
 pass. Catalog data is fictional. Source-browser identity uses fictional verified
 HA providers and owned temporary SQLite stores; neither is installed HA evidence.
 
-The required exact-head CI, both actual CPU images, immutable Edge artifact and
-separate installed acceptance remain publication gates. Their results must be
-recorded before this qualification is treated as complete. No prior Edge.70 result
-qualifies the new schema-36 runtime.
+The final exact-head product CI, substantive review, native cleanup and destination
+acceptance remain publication gates. The native observations below and the separate
+CPU job records qualify the new schema-36 runtime; prior Edge.70 results alone do not.
 
 The first source CI exposed a stale product-bundle identity in the navigation
 receipt: wheel and both CPU images contained the same newly compiled files, but
 the byte guards still expected the previous bundle. That identity now matches
 the independently qualified Edge.72 artifact, wheel and local image; the exact
-byte comparisons remain required. Source CI is not accepted until those guards and every other suite pass.
+byte comparisons remain required. Final source CI requires those guards and every
+other applicable suite to pass.
 
 Review also reproduced a restoration defect in all four cancellation paths:
 disable, regrant, switch to manual and current-grant rejection. An admitted
@@ -43,16 +43,52 @@ audit and acknowledged outbox in the same writer as its control and queue change
 Actual checkpoint activation and compatible rollback must retain that result.
 An existing committed task outcome wins over a later cancellation attempt.
 The dedicated cancellation and restore cases and full current-source coverage pass;
-final both-CPU CI and installed acceptance remain required. Edge.71 was
-withheld without installation after this finding.
+the CPU jobs and native observations below qualify the corrected runtime. Final
+head checks and native cleanup remain required. Edge.71 was withheld without
+installation after this finding.
 
 The [structured qualification](daily-automation-execution.json) records the new
 Edge.72 source, wheel and actual local arm64 image identity. Its nine local image
 cases pass: both workers with admitted restart and cancelled-checkpoint restoration,
 real schema35 upgrade/refusal/protected rollback, native launcher restart, and exact
 packaged bytes with standalone delivery. Nine package guards and the exact wheel
-bundle check pass. Both final CI architectures and installed acceptance remain
-explicitly pending.
+bundle check pass. Final PR head checks and native cleanup remain explicit gates.
+
+## Installed Edge.72 and current CPU evidence
+
+A fresh native Edge.70 baseline upgraded through the documented Home Assistant UI
+with a cold compatible backup. Its enabled manual revision 1, inactive daily
+revision 2, original task and exact manual run receipt survived. Daily revision 3
+was reviewed for 2026-11-21 at 14:28 UTC. A later manual revision 4 and loss of the activating
+member's task-create permission left the rule enabled and its controls reachable.
+The Domus view was closed at 14:27:19 UTC and reopened after 14:28:34 UTC. The owned
+worker admitted one run at 14:28:02.402Z and finished its task at 14:28:07.535Z.
+
+Changing the synthetic household to Europe/Madrid and the second repeated-time
+choice retained the approved UTC/first policy until deliberate adoption. Keyboard
+cancellation and explicit adoption preserved focus and the earlier UTC outcome.
+Spanish dark 390 px actual touch revocation succeeded without task-create permission;
+viewport and scroll width were both 390 px and buttons were 44 px high. The result
+heading received focus. Browser overrides were reset and English restored. The
+original manual task and new scheduled task remained unperformed; the installation
+is stopped.
+
+The [PR acceptance record](https://github.com/vypdev/domus/pull/156#issuecomment-7064246044)
+maintains the current state of fresh cleanup approval and permanent removal of only
+this synthetic installation, source and cold test backup. Cleanup was pending at
+this evidence snapshot; it remains required before full installed acceptance.
+
+Both completed CPU jobs on candidate `a64aa6c` pass 57 real-container and 70
+actual-image browser cases each. Its Linux backend passes 5,868 tests and the
+independent statement/branch coverage audit for all 248 files at 100%. The structured
+receipt names the workflow and separates these completed jobs from final-head
+checks after the catalog review correction.
+
+The history story now uses six distinct nominal dates and the corresponding
+keys derived by the domain, with coherent schedule/admission/finish times and
+newest-first ordering. The semantic regression first failed on the original one-date
+example, then all 57 built-catalog cases passed in the corrected 37-story catalog.
+Production runtime and product-bundle bytes remain unchanged.
 
 ## Concrete case map
 
@@ -127,7 +163,7 @@ The short suite names refer to these actual sources:
 | scheduled-execution-C35 | Controller/view cancel adoption without sending; control preserves approved timing until explicit reviewed adoption, and unavailable review can be retried. |
 | scheduled-execution-C36 | Image observes each composition's actual owned worker, persistence, admitted restart, daily revocation and manual continuity; existing SIGTERM image fixture now asserts this worker is joined too. |
 | scheduled-execution-C37 | The existing amd64/aarch64 CI matrix builds current source and the pinned Edge artifact, then runs image worker and compiled browser journeys. Both actual CPU results remain required. |
-| scheduled-execution-C38 | A separately identified immutable installed Edge candidate must create a task at a naturally upcoming minute, show its original history, revoke future work and record scoped cleanup. Pending installed acceptance. |
+| scheduled-execution-C38 | Installed Edge.72 creates exactly one task at its natural 14:28 UTC occurrence while the view is closed and the activating member cannot create tasks. Original daily history, later manual4, explicit timing adoption and EN keyboard/ES390dark touch revocation pass. Fresh exact cleanup approval/completion is tracked in the linked PR acceptance record. |
 | scheduled-execution-C39 | Executable import/dependency, closed schema, all-source coverage, wheel/bundle and catalog guards include the new runtime. Artifact hashes, both images and native receipt must agree before acceptance. |
 
 ## Migration and recovery inputs

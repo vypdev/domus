@@ -13,7 +13,7 @@ type Example = 'review' | 'enabled' | 'timing-changed' | 'timing-unavailable' | 
 type Arguments = {example: Example; language: Language; deployment: 'native' | 'standalone'};
 const one = revisionValue('1'), two = revisionValue('2');
 const policy: DailyPolicy = {zone: 'Europe/Madrid', dataIdentity: 'tzdata:2026.2', repeatedTime: 'first_instant', revision: one};
-const time = 1_795_300_000_000;
+const time = Date.parse('2026-11-22T06:31:00Z');
 
 function upcoming(selected = policy, offsetSeconds = 3600): readonly ReviewedDailyTime[] {
   return [23, 24, 25, 26, 27].map(day => ({nominal: `2026-11-${day}T07:30:00`, resolvedLocal: `2026-11-${day}T07:30:00`,
@@ -43,15 +43,25 @@ function daily(example: Example): DailyView | null {
 
 function history(example: Example): DailyHistoryView | null {
   if (example !== 'history') return {phase: 'closed', items: [], hasOlder: false, timeZone: policy.zone};
-  const base: ScheduledAutomationRun = {key: 'f'.repeat(64), ruleRevision: one, controlRevision: two,
-    requestedLocal: '2026-11-22T07:30:00', resolvedLocal: '2026-11-22T07:30:00', scheduledAt: 1795329000000,
-    timeZone: policy.zone, resolution: 'exact', admittedAt: 1795329000200, outcome: 'queued', finishedAt: null,
-    historical: false, taskOccurrenceId: null, operationId: 'fictional-admission'};
-  const current = (['created', 'no_task', 'cancelled', 'denied'] as const).map((outcome, index) => ({...base,
-    key: String(index).repeat(64), outcome, finishedAt: time, operationId: 'fictional-result-' + index,
-    taskOccurrenceId: outcome === 'created' ? 'fictional-created-task' : null}));
-  return {phase: 'ready', items: [base, ...current, {...base, key: 'e'.repeat(64), historical: true}],
-    hasOlder: true, timeZone: policy.zone};
+  // Scheduler keys use the fictional entry scope, rule revision 1 and each nominal date.
+  // Separate admitted dates preserve the endpoint's newest-first ordering.
+  const samples = [
+    ['2026-11-22', '10961688d93dbd9d761605773d54fd2ec49fecb9ae14347c6fe48332131940b7', 'queued', false],
+    ['2026-11-21', '7964b746972b97e90bc0a4c4a812ec21d297c6d6ccdffeee25c0353ee4db5088', 'created', false],
+    ['2026-11-20', '9c053f865c792bcfcbc2341af5ff7cf0a0186ac722ba25808ace9f5a66160a86', 'no_task', false],
+    ['2026-11-19', '8b2b02ed37b18d153387a2c9eb8fe22f049bc8feb2a0073d79706981b3f4825c', 'cancelled', false],
+    ['2026-11-18', '8d556b6addc1b699eeb76340a5fb228dc0efedf0ced503617e3346b1b79af9e9', 'denied', false],
+    ['2026-11-17', '41fd93ba5d04dea04708f1d15b5620f18fe92155219439e1a3e533e0b7e5d199', 'queued', true],
+  ] as const;
+  const items: ScheduledAutomationRun[] = samples.map(([day, key, outcome, historical]) => {
+    const local = day + 'T07:30:00', scheduledAt = Date.parse(day + 'T06:30:00Z');
+    return {key, ruleRevision: one, controlRevision: two, requestedLocal: local, resolvedLocal: local,
+      scheduledAt, timeZone: policy.zone, resolution: 'exact', admittedAt: scheduledAt + 200, outcome,
+      finishedAt: outcome === 'queued' ? null : scheduledAt + 2200, historical,
+      taskOccurrenceId: outcome === 'created' ? 'fictional-created-task' : null,
+      operationId: (outcome === 'queued' ? 'fictional-admission-' : 'fictional-result-') + day};
+  });
+  return {phase: 'ready', items, hasOlder: true, timeZone: policy.zone};
 }
 
 function entry(deployment: Arguments['deployment']): EntryView {

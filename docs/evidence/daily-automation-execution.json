@@ -47,7 +47,14 @@
       "stories": 37,
       "dailyStories": 8,
       "skipped": 0,
-      "flaky": 0
+      "flaky": 0,
+      "historyFixture": {
+        "distinctNominalDates": 6,
+        "keysDerivedFromActualRulePrincipalAndRevision": true,
+        "newestAdmissionFirst": true,
+        "scheduledAdmittedFinishedWithinServerTime": true,
+        "semanticRegressionLocalesAndModes": 4
+      }
     },
     "pythonTooling": 186,
     "nodePolicy": 42,
@@ -62,12 +69,6 @@
     "packageContractCases": 9,
     "exactWheelBundleCase": 1
   },
-  "pendingGates": [
-    "Final PR exact-head product CI including actual amd64 and aarch64",
-    "Final PR review and Branch Sync",
-    "Separately identified installed Edge72 daily execution at naturally upcoming time, revocation and cleanup",
-    "Normal merge, destination all product CI/Branch Sync and native issue closure"
-  ],
   "limits": "Local source, catalog and image observations are distinct. Prior Edge70 installed acceptance does not qualify155; this does not declare the remaining automation owner complete.",
   "installedBaseline": {
     "app": "5c3e40a5_domus_edge",
@@ -79,11 +80,66 @@
     "manualTasks": 1,
     "manualHistoryItems": 1,
     "limits": "Fresh synthetic70 baseline through documented public UI; stopped, not installed72 acceptance. No private HA state/API or shared clock mutation.",
-    "upgradeTo72": "pending"
+    "upgradeTo72": "Verified through the documented native UI, preserving manual1, inactive daily2, original task and exact manual history."
   },
   "withheldCandidate": {
     "version": "0.0.0-edge.71",
     "installed": false,
     "reason": "Valid cancelled-run restoration defect reproduced and corrected before installation."
+  },
+  "recordedAt": "2026-11-21T15:05:00.726324+00:00",
+  "pendingGatesAtRecording": [
+    "Final PR exact-head product CI including actual amd64 and aarch64",
+    "Final PR review and Branch Sync",
+    "Fresh native test cleanup consent and completion, maintained in the linked PR acceptance record",
+    "Normal merge, destination all product CI/Branch Sync and native issue closure"
+  ],
+  "installedAcceptance": {
+    "previewVersion": "0.0.0-edge.72",
+    "repositoryCandidateHead": "a64aa6c6289f316ac087aa0b7911f570105eef01",
+    "runtimeSource": "31553dda1f3782b916c16b13818154cdc66ec520",
+    "record": "https://github.com/vypdev/domus/pull/156#issuecomment-7064246044",
+    "dailyRevision": 3,
+    "laterManualRevision": 4,
+    "ownTaskCreateDenied": true,
+    "viewClosedAt": "2026-11-21T14:27:19Z",
+    "viewReopenedAfter": "2026-11-21T14:28:34Z",
+    "requestedTime": "2026-11-21T14:28:00 UTC",
+    "admittedAt": "2026-11-21T14:28:02.402Z",
+    "finishedAt": "2026-11-21T14:28:07.535Z",
+    "scheduledTaskCount": 1,
+    "totalTasksBefore": 1,
+    "totalTasksAfterAdoptionAndRevoke": 2,
+    "approvedUTCRetainedUntilExplicitAdoption": true,
+    "adoptedZone": "Europe/Madrid",
+    "adoptedRepeatedTime": "second",
+    "historicalRunRetainsOriginalUTC": true,
+    "currentTaskCreateDeniedDuringAdoptionAndRevocation": true,
+    "englishKeyboardAndFocus": true,
+    "spanish390DarkActualTouch": true,
+    "actualViewportAndScrollWidth": 390,
+    "buttonHeight": 44,
+    "browserOverridesResetAndEnglishRestored": true,
+    "appStopped": true,
+    "cleanup": "Fresh exact consent was requested after stopping. Its current approval/completion state is maintained in the linked PR acceptance record.",
+    "limits": "Native UI/version and natural owned-worker observations. Canonical source/wheel/image byte checks and exact-head CI remain distinct evidence; no native filesystem hash claim."
+  },
+  "completedCPUAndBackendJobsOnCandidateHead": {
+    "head": "a64aa6c6289f316ac087aa0b7911f570105eef01",
+    "workflow": "https://github.com/vypdev/domus/actions/runs/44912921320",
+    "backendTests": 5868,
+    "backendRuntimeFiles": 248,
+    "backendStatements": 19137,
+    "backendBranches": 5148,
+    "coverageGlobalAndPerFile": 100,
+    "amd64": {
+      "containerCases": 57,
+      "actualImageBrowserCases": 70
+    },
+    "aarch64": {
+      "containerCases": 57,
+      "actualImageBrowserCases": 70
+    },
+    "scope": "Completed jobs for the same immutable product runtime. Final PR head checks after the catalog review correction remain required."
   }
 }

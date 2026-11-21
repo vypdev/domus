@@ -33,6 +33,22 @@ for (const example of ['review', 'enabled', 'timing-changed', 'timing-unavailabl
       if (example === 'uncertain')
         await expect(app.getByRole('button', {name: locale === 'es' ? 'Consultar solicitud diaria original' : 'Check original daily request', exact: true})).toBeEnabled();
       if (example === 'history') {
+        const facts = await app.evaluate(element => {
+          const component = element as DomusApp;
+          return {items: component.automationDailyHistory!.items, serverTime: component.view!.session!.serverTime};
+        });
+        expect(new Set(facts.items.map(item => item.requestedLocal.slice(0, 10))).size).toBe(facts.items.length);
+        expect(new Set(facts.items.map(item => item.key)).size).toBe(facts.items.length);
+        expect(facts.items).toEqual([...facts.items].sort((left, right) =>
+          right.admittedAt - left.admittedAt || right.key.localeCompare(left.key)));
+        for (const item of facts.items) {
+          expect(item.scheduledAt).toBeLessThanOrEqual(item.admittedAt);
+          expect(item.admittedAt).toBeLessThanOrEqual(facts.serverTime);
+          if (item.finishedAt !== null) {
+            expect(item.finishedAt).toBeGreaterThanOrEqual(item.admittedAt);
+            expect(item.finishedAt).toBeLessThanOrEqual(facts.serverTime);
+          }
+        }
         await expect(app.getByText(locale === 'es' ? 'Esta admisión histórica no es trabajo pendiente actual.'
           : 'This historical admission is not current queued work.', {exact: true})).toBeVisible();
         await expect(app.getByRole('link', {name: locale === 'es' ? 'Abrir tarea creada' : 'Open created task', exact: true})).toHaveCount(1);
