@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8e343a1d46667db1778219d10b6f1dd6cb89784eeadc45605758b7d764409eb7",
-    "assets/index-C07fSFmw.js": "c1aa565f547d3be1a1fbe3b7e7092a3c02fa466fecd2046ccaa7b1ca79c5d585",
+    ".vite/manifest.json": "fc24a51943fdb802972e4dc81a2e3e64c885a561739e309b5334ceba2f0ee8a3",
+    "assets/index-CAYlPSUq.js": "36491fe471fdf5acf97d0063a85beda9c061a2876ec36db04887a5f68b569b45",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "d77374eba867d93ac7b180a16adfe571fb4d4712916973fa4918fb421ab5c020"
+    "index.html": "749973a568f77ddc6d3b381f1682bfbb42741670276eb865ab0dc7b2982b94d5"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -1283,7 +1283,43 @@
       },
       "wheelUIEquality": "four files equal",
       "originalClosedBodyRetention": "All4raw upstream page bodies retained in full original report; no reread/retry/substitution.",
-      "sourceState": "Local correction qualified; new70immutablebuild/native/finalCI/review anddestination stillrequired."
+      "sourceState": "Local correction qualified; new70immutablebuild/native/finalCI/review anddestination stillrequired.",
+      "precedingUIInventory": {
+        "candidate": "0.0.0-edge.69",
+        "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+        "files": {
+          ".vite/manifest.json": "8e343a1d46667db1778219d10b6f1dd6cb89784eeadc45605758b7d764409eb7",
+          "assets/index-C07fSFmw.js": "c1aa565f547d3be1a1fbe3b7e7092a3c02fa466fecd2046ccaa7b1ca79c5d585",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "index.html": "d77374eba867d93ac7b180a16adfe571fb4d4712916973fa4918fb421ab5c020"
+        },
+        "historicalOnly": true
+      },
+      "newImmutableCandidate": {
+        "schemaVersion": 1,
+        "version": "0.0.0-edge.70",
+        "sourceCommit": "259814f37495fddff03d47460a93735ca1db4e4d",
+        "sourceArchiveSHA256": "54518fe1ac8beaca4b869fb7e069072f924e7d7e1e2010eb763c7f801f76a02a",
+        "storageSchema": 35,
+        "wheelSHA256": "b4bcd647b63b21d55fec28eb040b0b1d95c7062cd938d3955fc0151d0d743aa9",
+        "pythonFiles": 231,
+        "uiFiles": 4,
+        "archiveWheelInstalledBuilderEquality": "passed",
+        "normalLocalLinuxWholeWheelEquality": "passed",
+        "native": "Required; stopped69QAdata retained for normal70upgrade with existing2products.",
+        "localFinalImage": {
+          "candidate": "0.0.0-edge.70",
+          "runtimeSource": "259814f37495fddff03d47460a93735ca1db4e4d",
+          "imageTag": "domus-150-edge70:pinned",
+          "imageId": "sha256:fdafef74ea21a49e1c1ba44da446b42548ea646db4251b9609c9db610848f310",
+          "architecture": "arm64",
+          "pythonFiles": 231,
+          "uiFiles": 4,
+          "archiveWheelInstalledEquality": "passed",
+          "versionAndSourceLabels": "passed"
+        }
+      },
+      "runtimeSource": "259814f37495fddff03d47460a93735ca1db4e4d"
     },
     "installedEdge69": {
       "version": "0.0.0-edge.69",

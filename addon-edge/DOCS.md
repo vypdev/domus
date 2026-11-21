@@ -1,9 +1,10 @@
 # Installation and operation
 
-Edge 0.0.0-edge.69 packages the immutable runtime declared in
+Edge 0.0.0-edge.70 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
 for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
-including zero for unused materials. Each result shows confirmed, unused or pending consumption
+including zero for unused materials. **More products** keeps earlier choices available while you browse later pages.
+Refreshing material choices checks the catalog again and retains draft quantities. Each result shows confirmed, unused or pending consumption
 separately from task completion and points. After reviewing stock or access, choose
 **Settle pending usage** explicitly. Existing separate-recording tasks offer **Record actual usage**
 with a quantity and reason. Failed reads, competing changes and interrupted replies retain the

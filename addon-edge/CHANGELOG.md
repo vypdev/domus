@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.70
+
+- Keep earlier products selectable while browsing additional material catalog pages.
+
 ## 0.0.0-edge.69
 
 - Keep the selected task and earlier material usage when the first settlement detail read fails.
