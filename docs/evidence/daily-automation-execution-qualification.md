@@ -31,9 +31,9 @@ qualifies the new schema-36 runtime.
 
 The first source CI exposed a stale product-bundle identity in the navigation
 receipt: wheel and both CPU images contained the same newly compiled files, but
-the byte guards still expected the previous bundle. That identity must advance
-with the newly qualified immutable artifact; the exact byte comparisons remain
-required. Source CI is not accepted until those guards and every other suite pass.
+the byte guards still expected the previous bundle. That identity now matches
+the independently qualified Edge.72 artifact, wheel and local image; the exact
+byte comparisons remain required. Source CI is not accepted until those guards and every other suite pass.
 
 Review also reproduced a restoration defect in all four cancellation paths:
 disable, regrant, switch to manual and current-grant rejection. An admitted
@@ -43,8 +43,16 @@ audit and acknowledged outbox in the same writer as its control and queue change
 Actual checkpoint activation and compatible rollback must retain that result.
 An existing committed task outcome wins over a later cancellation attempt.
 The dedicated cancellation and restore cases and full current-source coverage pass;
-new immutable images and installed acceptance remain required. Edge.71 was
+final both-CPU CI and installed acceptance remain required. Edge.71 was
 withheld without installation after this finding.
+
+The [structured qualification](daily-automation-execution.json) records the new
+Edge.72 source, wheel and actual local arm64 image identity. Its nine local image
+cases pass: both workers with admitted restart and cancelled-checkpoint restoration,
+real schema35 upgrade/refusal/protected rollback, native launcher restart, and exact
+packaged bytes with standalone delivery. Nine package guards and the exact wheel
+bundle check pass. Both final CI architectures and installed acceptance remain
+explicitly pending.
 
 ## Concrete case map
 

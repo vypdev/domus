@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "fc24a51943fdb802972e4dc81a2e3e64c885a561739e309b5334ceba2f0ee8a3",
-    "assets/index-CAYlPSUq.js": "36491fe471fdf5acf97d0063a85beda9c061a2876ec36db04887a5f68b569b45",
+    "index.html": "93be7638218dc6df7c41607011c05cb92dd65e847cc2aafb37d644a688776ed8",
+    ".vite/manifest.json": "66da83527af9a540dc97c982f65c05c3d72d8b5e03e24eab03ab48e0a07b556c",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "749973a568f77ddc6d3b381f1682bfbb42741670276eb865ab0dc7b2982b94d5"
+    "assets/index-DL0JDusj.js": "8aa8aa4853ec1d40b06e3d902d98b898d4c9d87526313efb5af3768e1dfac25d"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -1501,5 +1501,21 @@
       },
       "aggregate": "failure; not accepted"
     }
+  },
+  "preDailyTaskExecution": {
+    "sourceCommit": "259814f37495fddff03d47460a93735ca1db4e4d",
+    "scope": "Retained accepted Edge70 task/material bundle before durable daily execution.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "fc24a51943fdb802972e4dc81a2e3e64c885a561739e309b5334ceba2f0ee8a3",
+      "assets/index-CAYlPSUq.js": "36491fe471fdf5acf97d0063a85beda9c061a2876ec36db04887a5f68b569b45",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "749973a568f77ddc6d3b381f1682bfbb42741670276eb865ab0dc7b2982b94d5"
+    }
+  },
+  "dailyTaskExecutionQualification": {
+    "sourceCommit": "31553dda1f3782b916c16b13818154cdc66ec520",
+    "version": "0.0.0-edge.72",
+    "qualification": "docs/evidence/daily-automation-execution-qualification.md",
+    "scope": "Current source UI identity independently matched against wheel and actual local arm64 image. Both final CI architectures and installed acceptance are separate required gates."
   }
 }

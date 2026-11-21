@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "issue": 155,
+  "sourceCommit": "31553dda1f3782b916c16b13818154cdc66ec520",
+  "currentPackage": {
+    "version": "0.0.0-edge.72",
+    "sourceArchiveSHA256": "60496a355532ca2607fe617fcfe94251852dc5b2452e5a715fd2a542921cfa5b",
+    "wheelSHA256": "d153f113ca7a965ebdb868f18de495526c69e764fe2b60adaae6b3264a36df5c",
+    "storageSchema": 36,
+    "pythonFiles": 248,
+    "actualProductFiles": {
+      "index.html": "93be7638218dc6df7c41607011c05cb92dd65e847cc2aafb37d644a688776ed8",
+      ".vite/manifest.json": "66da83527af9a540dc97c982f65c05c3d72d8b5e03e24eab03ab48e0a07b556c",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DL0JDusj.js": "8aa8aa4853ec1d40b06e3d902d98b898d4c9d87526313efb5af3768e1dfac25d"
+    }
+  },
+  "localQualification": {
+    "backend": {
+      "tests": 5867,
+      "runtimeFiles": 248,
+      "statements": 19137,
+      "branches": 5148,
+      "coverageGlobalAndPerFile": 100,
+      "cancellationRetirementPaths": 4,
+      "restoreAndRollback": "actual checkpoint preparation/activation and compatible rollback; retained terminal cancellation and task outcomes"
+    },
+    "frontend": {
+      "tests": 2134,
+      "runtimeFiles": 119,
+      "statements": 9296,
+      "branches": 8489,
+      "functions": 1996,
+      "lines": 6760,
+      "allMetricsGlobalAndPerFile": 100
+    },
+    "sourceCompiledBrowser": {
+      "tests": 125,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0,
+      "sourceCommit": "3aa4934d549e20db42ed8adb9a15a3445df084d6",
+      "scope": "Qualified frontend UI sources unchanged by the cancellation correction; final current-backend browser/image checks remain required."
+    },
+    "catalog": {
+      "tests": 57,
+      "stories": 37,
+      "dailyStories": 8,
+      "skipped": 0,
+      "flaky": 0
+    },
+    "pythonTooling": 186,
+    "nodePolicy": 42,
+    "arm64Image": {
+      "imageId": "sha256:7732e20159e284c7cd811df8109405d1c3b4e0bae7545328de55858dcba66945",
+      "sourceCommit": "31553dda1f3782b916c16b13818154cdc66ec520",
+      "all248PythonAnd4UIFilesMatchWheel": true,
+      "workerAndSchema35CompatibilityCases": 5,
+      "nativeStandaloneListenerAndExactBundleCases": 3,
+      "currentSourceBundleCase": 1
+    },
+    "packageContractCases": 9,
+    "exactWheelBundleCase": 1
+  },
+  "pendingGates": [
+    "Final PR exact-head product CI including actual amd64 and aarch64",
+    "Final PR review and Branch Sync",
+    "Separately identified installed Edge72 daily execution at naturally upcoming time, revocation and cleanup",
+    "Normal merge, destination all product CI/Branch Sync and native issue closure"
+  ],
+  "limits": "Local source, catalog and image observations are distinct. Prior Edge70 installed acceptance does not qualify155; this does not declare the remaining automation owner complete.",
+  "installedBaseline": {
+    "app": "5c3e40a5_domus_edge",
+    "version": "0.0.0-edge.70",
+    "household": "Domus QA 155 Edge70",
+    "manualEnabledRevision": 1,
+    "latestInactiveDailyRevision": 2,
+    "dailyTime": "07:30",
+    "manualTasks": 1,
+    "manualHistoryItems": 1,
+    "limits": "Fresh synthetic70 baseline through documented public UI; stopped, not installed72 acceptance. No private HA state/API or shared clock mutation.",
+    "upgradeTo72": "pending"
+  },
+  "withheldCandidate": {
+    "version": "0.0.0-edge.71",
+    "installed": false,
+    "reason": "Valid cancelled-run restoration defect reproduced and corrected before installation."
+  }
+}

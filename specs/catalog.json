@@ -1142,7 +1142,9 @@
         "docs/contracts/native-household-api.openapi.json",
         "docs/evidence/automation-execution-qualification.md",
         "docs/evidence/daily-automation-execution-qualification.md",
-        "docs/development.md"
+        "docs/development.md",
+        "docs/evidence/task-navigation-integration.json",
+        "docs/evidence/daily-automation-execution.json"
       ],
       "readiness": {
         "state": "draft",
