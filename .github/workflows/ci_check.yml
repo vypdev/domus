@@ -139,10 +139,11 @@ jobs:
         env:
           TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend-toolchain
-      - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-browser
+      - run: mkdir -p "${HOME:?}/.cache/domus-ci"
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/toolchain-browser.lock" pnpm test:frontend-browser
         env:
           TMPDIR: ${{ runner.temp }}
-      - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-guards
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/toolchain-browser.lock" pnpm test:frontend-guards
         env:
           TMPDIR: ${{ runner.temp }}
       - name: Retain distinct framework fixture outputs and coverage
@@ -210,11 +211,13 @@ jobs:
           stat --file-system \
             --format='source browser filesystem=%T free_blocks=%a block_size=%S' \
             "$browser_fixture_root"
-      - run: flock -w 600 /tmp/domus-ci-entry-browser.lock pnpm test:frontend-entry
+      # Keep shared lock inodes persistent across concurrent runner jobs.
+      - run: mkdir -p "${HOME:?}/.cache/domus-ci"
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/entry-browser.lock" pnpm test:frontend-entry
         env:
           TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend-catalog
-      - run: flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/catalog-browser.lock" pnpm test:frontend-catalog
         env:
           TMPDIR: ${{ runner.temp }}
       - name: Retain distinct application coverage
@@ -454,13 +457,14 @@ jobs:
           cache: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @domus/frontend exec playwright install chromium
+      - run: mkdir -p "${HOME:?}/.cache/domus-ci"
       - name: Execute household workflows in the actual isolated image from Chromium
         env:
           DOMUS_BROWSER_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:current
           DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
           DOMUS_TEST_ARCH: ${{ matrix.arch }}
         run: >-
-          lockf -k -t 600 /tmp/domus-ci-entry-browser.lock pnpm --filter @domus/frontend exec playwright test
+          lockf -k -t 600 "${HOME:?}/.cache/domus-ci/entry-browser.lock" pnpm --filter @domus/frontend exec playwright test
           -c playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts tests/e2e/workspace-navigation.spec.ts tests/e2e/shopping-annotations.spec.ts
       - name: Require all seventy-four actual-image household journeys
         run: >-

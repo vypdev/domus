@@ -1533,7 +1533,9 @@
     "issue": 157,
     "qualification": "docs/evidence/shopping-manual-annotations-qualification.md",
     "record": "docs/evidence/shopping-manual-annotations.json",
-    "scope": "Current source typography correction; immutable Edge.74, complete source entry, both CPU campaigns and installed acceptance remain required."
+    "scope": "Current typography-corrected source and wheel UI identity. Complete final-head entry/CPU campaigns, installed upgrade and scoped cleanup remain separate required gates.",
+    "sourceCommit": "39790e871a7ee53e502e6ac891f5ada42ee6aa8e",
+    "version": "0.0.0-edge.74"
   },
   "preShoppingAnnotationTypographyCorrection": {
     "version": "0.0.0-edge.73",

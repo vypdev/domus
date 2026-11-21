@@ -21,8 +21,21 @@ priority label's named font had no generic fallback. The correction scopes the
 published font token to the two annotation controls, matching Domus's existing
 body font stack. Its actual catalog regression failed before the correction;
 all 2,164 frontend tests and 68 catalog cases pass afterward. The previous
-73 bytes and observations remain historical in the JSON record. Current full
-entry, immutable Edge.74 and installed upgrade acceptance remain pending.
+73 bytes and observations remain historical in the JSON record. The public
+Edge.74 source archive matches all 1,018 tracked blobs and all 250 wheel runtime
+files. Its ten static package contracts and actual bundle/license check pass.
+Current full entry, both final CPU campaigns and installed upgrade acceptance
+remain pending.
+
+One prior amd64 job completed its container checks but could not start a browser
+case because another image job still owned the fixture ports. The first job's
+temporary lock pathname was absent while its lock process remained active.
+Shared browser locks now live in the runner user's persistent cache, with the
+existing complete inventories, zero retries and wait limits retained. A real
+parallel lock attempt was rejected while held, then succeeded after release
+with the same inode still present; all 48 workflow policy cases pass. The final
+CI must exercise this coordination. The actor that removed the earlier path
+has not been established.
 
 | Native case | Evidence and current outcome |
 | --- | --- |

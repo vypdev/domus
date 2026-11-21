@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Typography correction source2164/catalog68 qualified; immutable Edge.74 and current source entry pending",
+  "status": "Immutable source/wheel74 qualified; current full entry, final CPU campaigns and native74 upgrade acceptance pending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
@@ -97,32 +97,31 @@
   },
   "pendingGates": [
     "Complete129-case source entry campaign in final-head CI; the local repeat stopped before any case because an active Actions fixture already owned the required ports.",
-    "Immutable Edge.74 source archive, wheel and ten static app-package contracts",
     "All 62 container and 74 actual-image browser cases in each CPU architecture",
     "Installed native Edge acceptance and scoped cleanup",
     "Final PR same-head CI, review and Branch Sync; normal merge, destination checks and native issue closure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-21T23:01:56.166452+00:00",
-  "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
+  "recordedAt": "2026-11-21T23:11:58.690550+00:00",
+  "sourceCommit": "39790e871a7ee53e502e6ac891f5ada42ee6aa8e",
   "currentPackage": {
-    "version": "0.0.0-edge.73",
-    "sourceArchiveSHA256": "6bd2f0ed107c25387ad0b6f9187b56fa4ab59563c92b6dcb976638d10709ac48",
-    "wheelSHA256": "84d3cb13e302b674258a1c846ecc2b02752226f3e7864cf643a3453a39e64924",
+    "version": "0.0.0-edge.74",
+    "sourceArchiveSHA256": "d7d998681d659dd761581297d8280936ef990442e77138e14718b3bdcefc02a7",
+    "wheelSHA256": "dbc7c2f5520ac97d5c6e21c81aa62cd51ca1b4304644c0cbbc748fbaed5961e8",
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "fb06a78159cebcd880a7dc25bfe82fda96ef3ae33703284d530516528a9d1e72",
-      ".vite/manifest.json": "e2c258c7f08d8ba5223ce00c56e773204a87d44aac47e152c9f32968f77126c9",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-DeTOJyVp.js": "24a5221e3e9fcbc58a17f91dbd2d17225b5fc07ec985e216fbb19dbfed70fbbe"
+      "index.html": "61074d02ad26af270347817f5f02b36e3d3fc535dfcdaa56806ddfc5b4657aff",
+      ".vite/manifest.json": "248c607d7318af6d9de2d3a73d2e6d0491ec6c688baa6c9c19684b55c5207e54",
+      "assets/index-BCQLqeBf.js": "aed08b45049fce52b1c8524acb9291393dd530d9bab4aad7d9dbef5c2ffd40e3",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     }
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1018,
     "allTrackedGitBlobsMatch": true,
     "all250WheelRuntimeFilesMatchArchive": true,
-    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091"
+    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/39790e871a7ee53e502e6ac891f5ada42ee6aa8e"
   },
   "priorCandidate73": {
     "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
@@ -190,5 +189,12 @@
     "scope": "Note and priority controls only; existing Domus body font stack, no library renderer or dependency change.",
     "red": "Actual installed Edge.73 label computed family Roboto with no generic fallback; note/body/control fonts differed. Source catalog reproduced the missing generic fallback.",
     "verified": "All 68 catalog cases pass; visible priority labels have a generic fallback and match the note field in both modes/locales."
+  },
+  "ciBrowserLockCorrection": {
+    "failedJob": "https://github.com/vypdev/domus/actions/runs/44958042150/job/137010410758",
+    "failure": "A second image job entered the browser phase while the first still owned56174/56175. The first lockf process held an inode for the temporary lock path while that pathname was absent. No browser case ran in the failing job.",
+    "deletionActor": "Not established. No attribution to Copilot.",
+    "fix": "Use persistent per-user .cache/domus-ci lock files shared across runner instances; retain BSD -k and Linux flock, existing600-second waits, zero retries and complete inventories.",
+    "localQualification": "Actual lockf holder blocked a second process with75, then released; same inode and one link persisted, and reacquisition succeeded. All48 workflow policy cases pass."
   }
 }
