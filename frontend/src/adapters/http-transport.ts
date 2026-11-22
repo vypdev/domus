@@ -4,7 +4,7 @@ import type {EntryRead, ReadFault} from '../application/ports';
 import type {JournalContext} from '../domain/journal';
 import * as wire from './http-values';
 import type {EntryEndpoint} from './http-values';
-import {administrationJSON, ROSTER_MAX_BYTES, SHOPPING_PAGE_MAX_BYTES} from './json-values';
+import {administrationJSON, ROSTER_MAX_BYTES, SHOPPING_PAGE_MAX_BYTES, REWARDS_PAGE_MAX_BYTES} from './json-values';
 import type {JSONResponseLimit} from './json-values';
 
 export const HTTP_TIMEOUT_MS = 15_000;
@@ -73,10 +73,11 @@ export class BoundedHTTP {
     return {result, cancel};
   }
   async request(route: string, method: 'GET' | 'POST' | 'PUT', expected: JournalContext | null,
-    body: string | null, key: string | null, token: string | null, signal: AbortSignal, budget: 'standard' | 'roster' | 'shopping' = 'standard') {
+    body: string | null, key: string | null, token: string | null, signal: AbortSignal, budget: 'standard' | 'roster' | 'shopping' | 'rewards' = 'standard') {
     if (signal.aborted) throw new EntryReadError('unavailable');
-    wire.check(budget === 'standard' || budget === 'roster' || budget === 'shopping');
-    const maximumBytes = budget === 'roster' ? ROSTER_MAX_BYTES : budget === 'shopping' ? SHOPPING_PAGE_MAX_BYTES : HTTP_MAX_BYTES;
+    wire.check(budget === 'standard' || budget === 'roster' || budget === 'shopping' || budget === 'rewards');
+    const maximumBytes = budget === 'rewards' ? REWARDS_PAGE_MAX_BYTES
+      : budget === 'roster' ? ROSTER_MAX_BYTES : budget === 'shopping' ? SHOPPING_PAGE_MAX_BYTES : HTTP_MAX_BYTES;
     const path = this.target.applicationBase + 'api/v1/' + route;
     const headers = new Headers({'Accept': 'application/json'});
     if (expected !== null) headers.set('X-Domus-Context', wire.assertion(expected));
@@ -93,7 +94,7 @@ export class BoundedHTTP {
     }
     return {status: response.status, value};
   }
-  async get(route: string, expected: JournalContext | null, signal: AbortSignal, budget: 'standard' | 'roster' | 'shopping' = 'standard') {
+  async get(route: string, expected: JournalContext | null, signal: AbortSignal, budget: 'standard' | 'roster' | 'shopping' | 'rewards' = 'standard') {
     const reply = await this.request(route, 'GET', expected, null, null, null, signal, budget);
     if (reply.status !== 200) readFailure(reply.status, reply.value);
     return reply.value;

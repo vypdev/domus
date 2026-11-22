@@ -1,0 +1,146 @@
+{
+  "issue": "https://github.com/vypdev/domus/issues/165",
+  "nativeBranch": "bugfix/165-preserve-valid-unicode-text-at-existing-field-limits",
+  "acceptedBase": "487e157ff4b95b4ba6debf1543d816f95c985481",
+  "baseline": {
+    "qualification": "/private/tmp/domus-unicode-inputs-repro/qualification.json",
+    "fourNative160CodepointInputsRetainOnly80Emoji": true,
+    "actualUICommitted80AndProtectedAPIAccepts160": true,
+    "baselineWheelSHA256": "84314084096c5d9ee30c3d571325b8ae699951fd3fcf2788d6a8abb385e039ae",
+    "sourceHead": "8a63abb9032198f90aa20e1168f01ebd2912112f (same tree as accepted develop487)"
+  },
+  "scope": {
+    "nameFieldsCodepoints": 160,
+    "locationCodepoints": 80,
+    "inventoryAndShoppingReasonCodepoints": 240,
+    "rewardAndScheduleReasonCodepoints": 1000,
+    "haUi": "0.1.0-next.5",
+    "schema": 37,
+    "backendChanged": false,
+    "sdkChanged": false,
+    "workflowsChanged": "Only actual-image case inventory86->90 and its existing contract assertion; placements, action tags, permissions, timeouts and zero-retry policy unchanged.",
+    "apiFormatChanged": false
+  },
+  "retainedOwningRequirements": {
+    "specs/household-inventory.md": [
+      "SDD-I68-U1-R2",
+      "SDD-I68-U1-R4",
+      "household-inventory-R6"
+    ],
+    "specs/shopping-management.md": [
+      "shared-shopping-R3",
+      "shared-shopping-R4",
+      "purchase-balance-R1",
+      "receipt-void-R1",
+      "posted-receipt-R1",
+      "receipt-return-R1"
+    ],
+    "specs/points-rewards.md": [
+      "points-rewards-R6"
+    ],
+    "specs/recurrence-lifecycle-calendar.md": [
+      "RCL-05",
+      "RCL-07",
+      "RCL-09"
+    ]
+  },
+  "ownershipLimit": "Regression evidence for existing accepted behavior; no new native CaseID definitions, renumbering or completion claim for these broad capabilities.",
+  "checks": {
+    "frontendUnit": {
+      "passed": 2229,
+      "files": 50,
+      "statements": 9599,
+      "branches": 8807,
+      "functions": 2035,
+      "lines": 6978,
+      "allFourGlobalAndPerFile100": true,
+      "authoredRuntimeFiles": 121,
+      "nonempty": 114,
+      "empty": 7,
+      "log": "/private/tmp/domus-165-source-final-unit.log"
+    },
+    "nodePolicy": {
+      "passed": 42,
+      "allFourGlobalAndPerFile100": true
+    },
+    "typescriptRuntimeAndCatalog": true,
+    "nodeTypescript": true,
+    "nativeCatalogValidator": true,
+    "catalogBrowser": {
+      "passed": 68,
+      "seconds": 51.1
+    },
+    "targetedComposedUnicode": {
+      "passed": 4,
+      "qualification": "/private/tmp/domus-165-final-unicode-contrast-focus/qualification.json",
+      "contrastLight": 7.112998299903268,
+      "contrastDark": 9.141730265691209,
+      "focusedInputMinTop": 80.4375,
+      "stickyNavigationBottom": 56,
+      "notInstalledHAEvidence": true
+    },
+    "fullSourceBrowser": {
+      "passed": 139,
+      "failed": 6,
+      "total": 145,
+      "seconds": 573.575905,
+      "qualification": "/private/tmp/domus-165-full-source-browser-initial/qualification-limits.json",
+      "cause": "4 obsolete native-textarea selectors and2 old stock-error role assertions. Current semantic replacements preserve every command, receipt, authority, recovery and storage assertion; targeted rerun pending."
+    },
+    "images": "pending exact-head actual amd64 and ARM64",
+    "nativeEdge": "not built or installed; existing85 observed stopped",
+    "imageInventoryPolicy": {
+      "passed": 48,
+      "seconds": 0.62
+    },
+    "combinedAffectedBrowser": {
+      "at": "2026-11-22T22:38:44.283214+00:00",
+      "stats": {
+        "startTime": "2026-11-22T22:33:49.618Z",
+        "duration": 124599.346,
+        "expected": 10,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "allExecutedExactlyOnce": true,
+      "retriesSkippedFlaky": 0,
+      "originalReport": "/private/tmp/domus-165-source-final-ten-browser/entry-results-original.json",
+      "originalArtifacts": "/private/tmp/domus-165-source-final-ten-browser/artifacts-original",
+      "includes": "4 Unicode/contrast/focus,4 protected calendar+fixed review+original receipt,2 shared workspace+permissions+history+recovery"
+    },
+    "documentation": true
+  },
+  "status": "Source correction implemented; final browser, immutable image, installed Edge and same-head CI/review acceptance pending.",
+  "responseBudgetRegression": {
+    "before": "A complete permitted64-offer/25-cancelled-redemption page with160/1000 supplementary-codepoint values fails in the old64KiB consumer before parsing. Original negative test report retained.",
+    "correction": "Only reward-page GET receives an explicit256KiB limit; streaming, declared-length, charset, same-origin, credentials and closed payload validation stay required. Ordinary requests remain64KiB.",
+    "negativeOriginal": "/private/tmp/domus-165-reward-page-negative-results.json"
+  },
+  "codeAndVerificationSHA256": {
+    ".github/workflows/ci_check.yml": "03a8c1b5d58daed3d1b96a3faf527139761bc840880fdc5323e11890c0e9d0a3",
+    "frontend/src/adapters/http-transport.ts": "8d1ec9f4a739c2e90c13cf3e4a03a90a1d45c0344dd8813ba27efad669c1a813",
+    "frontend/src/adapters/json-values.ts": "5e20de853a6d6c728f8dfef9f78f1ce0834511dc7c2e6a01e2b0872af4727e13",
+    "frontend/src/adapters/reward-http.ts": "30aa24d84e587e78e5cf694f0f42ca2d317ef1d8780e452d4a2f25ae23d95aff",
+    "frontend/src/presentation/domus-inventory.ts": "8403fa07fdcde6ab1a4a6f1c8d54286e4ab049f92437e2ae6696df713580bff2",
+    "frontend/src/presentation/domus-recurrence-review.ts": "12c128d511298fc05715b992b65cf103207114ee26c1e2ce2e508cab25a99dc3",
+    "frontend/src/presentation/domus-rewards.ts": "1e16a098353629e8844bc48f5166bb81aad910b76a97d426d883ae42d5e3fd9d",
+    "frontend/src/presentation/domus-shopping-list.ts": "d648f037edb9c06247a70725a09c69377678c651d541f5e73093acc164746fd4",
+    "frontend/src/presentation/domus-shopping.ts": "e8f68727870f76fd0d41e74b14330d1526606eede6d713c0cbee79ff464ceb59",
+    "frontend/src/presentation/recurrence-messages.ts": "ee37673d44140226135b30c94d18c77ac0706b81766fd325ae6d7b18d5af67c5",
+    "frontend/src/presentation/reward-messages.ts": "3eb9a0e36539240ac8f6f05149d410586b55e13f3b4ea2a64713df5818c2d859",
+    "frontend/tests/e2e/shopping-annotations.spec.ts": "98fb6e76a870ce1701881b985478c6f74147e3274923f7d963626d67bd3de053",
+    "frontend/tests/e2e/tasks.spec.ts": "1577f7fbdc7547e56d32cd780531789a683608bdda9567c44bdaec2e98941ec1",
+    "frontend/tests/e2e/workspace-navigation.spec.ts": "b3575a931512ccd4a499a4af2f704e972b8571e248d11dfb2747103a21c82414",
+    "frontend/tests/inventory.test.ts": "ff3de6e0bc67e2cd7c8c466ceb81c2a80fa5f8f50ccb1bfbd07219be77eeb063",
+    "frontend/tests/recurrence-review.test.ts": "15e0e6fbbea9c196c3592668e90febdb4ec6802d5f33c9281e8a4b5a16d4651e",
+    "frontend/tests/rewards.test.ts": "82e977934bf225c460c154578a727ec8955cf5b9132db45cae336cc0754d5803",
+    "frontend/tests/shopping-annotations.test.ts": "fad73a4dedc5370483ddbf2c9a324ccfb64363f071b4ee27f3c63be1ef9e402a",
+    "tests/python/test_ci_contract.py": "3b8e230a179e03b4950c2c91061682ef844209f3f83ecd9236705c828ca73f9f"
+  },
+  "updated": "2026-11-22T22:38:44.284202+00:00",
+  "runtimeSourceCommit": null,
+  "immutableCandidate": null,
+  "installedAcceptance": null,
+  "sameHeadCIGates": null
+}

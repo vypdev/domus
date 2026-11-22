@@ -339,7 +339,7 @@ test('a failed purchase read keeps the actual form and disables its retained dra
   node.view = f.current()!; await node.updateComplete;
   const shopping = root.querySelector('domus-shopping')!; await shopping.updateComplete;
   const form = shopping.shadowRoot!.querySelector<HTMLFormElement>('#purchase-form')!;
-  const name = form.querySelector<HTMLInputElement>('input[name=name]')!;
+  const name = form.querySelector<HaTextField>('vyp-ha-field[name=name]')!;
   const amount = form.querySelector<HTMLInputElement>('input[name=quantity]')!;
   name.value = '  Retained new purchase 😀  '; amount.value = '2';
   f.buys.mockReturnValueOnce(lost());
@@ -653,6 +653,11 @@ test('retired reads and recovered results cannot populate a different identity',
 
 const mounted: HTMLElement[] = [];
 afterEach(() => {for (const node of mounted.splice(0)) node.remove();});
+function enterField(field: HTMLInputElement | HaTextField, value: string) {
+  if (field.localName === 'vyp-ha-field') {
+    field.dispatchEvent(new CustomEvent('ha-value-request', {detail:{value,reason:'input'}}));
+  } else {field.value=value;field.dispatchEvent(new Event('input'));}
+}
 function component(surface: 'inventory' | 'shopping' = 'inventory') {
   const node = surface === 'shopping' ? document.createElement('domus-shopping-workspace') : document.createElement('domus-inventory');
   document.body.append(node); mounted.push(node);
@@ -664,13 +669,49 @@ function component(surface: 'inventory' | 'shopping' = 'inventory') {
     control!.dispatchEvent(new Event('ha-press-request'));
   };
   const input = (form:HTMLFormElement,value:string) => {
-    const field = form.querySelector('input')!;
-    field.value=value; field.dispatchEvent(new Event('input'));
+    const field = form.querySelector<HTMLInputElement | HaTextField>('input:not([hidden]), vyp-ha-field')!;
+    enterField(field,value);
   };
   const submit = (form:HTMLFormElement) => form.dispatchEvent(new Event('submit',{cancelable:true}));
   return {node,root,events,press,input,submit};
 }
 const initial: InventoryState = {scope,report:null,history:null,busy:false,pending:false,result:null,notice:null};
+
+test.each(['en','es'] as const)('product and location fields retain complete codepoint-bounded text and rejected drafts (%s)', async language => {
+  const f = component(); f.node.language=language; f.node.view={...initial,report}; await f.node.updateComplete;
+  const form=f.root.querySelector<HTMLFormElement>('.registration-form')!;
+  const name=form.querySelector('vyp-ha-field')!;
+  for (const value of ['😀'.repeat(160),'e\u0301'.repeat(80),'A'.repeat(159)+'𐐀']) {
+    enterField(name,value);await f.node.updateComplete;await name.updateComplete;
+    expect(name.shadowRoot!.querySelector('input')!.value).toBe(value);
+    f.submit(form);expect(f.events.mock.lastCall?.[0].detail.command).toEqual({...register,name:value,base_unit:'piece'});
+  }
+  const tooLong='😀'.repeat(160)+'X';enterField(name,tooLong);await f.node.updateComplete;
+  f.events.mockClear();f.submit(form);await f.node.updateComplete;
+  expect(f.events).not.toHaveBeenCalled();expect(name.value).toBe(tooLong);
+  expect(name.state.error).toContain(language==='es'?'160 caracteres':'160 characters');
+  f.node.view={...initial,report,pending:true};await f.node.updateComplete;
+  enterField(name,'Late edit');await f.node.updateComplete;expect(name.value).toBe(tooLong);
+  f.node.view={...initial,report};await f.node.updateComplete;
+  const location=f.root.querySelector<HaTextField>('.location-content vyp-ha-field')!;
+  const locationForm=location.form!;const full='😀'.repeat(80);
+  enterField(location,full);await f.node.updateComplete;f.submit(locationForm);
+  expect(f.events.mock.lastCall?.[0].detail.command).toEqual({action:'inventory.add-location',name:full});
+  enterField(location,full+'X');await f.node.updateComplete;f.events.mockClear();f.submit(locationForm);await f.node.updateComplete;
+  expect(f.events).not.toHaveBeenCalled();expect(location.value).toBe(full+'X');expect(location.state.error).toContain('80');
+});
+
+test('stock reasons preserve all 240 supplementary characters, reject 241 without dispatch, and fence disabled edits', async () => {
+  const f=component();f.node.view={...initial,report,history};await f.node.updateComplete;
+  f.press('Adjust stock');await f.node.updateComplete;
+  const form=f.root.querySelector<HTMLFormElement>('.history form')!, reason=form.querySelector('vyp-ha-field')!;
+  f.input(form,'1');const full='😀'.repeat(240);enterField(reason,full);await f.node.updateComplete;f.submit(form);
+  expect(f.events.mock.lastCall?.[0].detail.command).toEqual({...adjust,quantity:'1',reason:full});
+  enterField(reason,full+'X');await f.node.updateComplete;f.events.mockClear();f.submit(form);await f.node.updateComplete;
+  expect(f.events).not.toHaveBeenCalled();expect(reason.value).toBe(full+'X');expect(reason.state.error).toContain('240');
+  f.node.view={...f.node.view,pending:true};await f.node.updateComplete;
+  enterField(reason,'Late edit');await f.node.updateComplete;expect(reason.value).toBe(full+'X');
+});
 
 test('Inventory retains incoming purchase facts and a committed receipt when a later catalog read is unavailable', async () => {
   const {node,root} = component();
@@ -723,8 +764,8 @@ test('Shopping distinguishes tracked stock posting from an untracked receipt and
   expect(purchaseForm.querySelector('[role=alert]')?.textContent).toContain('Enter a quantity');
   quantity.value = '2';
   submit(purchaseForm); await element.updateComplete;
-  expect(purchaseForm.querySelector('[role=alert]')?.textContent).toContain('Enter a product name');
-  purchaseForm.querySelector<HTMLInputElement>('input[name=name]')!.value = 'Apples';
+  expect(purchaseForm.querySelector('vyp-ha-field')?.state.error).toContain('Enter a product name');
+  purchaseForm.querySelector<HaTextField>('vyp-ha-field[name=name]')!.value = 'Apples';
   submit(purchaseForm); await element.updateComplete;
   expect(command()).toEqual({type:'submit',command:{action:buy.action,product_id:null,name:'Apples',quantity:'2'}});
   const select = purchaseForm.querySelector('select')!;
@@ -862,7 +903,7 @@ test('inventory exposes scoped empty, read-only and failure states with accessib
   const registration = root.querySelector<HTMLFormElement>('.registration-form')!;
   submit(registration);
   await node.updateComplete;
-  expect(registration.querySelector('[role=alert]')?.textContent).toContain('Enter a product name');
+  expect(registration.querySelector('vyp-ha-field')?.state.error).toContain('Enter a product name');
   input(registration, register.name);
   const unit = registration.querySelector('select')!;
   unit.value = register.base_unit; unit.dispatchEvent(new Event('change'));
@@ -1065,12 +1106,12 @@ test('history and signed stock forms expose links, actor, validation and current
   const form = () => root.querySelector<HTMLFormElement>('.history form')!;
   expect(root.activeElement).toBe(form().querySelector('input'));
   const fill = (value: string, index = 0) => {
-    const field = form().querySelectorAll('input')[index];
-    field.value=value; field.dispatchEvent(new Event('input'));
+    const field = form().querySelectorAll<HTMLInputElement | HaTextField>('input:not([hidden]), vyp-ha-field')[index];
+    enterField(field,value);
   };
   submit(form());
   await node.updateComplete;
-  expect(form().textContent).toContain('Enter a reason');
+  expect(form().querySelector('vyp-ha-field')?.state.error).toContain('Enter a reason');
   fill(adjust.reason,1);
   submit(form());
   await node.updateComplete;
@@ -1310,13 +1351,13 @@ test('shared Shopping renders bilingual per-source totals and controls for autho
   press('Clear manual extra',1);
   expect(command()).toEqual({type:'submit',command:clearExtra});
   const form = panel.querySelector('form')!;
-  const name = form.querySelector<HTMLInputElement>('input[name="name"]')!;
+  const name = form.querySelector<HaTextField>('vyp-ha-field[name="name"]')!;
   const quantity = form.querySelector<HTMLInputElement>('input[name="quantity"]')!;
   const selector = form.querySelector('select')!;
   quantity.value='0.5'; submit(form); await list.updateComplete;
   expect(quantity.getAttribute('aria-invalid')).toBe('true');
   quantity.value='1'; submit(form); await list.updateComplete;
-  expect(name.getAttribute('aria-invalid')).toBe('true');
+  expect(name.state.error).toContain('Enter a product name');
   name.value='Olive oil'; submit(form); await list.updateComplete;
   expect(command()).toEqual({type:'submit',command:{...addExtra,product_id:null,name:'Olive oil',quantity:'1',note:'',priority:'normal'}});
   selector.value='product'; selector.dispatchEvent(new Event('change')); await list.updateComplete;
@@ -1658,12 +1699,12 @@ test('purchase details confirm the exact remaining amount, require a reason, and
   await assign(open);
   const form = shop.querySelector<HTMLFormElement>('#cancel-form')!;
   const disclosure = shop.querySelector<HTMLDetailsElement>('#cancel-confirmation')!;
-  const reason = form.querySelector('input')!;
+  const reason = form.querySelector('vyp-ha-field')!;
   disclosure.open = true;
   expect(form.textContent).toContain('2 millilitres');
   submit(form);
   await element.updateComplete;
-  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a reason');
+  expect(form.querySelector('vyp-ha-field')?.state.error).toContain('Enter a reason');
   expect(events).not.toHaveBeenCalled();
   reason.value = cancelBalance.reason;
   await assign({...open,pending:true});
@@ -1760,11 +1801,11 @@ test('only a pending tracked receipt can be voided with a reason, and its histor
   };
   await assign(open);
   const form = shop.querySelector<HTMLFormElement>('.receipt-void-form')!;
-  const reason = form.querySelector('input')!;
+  const reason = form.querySelector('vyp-ha-field')!;
   expect(form.textContent).toContain('4.000001 millilitres');
   submit(form);
   await element.updateComplete;
-  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a reason');
+  expect(form.querySelector('vyp-ha-field')?.state.error).toContain('Enter a reason');
   expect(events).not.toHaveBeenCalled();
   reason.value = voidReceipt.reason;
   await assign({...open,pending:true});
@@ -1874,7 +1915,7 @@ test('posted receipt correction uses the shared reason form and keeps both histo
   const form = shop.querySelector<HTMLFormElement>('.posted-receipt-correction-form')!;
   expect(form.textContent).toContain('Quantity to reverse');
   expect(form.textContent).toContain('4.000001 millilitres');
-  form.querySelector('input')!.value = correctPosted.reason;
+  form.querySelector('vyp-ha-field')!.value = correctPosted.reason;
   submit(form);
   expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:correctPosted});
   const correction = {movementId:'compensation',reason:correctPosted.reason,memberId:'shopper',
@@ -1973,8 +2014,8 @@ test('only a valid posting on a settled purchase exposes the full physical retur
   expect(form.textContent).toContain('4.000001 millilitres');
   submit(form);
   await element.updateComplete;
-  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a reason');
-  form.querySelector('input')!.value = returnReceipt.reason;
+  expect(form.querySelector('vyp-ha-field')?.state.error).toContain('Enter a reason');
+  form.querySelector('vyp-ha-field')!.value = returnReceipt.reason;
   submit(form);
   expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:returnReceipt});
   node.language = 'es';
@@ -2580,7 +2621,7 @@ test('barcode lookup selects an existing paginated product and reviews each asso
     barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false}};
   await f.assign(found);
   expect(f.root.textContent).toContain('Barcode associated.');
-  expect(f.root.querySelector<HTMLInputElement>('.registration-form input')!.value).toBe('Preserved product draft');
+  expect(f.root.querySelector<HaTextField>('.registration-form vyp-ha-field')!.value).toBe('Preserved product draft');
   expect(f.field()!.value).toBe('036000291452');
   f.press('Open product stock');
   expect(f.events.mock.lastCall?.[0].detail).toEqual({type: 'history', productId: 'product'});
@@ -2692,4 +2733,56 @@ test('barcode controls honor current grants, pending work and changed associatio
   retired.dispatchEvent(new Event('ha-press-request'));
   await f.node.updateComplete;
   expect(f.root.querySelector('.barcode-review')).toBeNull();
+});
+
+test('an untracked purchase retains 160 supplementary characters and preserves its invalid draft until correction', async () => {
+  const node=document.createElement('domus-shopping');mounted.push(node);document.body.append(node);
+  const view={...initial,report,purchases};node.view=view;await node.updateComplete;
+  const root=node.shadowRoot!,form=root.querySelector<HTMLFormElement>('#purchase-form')!;
+  const name=form.querySelector('vyp-ha-field')!,quantity=form.querySelector<HTMLInputElement>('input[name=quantity]')!;
+  const events=vi.fn();node.addEventListener('domus-inventory-intent',events);quantity.value='1';
+  const full='😀'.repeat(160);enterField(name,full+'X');form.dispatchEvent(new Event('submit',{cancelable:true}));await node.updateComplete;
+  expect(events).not.toHaveBeenCalled();expect(name.value).toBe(full+'X');expect(name.state.error).toContain('160');
+  node.view={...view,pending:true};await node.updateComplete;enterField(name,'Late edit');expect(name.value).toBe(full+'X');
+  form.reset();expect(name.value).toBe('');
+  node.view=view;await node.updateComplete;quantity.value='1';enterField(name,full);
+  form.dispatchEvent(new Event('submit',{cancelable:true}));
+  expect(events.mock.lastCall?.[0].detail.command).toEqual({action:'shopping.purchase',product_id:null,name:full,quantity:'1'});
+});
+
+test.each(['cancel','void','correct','return'] as const)('Shopping %s preserves codepoint-bounded reasons and native reset ownership', async action => {
+  const node=document.createElement('domus-shopping');mounted.push(node);document.body.append(node);
+  const detail:PurchaseReceipts=action==='return'
+    ? {...purchaseReceipts,purchase:{...purchase,received:purchase.purchased,remaining:'0',pendingStock:'0',revision:revisionValue('4')},
+        items:[{...purchaseReceipts.items[0],quantity:purchase.purchased,movementId:'movement'}]}
+    : action==='correct' ? {...purchaseReceipts,purchase:{...purchase,pendingStock:'0'},
+        items:[{...purchaseReceipts.items[0],movementId:'movement'}]} : purchaseReceipts;
+  const view={...initial,report,purchases,purchaseReceipts:detail};node.view=view;await node.updateComplete;
+  const selector={cancel:'#cancel-form',void:'.receipt-void-form',correct:'.posted-receipt-correction-form',return:'.receipt-return-form'}[action];
+  const form=node.shadowRoot!.querySelector<HTMLFormElement>(selector)!,reason=form.querySelector('vyp-ha-field')!;
+  const events=vi.fn();node.addEventListener('domus-inventory-intent',events);const full='😀'.repeat(240);
+  enterField(reason,full);expect(new FormData(form).get('reason')).toBe(full);
+  form.dispatchEvent(new Event('submit',{cancelable:true}));
+  expect(inventoryCommand(events.mock.lastCall?.[0].detail.command)).toMatchObject({reason:full});
+  enterField(reason,full+'X');events.mockClear();form.dispatchEvent(new Event('submit',{cancelable:true}));await node.updateComplete;
+  expect(events).not.toHaveBeenCalled();expect(reason.value).toBe(full+'X');expect(reason.state.error).toContain('240');
+  node.view={...view,pending:true};await node.updateComplete;enterField(reason,'Late edit');expect(reason.value).toBe(full+'X');
+  form.reset();expect(reason.value).toBe('');
+});
+
+test('completed registration clears revealed validation and preserves the chosen base unit for the next product', async () => {
+  const f=component();f.node.view={...initial,report};await f.node.updateComplete;
+  const form=f.root.querySelector<HTMLFormElement>('.registration-form')!,name=form.querySelector('vyp-ha-field')!;
+  await name.updateComplete;expect(name.reportValidity()).toBe(false);await name.updateComplete;
+  expect(name.shadowRoot!.querySelector('input')!.getAttribute('aria-invalid')).toBe('true');
+  f.input(form,'First 😀');const unit=form.querySelector('select')!;unit.value='gram';unit.dispatchEvent(new Event('change'));
+  await f.node.updateComplete;f.submit(form);expect(f.events.mock.lastCall?.[0].detail.command.base_unit).toBe('gram');
+  const result={kind:'committed',operationId:'registered-first',productId:'product',movement:null} as const;
+  f.node.view={...initial,report,result};await f.node.updateComplete;await name.updateComplete;
+  expect(name.value).toBe('');expect(name.shadowRoot!.querySelector('input')!.getAttribute('aria-invalid')).toBe('false');
+  expect(unit.value).toBe('gram');f.input(form,'Second 😀');f.submit(form);
+  expect(f.events.mock.lastCall?.[0].detail.command).toEqual({action:'inventory.register-product',name:'Second 😀',base_unit:'gram'});
+  // A recovered earlier registration may finish after management access is revoked.
+  f.node.view={...initial,report:{...report,mayManage:false},result:{...result,operationId:'recovered-earlier'}};
+  await f.node.updateComplete;expect(f.root.querySelector('.registration-form')).toBeNull();
 });

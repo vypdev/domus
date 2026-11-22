@@ -68,6 +68,8 @@ export const JSON_MAX_BYTES = 65_536;
 export const ROSTER_MAX_BYTES = 1_048_576;
 /** Twenty-five 1,000-codepoint shopping notes can exceed the standard JSON response budget. */
 export const SHOPPING_PAGE_MAX_BYTES = 262_144;
+/** Up to 64 offers and 25 redemptions, including 1,000-codepoint cancellation reasons. */
+export const REWARDS_PAGE_MAX_BYTES = 262_144;
 export type JSONResponseLimit = typeof JSON_MAX_BYTES | typeof ROSTER_MAX_BYTES | typeof SHOPPING_PAGE_MAX_BYTES;
 
 function maskNumbers(raw: string): string {

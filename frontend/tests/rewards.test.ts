@@ -1,5 +1,7 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import {HttpRewardsServer} from '../src/adapters/reward-http';
+import {BoundedHTTP} from '../src/adapters/http-transport';
+import {REWARDS_PAGE_MAX_BYTES} from '../src/adapters/json-values';
 import {REWARD_JOURNAL_KEY, RewardsSessionJournal} from '../src/adapters/reward-journal';
 import {RewardsController} from '../src/application/rewards-controller';
 import type {RewardRequest, RewardsScope, RewardsServer, RewardsView} from '../src/application/rewards-controller';
@@ -40,13 +42,45 @@ const receipt = (result: unknown, state = 'committed') => ({state, archived_by: 
 const read = <T>(result: T): EntryRead<T> => ({result: Promise.resolve(result), cancel: vi.fn()});
 const lost = <T>(): EntryRead<T> => ({result: Promise.reject(new Error('lost')), cancel: vi.fn()});
 
-function http(replies: readonly (readonly [number, unknown])[], deployment: 'native' | 'standalone' = 'standalone') {
+test('a permitted full reward history retains all 1,000-codepoint cancellation reasons and catalog titles', async () => {
+  const full='😀'.repeat(1000),title='😀'.repeat(160);
+  const identifier=(index:number)=>'x'.repeat(120)+String(index).padStart(8,'0');
+  const member='M'.repeat(128),actor='A'.repeat(128);
+  const page={...wire,balance:{posted_minor:0,reserved_minor:0},
+    catalog:Array.from({length:64},(_,index)=>({offer:{...offerWire,offer_id:identifier(index),title},eligible:true})),
+    requests:Array.from({length:25},(_,index)=>({...requestWire,redemption_id:identifier(index),offer_id:identifier(index),member_id:member,
+      title,stage:'cancelled',revision:2,closed:{...closed,actor_member_id:actor},cancellation_reason:full}))};
+  expect(new TextEncoder().encode(JSON.stringify(page)).byteLength).toBeGreaterThan(65_536);
+  expect(new TextEncoder().encode(JSON.stringify(page)).byteLength).toBeLessThan(REWARDS_PAGE_MAX_BYTES);
+  const loaded=await http([[200,page]]).server.read({...scope,memberId:member},null).result;
+  expect(loaded.catalog).toHaveLength(64);expect(loaded.requests).toHaveLength(25);
+  expect(loaded.catalog[63].title).toBe(title);expect(loaded.requests[24].cancellationReason).toBe(full);
+});
+
+test('reward page reads retain declared and streamed bounds without expanding unrelated reads', async () => {
+  for (const declared of [undefined,REWARDS_PAGE_MAX_BYTES+1]) {
+    const oversized=' '.repeat(REWARDS_PAGE_MAX_BYTES)+JSON.stringify(wire);
+    await expect(http([[200,wire]],'standalone',oversized,declared).server.read(scope,null).result)
+      .rejects.toMatchObject({code:'invalid_response'});
+  }
+  const ordinary=' '.repeat(65_536)+JSON.stringify(wire);
+  const f=http([[200,wire]],'standalone',ordinary);
+  const endpoint={...corpus.standalone.endpoint,deployment:'standalone' as const};
+  const network=new BoundedHTTP(endpoint,f.fetch);
+  await expect(network.owned(signal=>network.get('unrelated',scope.context,signal)).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+});
+
+function http(replies: readonly (readonly [number, unknown])[], deployment: 'native' | 'standalone' = 'standalone',
+  rawBody?: string, declaredLength?: number) {
   const endpoint = {...corpus[deployment].endpoint, deployment};
   let index = 0;
   const fetch = vi.fn(async (path: string, _init: RequestInit) => {
     const [status, payload] = replies[index++];
-    const raw = JSON.stringify(payload).replaceAll('"exact-next"', '9007199254740994');
-    const response = new Response(raw, {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
+    const raw = rawBody ?? JSON.stringify(payload).replaceAll('"exact-next"', '9007199254740994');
+    const headers=new Headers({'Content-Type':'application/json','Cache-Control':'no-store'});
+    if (declaredLength !== undefined) headers.set('Content-Length',String(declaredLength));
+    const response = new Response(raw, {status, headers});
     Object.defineProperty(response, 'url', {value: endpoint.origin + path}); return response;
   });
   return {server: new HttpRewardsServer(endpoint, fetch), fetch};
@@ -279,11 +313,15 @@ function component() {
   const events = vi.fn(); node.addEventListener('domus-rewards-intent', events);
   const button = (label: string) => [...root.querySelectorAll('vyp-ha-button')].find(item => item.state.label === label);
   const press = (label: string) => {const control = button(label); expect(control).toBeDefined(); control!.dispatchEvent(new Event('ha-press-request'));};
-  const label = <T extends HTMLInputElement | HTMLSelectElement>(value: string, selector = 'input'): T =>
-    [...root.querySelectorAll('label')].find(item => item.textContent?.trim().startsWith(value))!.querySelector<T>(selector)!;
+  const label = <T extends HTMLInputElement | HTMLSelectElement>(value: string, selector = 'input'): T => {
+    const shared = [...root.querySelectorAll('vyp-ha-field')].find(item => item.state.label === value);
+    return (shared ?? [...root.querySelectorAll('label')].find(item => item.textContent?.trim().startsWith(value))!.querySelector<T>(selector)!) as T;
+  };
   const type = (value: string, input: string) => {
     const control = label<HTMLInputElement>(value);
-    control.value = input; control.dispatchEvent(new Event('input')); return control;
+    if (control.localName === 'vyp-ha-field') control.dispatchEvent(new CustomEvent('ha-value-request', {detail:{value:input,reason:'input'}}));
+    else {control.value = input; control.dispatchEvent(new Event('input'));}
+    return control;
   };
   const change = (control: HTMLInputElement, checked: boolean) => {
     control.checked = checked; control.dispatchEvent(new Event('change'));
@@ -292,6 +330,34 @@ function component() {
   return {node, root, events, button, press, label, type, change, submit};
 }
 const initial: RewardsView = {scope, report: null, pending: false, busy: false, result: null, notice: null};
+
+test.each(['en','es'] as const)('reward fields retain complete Unicode and refuse over-limit drafts without losing them (%s)', async language => {
+  const f=component();f.node.language=language;f.node.view={...initial,report};await f.node.updateComplete;
+  const field=(label:string)=>[...f.root.querySelectorAll('vyp-ha-field')].find(item=>item.state.label===label)!;
+  const titleLabel=language==='es'?'Nombre de la recompensa':'Reward name';
+  const reasonLabel=language==='es'?'Motivo de la cancelación':'Reason for cancellation';
+  const edit=(control:HTMLElement,value:string)=>control.dispatchEvent(new CustomEvent('ha-value-request',{detail:{value,reason:'input'}}));
+  const title=field(titleLabel),offerForm=title.form!;
+  const price=f.root.querySelector<HTMLInputElement>('input[inputmode=decimal]')!;
+  price.value='2';price.dispatchEvent(new Event('input'));
+  const full='😀'.repeat(160);edit(title,full);await f.node.updateComplete;f.submit(offerForm);
+  expect(f.events.mock.lastCall?.[0].detail.command).toEqual({...makeOffer,title:full});
+  edit(title,full+'X');await f.node.updateComplete;f.events.mockClear();f.submit(offerForm);await f.node.updateComplete;
+  expect(f.events).not.toHaveBeenCalled();expect(title.value).toBe(full+'X');expect(title.state.error).toContain('160');
+  f.node.view={...initial,report,pending:true};await f.node.updateComplete;
+  edit(title,'Late edit');await f.node.updateComplete;expect(title.value).toBe(full+'X');
+  f.node.view={...initial,report};await f.node.updateComplete;
+  f.press(language==='es'?'Cancelar solicitud':'Cancel request');await f.node.updateComplete;
+  const reason=field(reasonLabel),reasonForm=reason.form!,all='😀'.repeat(1000);
+  edit(reason,all+'X');await f.node.updateComplete;f.events.mockClear();f.submit(reasonForm);await f.node.updateComplete;
+  expect(f.events).not.toHaveBeenCalled();expect(reason.value).toBe(all+'X');
+  expect(reason.state.error).toContain(language==='es'?'1.000':'1,000');
+  f.node.view={...initial,report,pending:true};await f.node.updateComplete;
+  edit(reason,'Late edit');await f.node.updateComplete;expect(reason.value).toBe(all+'X');
+  f.node.view={...initial,report};await f.node.updateComplete;
+  edit(reason,all);await f.node.updateComplete;f.submit(reasonForm);
+  expect(f.events.mock.lastCall?.[0].detail.command).toEqual({...cancel,expected_revision:revision,reason:all});
+});
 
 test('rewards render optional catalog, balance reasons, exact confirmation, and safe lifecycle text', async () => {
   const f = component(), {node, root, events, press, submit, type} = f;

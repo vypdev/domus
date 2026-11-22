@@ -126,7 +126,7 @@ export class HttpRewardsServer implements RewardsServer {
     return this.network.owned(async signal => {
       const query = new URLSearchParams({limit: '25'});
       if (cursor !== null) query.set('cursor', text(cursor, 512));
-      return report(await this.network.get(BASE + '?' + query.toString(), scope.context, signal), scope.memberId);
+      return report(await this.network.get(BASE + '?' + query.toString(), scope.context, signal, 'rewards'), scope.memberId);
     });
   }
 

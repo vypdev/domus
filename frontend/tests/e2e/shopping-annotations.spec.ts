@@ -129,3 +129,149 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
     await page.screenshot({path:info.outputPath('shopping-annotations-'+locale+'.png'),fullPage:true});
   });
 }
+
+for(const mode of ['native','standalone'] as const)for(const locale of ['en','es'] as const){
+  test.describe(`Unicode text limits ${mode}/${locale}`,()=>{
+    test.use({hasTouch:locale==='es',viewport:{width:locale==='es'?390:1120,height:844}});
+    test('complete supplementary values survive native entry, validation and protected persistence',async({page,context,request},info)=>{
+      test.setTimeout(120_000);
+      page.setDefaultTimeout(15_000);
+      const origin=`http://127.0.0.1:${mode==='native'?56174:56175}`;
+      const base=origin+(mode==='native'?ingress:'')+'/';
+      const commands=base+'api/v1/inventory/commands',rewardCommands=base+'api/v1/family/rewards/commands';
+      const text=(en:string,es:string)=>locale==='es'?es:en;
+      const activate=async(control:ReturnType<typeof page.getByRole>)=>{
+        await expect(control).toBeEnabled();
+        if(locale==='es')await control.tap();else await control.press('Enter');
+      };
+      const checkLayout=async()=>expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(locale==='es'?390:1120);
+      const errors:string[]=[],external:string[]=[],posts:Record<string,unknown>[]=[];
+      page.on('pageerror',error=>errors.push(error.message));
+      page.on('request',item=>{if([commands,rewardCommands].includes(item.url())&&item.method()==='POST')posts.push(item.postDataJSON());});
+      await context.route('**/*',route=>{
+        if(new URL(route.request().url()).origin===origin)return route.continue();
+        external.push(route.request().url());return route.abort('internetdisconnected');
+      });
+      if(process.env.DOMUS_BROWSER_IMAGE){
+        const image=await request.get(origin+'/__fixture__/image');expect(image.ok()).toBe(true);
+        expect(await image.json()).toEqual({source_commit:process.env.DOMUS_TEST_SOURCE_COMMIT,
+          architecture:process.env.DOMUS_TEST_ARCH,image_id:expect.stringMatching(/^sha256:[a-f0-9]{64}$/u),mode});
+      }
+      expect((await request.post(origin+'/__fixture__/reset')).ok()).toBe(true);
+      if(mode==='native')await context.addCookies([{name:'ingress_session',value:'f'.repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
+      await page.emulateMedia({colorScheme:locale==='es'?'dark':'light'});
+      await page.goto(base+'#household');
+      if(mode==='standalone'){
+        await page.getByRole('button',{name:'Sign in with Home Assistant',exact:true}).press('Enter');
+        await page.getByRole('link',{name:'Continue as fixture user',exact:true}).press('Enter');
+      }
+      await page.getByRole('textbox',{name:'Household name',exact:true}).fill('Unicode text QA');
+      await page.getByRole('textbox',{name:'Timezone',exact:true}).fill('UTC');
+      await page.getByRole('button',{name:'Create household',exact:true}).press('Enter');
+      const tabs=page.locator('vyp-ha-tabs');await tabs.getByRole('link',{name:'Inventory',exact:true}).press('Enter');
+      const stock=page.locator('domus-inventory'),full='😀'.repeat(160);
+      // Bind the verified household before choosing the temporary window locale.
+      await stock.getByRole('textbox',{name:'Product name',exact:true}).waitFor();
+      if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption(locale);
+      await expect(page.locator('html')).toHaveAttribute('lang',locale);
+      const name=stock.getByRole('textbox',{name:text('Product name','Nombre del producto'),exact:true});
+      // Native typing honors maxlength, unlike a programmatic DOM setter.
+      await name.pressSequentially(full+'X');await expect(name).toHaveValue(full+'X');
+      const register=stock.getByRole('button',{name:text('Register product','Registrar producto'),exact:true});
+      await activate(register);await expect(name).toHaveAttribute('aria-invalid','true');
+      await expect(name).toHaveValue(full+'X');expect(posts).toEqual([]);
+      await name.fill('');await name.pressSequentially(full);
+      const saved=page.waitForResponse(item=>item.url()===commands&&item.request().method()==='POST');
+      // Exercise implicit Enter from inside the public Field's shadow input.
+      await name.press('Enter');const registration=await saved;expect(registration.status()).toBe(200);
+      const householdContext=(await registration.request().allHeaders())['x-domus-context'];expect(householdContext).toBeTruthy();
+      await expect(stock.getByRole('article',{name:full,exact:true})).toBeVisible();
+      expect(posts[0]).toEqual({action:'inventory.register-product',name:full,base_unit:'piece'});
+      await expect(name).toHaveValue('');await expect(name).toHaveAttribute('aria-invalid','false');
+      const location=stock.getByRole('textbox',{name:text('Location name','Nombre de la ubicación'),exact:true});
+      const locationName='𐐀'.repeat(80);await location.pressSequentially(locationName+'X');
+      await activate(stock.getByRole('button',{name:text('Add location','Añadir ubicación'),exact:true}));
+      await expect(location).toHaveAttribute('aria-invalid','true');await expect(location).toHaveValue(locationName+'X');expect(posts).toHaveLength(1);
+      await location.fill('');await location.pressSequentially(locationName);
+      await activate(stock.getByRole('button',{name:text('Add location','Añadir ubicación'),exact:true}));await expect(location).toHaveValue('');
+      expect(posts[1]).toEqual({action:'inventory.add-location',name:locationName});
+      const product=stock.getByRole('article',{name:full,exact:true});
+      await activate(product.getByRole('button',{name:text('Show movement history','Mostrar historial de movimientos'),exact:true}));
+      await activate(stock.getByRole('button',{name:text('Adjust stock','Ajustar stock'),exact:true}));
+      await stock.getByRole('textbox',{name:text('Signed adjustment quantity','Cantidad del ajuste con signo'),exact:true}).fill('1');
+      const reason=stock.getByRole('textbox',{name:text('Reason','Motivo'),exact:true}),fullReason='😀'.repeat(240);
+      await reason.pressSequentially(fullReason+'X');await activate(stock.getByRole('button',{name:text('Save adjustment','Guardar ajuste'),exact:true}));
+      await expect(reason).toHaveAttribute('aria-invalid','true');await expect(reason).toHaveValue(fullReason+'X');expect(posts).toHaveLength(2);
+      await reason.fill('');await reason.pressSequentially(fullReason);
+      await activate(stock.getByRole('button',{name:text('Save adjustment','Guardar ajuste'),exact:true}));
+      await expect(stock.getByRole('status').filter({hasText:text('Stock adjustment recorded.','Ajuste de stock registrado.')})).toHaveText(text('Stock adjustment recorded. 1 piece','Ajuste de stock registrado. 1 unidad'));
+      expect(posts[2]).toMatchObject({action:'inventory.adjust',quantity:'1',reason:fullReason});
+      await checkLayout();
+      await activate(tabs.getByRole('link',{name:text('Shopping','Compras'),exact:true}));
+      const shopping=page.locator('domus-shopping-workspace'),extras=shopping.locator('domus-shopping-list');
+      const extraName=extras.getByRole('textbox',{name:text('Extra item name','Nombre del extra'),exact:true});
+      await extras.getByRole('textbox',{name:new RegExp('^'+text('Extra quantity','Cantidad del extra'),'u')}).fill('1');
+      await extraName.pressSequentially(full+'X');const add=extras.getByRole('button',{name:text('Add manual extra','Añadir extra manual'),exact:true});
+      await activate(add);await expect(extraName).toHaveAttribute('aria-invalid','true');await expect(extraName).toHaveValue(full+'X');expect(posts).toHaveLength(3);
+      await extraName.fill('');await extraName.pressSequentially(full);await activate(add);await expect(extraName).toHaveValue('');
+      expect(posts[3]).toMatchObject({action:'shopping.add-extra',product_id:null,name:full,quantity:'1'});
+      await activate(shopping.getByRole('button',{name:text('Show purchases','Mostrar compras'),exact:true}));
+      const untracked=shopping.getByRole('textbox',{name:text('Untracked item name','Nombre del artículo sin seguimiento'),exact:true});
+      await shopping.getByRole('textbox',{name:text('Quantity purchased','Cantidad comprada'),exact:true}).fill('2');
+      await untracked.pressSequentially(full+'X');const buy=shopping.getByRole('button',{name:text('Record purchase','Registrar compra'),exact:true});
+      await activate(buy);await expect(untracked).toHaveAttribute('aria-invalid','true');await expect(untracked).toHaveValue(full+'X');expect(posts).toHaveLength(4);
+      await untracked.fill('');await untracked.pressSequentially(full);await activate(buy);await expect(untracked).toHaveValue('');
+      expect(posts[4]).toEqual({action:'shopping.purchase',product_id:null,name:full,quantity:'2'});
+      await checkLayout();
+      await activate(tabs.getByRole('link',{name:text('Family','Familia'),exact:true}));
+      const rewards=page.locator('domus-rewards');
+      const title=rewards.getByRole('textbox',{name:text('Reward name','Nombre de la recompensa'),exact:true});
+      await rewards.getByRole('textbox',{name:text('Price in points','Precio en puntos'),exact:true}).fill('1');
+      await title.pressSequentially(full+'X');const offer=rewards.getByRole('button',{name:text('Save reward','Guardar recompensa'),exact:true});
+      await activate(offer);await expect(title).toHaveAttribute('aria-invalid','true');await expect(title).toHaveValue(full+'X');expect(posts).toHaveLength(5);
+      await title.fill('');await title.pressSequentially(full);
+      const offered=page.waitForResponse(item=>item.url()===rewardCommands&&item.request().method()==='POST');await activate(offer);
+      expect((await offered).status()).toBe(200);await expect(rewards.locator('ol').first().locator('strong')).toHaveText([full]);
+      expect(posts[5]).toMatchObject({action:'reward.offer',title:full,cost_minor:100});
+      const headers={'X-Domus-Context':householdContext};
+      const catalog=await page.request.get(base+'api/v1/inventory',{headers});expect(catalog.status()).toBe(200);
+      const inventory=await catalog.json();expect(inventory.products).toHaveLength(1);
+      expect(inventory.products[0]).toMatchObject({name:full,recorded:'1',reserved:'0',available:'1'});
+      expect(inventory.locations).toContainEqual(expect.objectContaining({name:locationName}));
+      const ledger=await page.request.get(base+'api/v1/inventory/products/'+inventory.products[0].product_id+'/movements',{headers});
+      expect(ledger.status()).toBe(200);const movements=await ledger.json();
+      expect(movements.movements).toHaveLength(1);expect(movements.movements[0]).toMatchObject({reason:fullReason,quantity:'1'});
+      const purchased=await page.request.get(base+'api/v1/inventory/purchases',{headers});expect(purchased.status()).toBe(200);
+      expect((await purchased.json()).purchases).toEqual([expect.objectContaining({name:full,product_id:null,purchased:'2',received:'0'})]);
+      const family=await page.request.get(base+'api/v1/family/rewards',{headers});expect(family.status()).toBe(200);
+      expect((await family.json()).catalog).toEqual([expect.objectContaining({offer:expect.objectContaining({title:full})})]);
+      await info.attach('unicode-text-commands',{body:JSON.stringify(posts,null,2),contentType:'application/json'});
+      await expect(offer).toBeEnabled();
+      const colors=await offer.evaluate(element=>{
+        // The public surface paints the background inside the transparent hit target.
+        const surface=element.querySelector('[part=surface]')!;
+        return {foreground:getComputedStyle(surface).color,background:getComputedStyle(surface).backgroundColor};
+      });
+      const luminance=(value:string)=>{
+        const rgb=value.match(/[\d.]+/gu)!.slice(0,3).map(Number).map(channel=>channel/255)
+          .map(channel=>channel<=0.04045?channel/12.92:((channel+0.055)/1.055)**2.4);
+        return 0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2];
+      };
+      const foreground=luminance(colors.foreground),background=luminance(colors.background);
+      const contrast=(Math.max(foreground,background)+0.05)/(Math.min(foreground,background)+0.05);
+      await title.press('Home');
+      expect(contrast).toBeGreaterThanOrEqual(4.5);
+      await expect.poll(async()=>{
+        const field=await title.boundingBox(),navigation=await tabs.boundingBox();
+        return field!.y-Math.max(0,navigation!.y+navigation!.height);
+      }).toBeGreaterThanOrEqual(0);
+      const fieldBounds=await title.boundingBox(),navigationBounds=await tabs.boundingBox();
+      await info.attach('unicode-text-visual-metrics',{body:JSON.stringify({colors,contrast,fieldBounds,navigationBounds}),contentType:'application/json'});
+      await page.screenshot({path:info.outputPath('unicode-text-'+locale+'.png')});
+      expect(fieldBounds).not.toBeNull();expect(navigationBounds).not.toBeNull();
+      expect(fieldBounds!.y).toBeGreaterThanOrEqual(navigationBounds!.y+navigationBounds!.height);
+      await checkLayout();
+      expect(external).toEqual([]);expect(errors).toEqual([]);
+    });
+  });
+}

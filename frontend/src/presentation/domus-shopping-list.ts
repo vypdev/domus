@@ -39,6 +39,7 @@ export class DomusShoppingList extends LitElement {
     sessionDraft:{state:true}, sessionStoreDraft:{state:true}, sessionError:{state:true}, extraPriority:{state:true}, extraNote:{state:true}};
 
   static styles = css`
+    vyp-ha-field {--vyp-ha-danger:var(--warning);--vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     section, form, label, li {display:grid;gap:8px}
     ol {display:grid;gap:12px;margin:0;padding:0;list-style:none}
     li + li {padding-block-start:8px;border-block-start:1px solid var(--line)}
@@ -129,7 +130,7 @@ export class DomusShoppingList extends LitElement {
     // Successful FormData entries disappear while a request disables its controls.
     // Ownership tracks entered values, independently of that temporary disabled state.
     return JSON.stringify([this.selected, this.extraPriority, this.extraNote,
-      form.querySelector<HTMLInputElement>('input[name="name"]')?.value ?? null,
+      form.querySelector<HTMLElementTagNameMap['vyp-ha-field']>('vyp-ha-field[name="name"]')?.value ?? null,
       form.querySelector<HTMLInputElement>('input[name="quantity"]')!.value]);
   }
 
@@ -185,8 +186,15 @@ export class DomusShoppingList extends LitElement {
         <option value="">${this.text('freeItem')}</option>
         ${products.map(item => html`<option value=${item.id}>${item.name}</option>`)}
       </select></label>
-      ${product === undefined ? html`<label>${this.text('extraName')}<input name="name" maxlength="160" ?disabled=${blocked}
-        aria-invalid=${error === 'invalidName'} aria-describedby="shopping-extra-error"></label>` : nothing}
+      ${product === undefined ? html`<vyp-ha-field name="name" ?disabled=${blocked}
+        .state=${textFieldState({label:this.text('extraName'), required:true,
+          requiredMessage:this.text('invalidName'), error:error === 'invalidName' ? this.text('invalidName') : ''})}
+        @ha-value-request=${(event: FieldValueEvent) => {
+          if (blocked && event.detail.reason !== 'reset') return;
+          (event.currentTarget as HTMLElementTagNameMap['vyp-ha-field']).value = event.detail.value;
+          if (this.error === 'invalidName') this.error = null;
+          this.extraRevision++;
+        }}></vyp-ha-field>` : nothing}
       <label>${this.text('extraQuantity')} · ${this.text(unit)}
         <input name="quantity" inputmode="decimal" maxlength="20" ?disabled=${blocked}
           aria-invalid=${error === 'invalidQuantity'} aria-describedby="shopping-extra-error">
@@ -219,7 +227,7 @@ export class DomusShoppingList extends LitElement {
           this.extraRevision++;
           if (this.error === 'invalid_shopping_priority') this.error = null;
         }}></vyp-ha-select>
-      <span id="shopping-extra-error" role="alert">${error === null ? nothing : this.text(error)}</span>
+      <span id="shopping-extra-error" role="alert">${error === null || error === 'invalidName' ? nothing : this.text(error)}</span>
       ${this.button('addExtra', blocked)}
     </form>`;
   }

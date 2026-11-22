@@ -1,0 +1,88 @@
+# Unicode text limits qualification
+
+[Issue #165](https://github.com/vypdev/domus/issues/165) repairs existing text
+contracts in product registration, Shopping names, storage locations and reasons,
+reward titles/cancellations and schedule review. The [machine-readable record](unicode-text-limits.json)
+separates baseline reproduction, local execution, historical failures and pending
+immutable/installed/CI acceptance. This increment is not yet accepted.
+
+## Existing contract and observed failure
+
+The accepted develop baseline `487e157ff4b95b4ba6debf1543d816f95c985481` has the
+same tree as `8a63abb9032198f90aa20e1168f01ebd2912112f`. Native typing of 160
+supplementary characters retained only 80 in four actual compiled views: Product
+name, Extra item name, Untracked item name and Reward name. ASCII 160 passed.
+The UI actually stored the 80-character product name, while the same protected
+API accepted and returned the exact 160-character value. The observed compiled
+JS/CSS match accepted Edge.85. The original observations, receipt, recipe and
+independent asset qualification are retained; this was not installed HA proof.
+
+Native HTML maxlength and the published single-line Field count UTF-16 units.
+The existing domain counts Unicode codepoints. Corrected single-line fields use
+the public Field's larger safety bound and keep application validation at the
+existing 160/80/240/1,000-codepoint limit. An extreme value truncated at the
+16,384-unit safety bound still exceeds every business maximum and cannot become
+a valid silently shortened submission. The public Textarea already counts
+codepoints and supplies schedule-review's 1,000-character limit. No domain text
+policy, schema, command/receipt identity or permission is changed.
+
+## Bounded integration
+
+All affected controls use exact published `@vypdev/ha-ui@0.1.0-next.5`. Named
+FormData, current draft revisions/fingerprints, default/reset ownership and blocked
+edits remain covered. A completed own extra resets while refreshing; a later or
+unrelated draft survives. Registration resets revealed validation while retaining
+the selected base unit for the next product. Over-limit drafts remain editable
+and produce no command. English and Spanish messages retain the existing limits.
+
+A complete permitted reward response can contain 64 offers and 25 request snapshots,
+each with 160-character titles and a 1,000-character cancellation reason. A
+supplementary-character page exceeded the previous 64 KiB read bound and failed
+before parsing. Reward-page GET now has a distinct 256 KiB budget. Streamed and
+declared-length overflow still fail; ordinary reads and command/recovery replies
+retain 64 KiB. Endpoint shapes, record limits, charset, no-store, same-origin and
+current authorization checks remain unchanged.
+
+Long reward options must fit a narrow grid. Its primary button uses the current
+surface as its on-accent color in both themes. The final four composed variants measure actual painted contrast at 7.11:1 in
+light mode and 9.14:1 in dark mode. Focused inputs sit at least 80px from the
+viewport top, below the 56px sticky navigation. The named public input part
+provides scroll margin without changing command or navigation ownership.
+
+The original owning requirements remain in [Inventory](../../specs/household-inventory.md),
+[Shopping](../../specs/shopping-management.md), [Rewards](../../specs/points-rewards.md)
+and [Recurrence](../../specs/recurrence-lifecycle-calendar.md). Their exact relevant
+identities are listed in the JSON record. No native requirement/case ledger is
+replaced or renumbered, and this bug does not complete those broader capabilities.
+
+## Executed source checks and remaining gates
+
+The complete frontend passes 2,229 tests across 50 files. All four metrics are 100%
+globally and per file: 9,599 statements, 8,807 branches, 2,035 functions and 6,978
+lines. The independent authored-file audit accounts for 121 runtime files
+(114 nonempty and 7 empty). Runtime/catalog TypeScript, product build, Node
+TypeScript, 42 Node-policy tests/all four 100%, the native catalog validator and
+68 catalog-browser variants pass. All 48 CI-contract tests pass after updating
+the strict actual-image inventory from 86 to 90 for the four new Unicode variants.
+Runner placement, exact released action tags, deadlines and zero retries remain
+unchanged.
+
+The first complete composed suite ran 145 variants: 139 passed and 6 failed. Four
+calendar failures locate the retired native textarea instead of the public named
+Textbox; two workspace failures require the former outer alert instead of the
+shared Field's described, live inline error. Their original diagnostics are
+retained. Current semantic selectors keep every actual write, original-key,
+permission, retained-state, restart and restore assertion. All six adapted calendar/workspace variants subsequently pass with their
+original persisted-effect and recovery assertions. The final four Unicode
+variants pass again with real painted contrast, focus and width checks, once
+each with zero retries. The combined final ten-variant execution passes once in 124.60 seconds, with no skipped, retried or flaky cases. These local checks are not same-head CI or
+installed acceptance.
+
+Require final exact-head CI, substantive review and verification, complete 145
+source and 68 catalog variants, all 6,040 unchanged backend tests / 250 modules,
+and 62 container plus 90 browser cases on each real image architecture. Native HA
+modules must retain full coverage. Qualify the new immutable Edge archive/wheel,
+actual image and installed English desktop/light/keyboard and Spanish
+mobile/dark/touch journeys, including exact persistence and public restart.
+This record currently makes none of those pending acceptance claims. No Stable
+release or deployment is authorized by this increment.

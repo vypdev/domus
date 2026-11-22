@@ -5,6 +5,9 @@ import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerCard} from '@vypdev/ha-ui/card';
 import {cardState} from '@vypdev/ha-ui/card-contracts';
+import {registerField} from '@vypdev/ha-ui/field';
+import type {FieldValueEvent} from '@vypdev/ha-ui/field';
+import {textFieldState} from '@vypdev/ha-ui/field-contracts';
 import type {InventoryState} from '../application/inventory-controller';
 import {STOCK_REASON_LIMIT, intakeQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, PhysicalReceipt, ProductStock, Purchase, PurchaseReceipts, PurchaseSession} from '../domain/inventory';
@@ -33,6 +36,7 @@ export class DomusShopping extends LitElement {
     purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}, receiptError:{state:true}};
 
   static styles = css`
+    vyp-ha-field {--vyp-ha-danger:var(--warning);--vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     .shopping, form, label, li {display:grid;gap:8px}
     ol {display:grid;gap:12px;margin:0;padding:0;list-style:none}
     li + li {padding-block-start:8px;border-block-start:1px solid var(--line)}
@@ -122,16 +126,21 @@ export class DomusShopping extends LitElement {
         ${products.map(item => html`<option value=${item.id} ?disabled=${item.outstandingPurchase !== '0'}>${item.name}</option>`)}
       </select></label>
       ${product === undefined
-        ? html`<label>${this.text('freeItemName')}<input name="name" required maxlength="160" ?disabled=${blocked}
-            aria-invalid=${this.purchaseError === 'invalidName'}
-            aria-describedby=${this.purchaseError === 'invalidName' ? 'purchase-error' : nothing}></label>`
+        ? html`<vyp-ha-field name="name" ?disabled=${blocked}
+            .state=${textFieldState({label:this.text('freeItemName'), required:true,
+              requiredMessage:this.text('invalidName'), error:this.purchaseError === 'invalidName' ? this.text('invalidName') : ''})}
+            @ha-value-request=${(event: FieldValueEvent) => {
+              if (blocked && event.detail.reason !== 'reset') return;
+              (event.currentTarget as HTMLElementTagNameMap['vyp-ha-field']).value = event.detail.value;
+              if (this.purchaseError === 'invalidName') this.purchaseError = null;
+            }}></vyp-ha-field>`
         : html`<p>${this.text('shoppingNeeded')} · ${this.amount(product.shoppingNeeded, unit)}</p>`}
       <label>${this.text('purchaseQuantity')}<input name="quantity" required maxlength="19"
         inputmode=${unit === 'piece' ? 'numeric' : 'decimal'} ?disabled=${blocked}
         aria-invalid=${this.purchaseError === 'invalidQuantity'}
         aria-describedby=${this.purchaseError === 'invalidQuantity' ? 'purchase-error' : nothing}></label>
       <p>${this.text('unit')} · ${this.text(unit)}</p>
-      ${this.purchaseError === null ? nothing : html`<p role="alert" id="purchase-error">${this.text(this.purchaseError)}</p>`}
+      ${this.purchaseError === 'invalidQuantity' ? html`<p role="alert" id="purchase-error">${this.text(this.purchaseError)}</p>` : nothing}
       ${this.button('recordPurchase', blocked)}
     </form>`;
   }
@@ -181,9 +190,14 @@ export class DomusShopping extends LitElement {
           reason, expected_revision:purchase.revision}});
       }}>
         <p>${this.text('cancellationAmount')} · <strong>${this.amount(purchase.remaining, purchase.unit)}</strong></p>
-        <label>${this.text('reason')}<input name="reason" required maxlength=${STOCK_REASON_LIMIT} ?disabled=${blocked}
-          aria-invalid=${this.cancelError} aria-describedby=${this.cancelError ? 'cancel-error' : nothing}></label>
-        ${this.cancelError ? html`<p role="alert" id="cancel-error">${this.text('invalid_inventory_reason')}</p>` : nothing}
+        <vyp-ha-field name="reason" ?disabled=${blocked}
+          .state=${textFieldState({label:this.text('reason'), required:true,
+            requiredMessage:this.text('invalid_inventory_reason'), error:this.cancelError ? this.text('invalid_inventory_reason') : ''})}
+          @ha-value-request=${(event: FieldValueEvent) => {
+            if (blocked && event.detail.reason !== 'reset') return;
+            (event.currentTarget as HTMLElementTagNameMap['vyp-ha-field']).value = event.detail.value;
+            this.cancelError = false;
+          }}></vyp-ha-field>
         ${this.button('confirmCancellation', blocked)}
       </form>
     </details>`;
@@ -207,9 +221,14 @@ export class DomusShopping extends LitElement {
           receipt_id:entry.id, reason, expected_revision:purchase.revision}});
       }}>
         <p>${this.text(labels.amount)} · <strong>${this.amount(entry.quantity, purchase.unit)}</strong></p>
-        <label>${this.text('reason')}<input name="reason" required maxlength=${STOCK_REASON_LIMIT} ?disabled=${blocked}
-          aria-invalid=${invalid} aria-describedby=${invalid ? errorId : nothing}></label>
-        ${invalid ? html`<p role="alert" id=${errorId}>${this.text('invalid_inventory_reason')}</p>` : nothing}
+        <vyp-ha-field name="reason" ?disabled=${blocked}
+          .state=${textFieldState({label:this.text('reason'), required:true,
+            requiredMessage:this.text('invalid_inventory_reason'), error:invalid ? this.text('invalid_inventory_reason') : ''})}
+          @ha-value-request=${(event: FieldValueEvent) => {
+            if (blocked && event.detail.reason !== 'reset') return;
+            (event.currentTarget as HTMLElementTagNameMap['vyp-ha-field']).value = event.detail.value;
+            this.receiptError = null;
+          }}></vyp-ha-field>
         ${this.button(labels.confirm, blocked)}
       </form>
     </details>`;
@@ -323,6 +342,7 @@ export class DomusShopping extends LitElement {
 
 registerButton();
 registerCard();
+registerField();
 customElements.define('domus-shopping', DomusShopping);
 
 declare global {

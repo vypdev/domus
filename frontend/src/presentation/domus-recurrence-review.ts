@@ -1,6 +1,9 @@
-import {LitElement, html, nothing} from 'lit';
+import {LitElement, css, html, nothing} from 'lit';
 import {keyed} from 'lit/directives/keyed.js';
 import type {PropertyValues} from 'lit';
+import {registerTextArea} from '@vypdev/ha-ui/textarea';
+import type {TextAreaValueEvent} from '@vypdev/ha-ui/textarea';
+import {textAreaState} from '@vypdev/ha-ui/textarea-contracts';
 import type {ReviewView} from '../application/recurrence-review-controller';
 import {ATTACHMENT_CHOICES, ATTACHMENT_FOLDS, MISSED_POLICIES, REVIEW_FOLDS, VISIBILITIES} from '../domain/recurrence-review';
 import type {ReviewDraft, ReviewKind, ReviewTarget} from '../domain/recurrence-review';
@@ -15,7 +18,8 @@ export type ReviewIntent = Readonly<{type: 'open' | 'close' | 'apply'}>
 
 export class DomusRecurrenceReview extends LitElement {
   static properties = {view: {attribute: false}, language: {attribute: false}, action: {state: true}};
-  static styles = styles;
+  static styles = [styles, css`vyp-ha-textarea {--vyp-ha-danger:var(--warning);
+    --vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}`];
   declare view: ReviewView | null;
   declare language: Language;
   private declare action: ReviewKind | null;
@@ -75,7 +79,14 @@ export class DomusRecurrenceReview extends LitElement {
         ${this.select('missedPolicy', MISSED_POLICIES, target.schedule?.missedPolicy?.policy ?? 'keep_visible')}
         <p>${this.text('missedPolicyHelp')}</p>` : nothing}
       ${pattern ? html`<label>${this.text('pattern')}<input name="pattern" required maxlength="2048"></label>` : nothing}
-      ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' || exception ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
+      ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' || exception ? html`
+        <vyp-ha-textarea name="reason" ?disabled=${disabled}
+          .state=${textAreaState({label:this.text('reason'), required:true, maxLength:1000,
+            requiredMessage:this.text('invalidReason'), tooLongMessage:this.text('invalidReason')})}
+          @ha-value-request=${(event: TextAreaValueEvent) => {
+            if (disabled) return;
+            (event.currentTarget as HTMLElementTagNameMap['vyp-ha-textarea']).value = event.detail.value;
+          }}></vyp-ha-textarea>` : nothing}
       `)}
       <button type="submit" ?disabled=${disabled}>${this.text('preview')}</button>
     </form>`;
@@ -146,5 +157,6 @@ export class DomusRecurrenceReview extends LitElement {
     </section>`;
   }
 }
+registerTextArea();
 customElements.define('domus-recurrence-review', DomusRecurrenceReview);
 declare global {interface HTMLElementTagNameMap {'domus-recurrence-review': DomusRecurrenceReview;}}

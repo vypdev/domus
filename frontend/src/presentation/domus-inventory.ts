@@ -14,7 +14,7 @@ import {selectState} from '@vypdev/ha-ui/select-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {InventoryError, InventoryState} from '../application/inventory-controller';
-import {BASE_UNITS, MAX_LOCATION_NAME, STOCK_REASON_LIMIT, adjustmentQuantity, canonicalGtin, intakeQuantity, locationName, policyQuantity, stockUnits} from '../domain/inventory';
+import {BASE_UNITS, STOCK_REASON_LIMIT, adjustmentQuantity, canonicalGtin, intakeQuantity, locationName, policyQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement, StockTotals, StorageLocation} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
@@ -68,6 +68,7 @@ export class DomusInventory extends LitElement {
   };
 
   static styles = css`
+    vyp-ha-field {--vyp-ha-danger:var(--warning);--vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     :host {display:grid;gap:16px;--vyp-ha-surface:var(--surface);--vyp-ha-surface-raised:var(--surface);
       --vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);
       --vyp-ha-primary:var(--accent);--vyp-ha-on-accent:var(--surface);--vyp-ha-focus-ring:3px solid var(--accent)}
@@ -108,6 +109,7 @@ export class DomusInventory extends LitElement {
   private declare locationDraft: string;
   private declare locationInvalid: boolean;
   private declare transferDraft: TransferDraft | null;
+  private registrationResetPending = false;
   private declare barcodeDraft: string;
   private declare barcodeSubmitted: string | null;
   private declare barcodeInvalid: boolean;
@@ -178,7 +180,7 @@ export class DomusInventory extends LitElement {
       } else if (result.locationSaved) this.locationDraft = '';
       else if (result.replenishmentSaved) this.policyEditor = null;
       else if (result.movement === null) {
-        if (!result.shoppingAction) this.nameDraft = '';
+        if (!result.shoppingAction) {this.nameDraft = ''; this.registrationResetPending = true;}
       }
       else if (result.movement.action === 'inventory.intake') this.select(result.productId);
       else if (result.movement.action === 'inventory.transfer') this.transferDraft = null;
@@ -188,6 +190,15 @@ export class DomusInventory extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     if (!changed.has('view')) return;
+    if (this.registrationResetPending) {
+      this.registrationResetPending = false;
+      const form = this.renderRoot.querySelector<HTMLFormElement>('.registration-form');
+      // Reset the shared control's revealed validation with the completed form.
+      // Keep the previously selected immutable base unit for the next product.
+      form?.reset();
+      const unit = form?.querySelector('select');
+      if (unit) unit.value = this.unit;
+    }
     if (this.barcodeFocusPending && !this.view!.busy) {
       const owner = this.view!;
       const target = this.renderRoot.querySelector<HTMLElement>(owner.pending
@@ -343,10 +354,13 @@ export class DomusInventory extends LitElement {
         try {taskText(this.nameDraft, 160, true);} catch {this.invalid = 'name'; return;}
         this.intent({type:'submit', command:{action:'inventory.register-product', name:this.nameDraft, base_unit:this.unit}});
       }}>
-        <label>${this.text('productName')}<input maxlength="160" required .value=${live(this.nameDraft)}
-          aria-invalid=${invalid} aria-describedby=${invalid ? 'inventory-name-error' : nothing} ?disabled=${blocked}
-          @input=${(event: InputEvent) => {this.nameDraft = (event.target as HTMLInputElement).value; this.invalid = null;}}></label>
-        ${invalid ? this.error('inventory-name-error', 'invalidName') : nothing}
+        <vyp-ha-field .value=${this.nameDraft} ?disabled=${blocked}
+          .state=${textFieldState({label:this.text('productName'), required:true,
+            requiredMessage:this.text('invalidName'), error:invalid ? this.text('invalidName') : ''})}
+          @ha-value-request=${(event: FieldValueEvent) => {
+            if (blocked) return;
+            this.nameDraft = event.detail.value; this.invalid = null;
+          }}></vyp-ha-field>
         <label>${this.text('unit')}<select .value=${live(this.unit)} ?disabled=${blocked} aria-describedby="inventory-unit-help"
           @change=${(event: Event) => {this.unit = (event.target as HTMLSelectElement).value as BaseUnit;}}>
           ${BASE_UNITS.map(unit => html`<option .value=${unit}>${this.text(unit)}</option>`)}
@@ -395,7 +409,7 @@ export class DomusInventory extends LitElement {
     this.reason = '';
     this.adjustment = '';
     this.invalid = null;
-    void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLInputElement>('.history form input')?.focus());
+    void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.history form input:not([hidden]), .history form vyp-ha-field')?.focus());
   }
 
   private stockForm(history: MovementHistory, editor: NonNullable<DomusInventory['editor']>, blocked: boolean) {
@@ -424,11 +438,14 @@ export class DomusInventory extends LitElement {
         ${this.invalid === 'adjustment' ? this.error('stock-adjustment-error', 'invalidQuantity') : nothing}
       ` : html`<p>${this.text('reversalGuide')} −${this.quantity(original.quantity)} ${this.text(history.unit)}.
         <code>${original.id}</code></p>`}
-      <label>${this.text('reason')}<input required maxlength=${STOCK_REASON_LIMIT} .value=${live(this.reason)}
-        aria-invalid=${this.invalid === 'reason'} ?disabled=${blocked} @input=${(event: InputEvent) => {
-          this.reason = (event.target as HTMLInputElement).value; this.invalid = null;
-        }}></label>
-      ${this.invalid === 'reason' ? this.error('stock-reason-error', 'invalid_inventory_reason') : nothing}
+      <vyp-ha-field .value=${this.reason} ?disabled=${blocked}
+        .state=${textFieldState({label:this.text('reason'), required:true,
+          requiredMessage:this.text('invalid_inventory_reason'),
+          error:this.invalid === 'reason' ? this.text('invalid_inventory_reason') : ''})}
+        @ha-value-request=${(event: FieldValueEvent) => {
+          if (blocked) return;
+          this.reason = event.detail.value; this.invalid = null;
+        }}></vyp-ha-field>
       <div class="actions">${this.submitButton(original === null ? 'saveAdjustment' : 'confirmReversal', blocked)}
         ${this.button('cancel', () => {this.editor = null;}, blocked)}</div>
     </form>`;
@@ -451,7 +468,8 @@ export class DomusInventory extends LitElement {
           this.intent({type:'submit', command:{action:'inventory.add-location', name}});
         }}>
           <vyp-ha-field .value=${this.locationDraft} ?disabled=${blocked}
-            .state=${textFieldState({label:this.text('locationName'), required:true, maxLength:MAX_LOCATION_NAME,
+            .state=${textFieldState({label:this.text('locationName'), required:true,
+              requiredMessage:this.text('invalid_inventory_location_name'),
               error:this.locationInvalid ? this.text('invalid_inventory_location_name') : ''})}
             @ha-value-request=${(event: FieldValueEvent) => {
               this.locationDraft = event.detail.value;

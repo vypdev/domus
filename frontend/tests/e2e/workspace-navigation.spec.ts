@@ -765,7 +765,8 @@ for (const mode of ['native', 'standalone'] as const) {
     await historial.getByRole('button', {name:'Revertir esta entrada'}).click();
     await expect(historial.getByRole('textbox', {name:'Motivo'})).toBeFocused();
     await historial.getByRole('button', {name:'Confirmar reversión de entrada'}).click();
-    await expect(historial.getByRole('alert')).toContainText('Introduce un motivo');
+    await expect(historial.getByRole('textbox',{name:'Motivo',exact:true})).toHaveAttribute('aria-invalid','true');
+    await expect(historial.getByText('Introduce un motivo de hasta 240 caracteres.',{exact:true})).toBeVisible();
     await historial.getByRole('textbox', {name:'Motivo'}).fill('Entrada duplicada');
     let correctionKey = '';
     let originalMovement = '';
