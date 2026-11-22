@@ -229,8 +229,10 @@ export class InventoryController {
     if (state === null || state.report === null || this.owned !== null) return;
     const cursor = more ? state.shoppingList?.cursor : null;
     if (more && !cursor) return;
+    if (!more) this.shoppingTarget = null;
     const loaded = await this.run(this.server.shoppingList(state.scope, cursor!), page => {
       this.set({shoppingList:more ? {...page, items:[...state.shoppingList!.items, ...page.items]} : page,
+        ...(!more ? {shoppingFocus:undefined} : {}),
         notice:state.pending ? state.notice : null});
     }, 'unavailable');
     if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), shoppingList:null, shoppingSources:null});

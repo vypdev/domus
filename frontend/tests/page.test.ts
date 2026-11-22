@@ -1540,6 +1540,12 @@ test('Overview shopping retries and opens the current shared-list item beyond an
   await list.updateComplete;
   expect(list.shadowRoot!.activeElement?.textContent).toBe('Salt');
 
+  navigate('#shopping');
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toBeUndefined());
+  expect(app.inventory?.shoppingList?.items).toEqual([]);
+  navigate(href);
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+
   navigate('#inventory');
   await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
   expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true});

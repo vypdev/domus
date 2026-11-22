@@ -41,7 +41,7 @@ export class DomusShoppingWorkspace extends LitElement {
       ${inventoryOperationFeedback(view, this.language, nothing, 'shoppingUnavailable')}
       ${!view.accessDenied && view.retainedReport != null ? html`<p role="status">${this.text('staleInventory')}</p>` : nothing}
       <div class="actions">${this.button('refresh')}${view.pending ? this.button('recover') : nothing}</div>
-      ${view.busy && view.report === null ? html`<p role="status">${this.text('loading')}</p>` : nothing}
+      ${view.busy && view.report === null ? html`<p role="status">${this.text('shoppingLoading')}</p>` : nothing}
       ${report == null ? nothing : keyed(view.scope.key,
         html`<domus-shopping .view=${view.report === null || view.retainedShopping != null
           ? {...view, ...shoppingReadSnapshot(view), report} : view} .language=${this.language}></domus-shopping>`)}`;

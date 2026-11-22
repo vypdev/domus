@@ -476,7 +476,7 @@ export function mountEntry(page: EntryPage): PageMount {
         if (current.busy || current.report === null) return;
         shoppingNavigation = null;
         if (scheduled.target !== null) void inventoryController.showShoppingItem(scheduled.target);
-        else if (current.shoppingList == null) void inventoryController.showShoppingList();
+        else if (current.shoppingList == null || current.shoppingFocus != null) void inventoryController.showShoppingList();
       }, 0);
     };
     const inventoryJournal = new InventorySessionJournal({getItem:key => browser.storage().getItem(key),

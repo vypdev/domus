@@ -1,9 +1,9 @@
-import {afterEach, expect, test} from 'vitest';
+import {afterEach, expect, test, vi} from 'vitest';
 import type {InventoryState} from '../src/application/inventory-controller';
 import '../src/presentation/domus-shopping-workspace';
 
 const owned: HTMLElement[] = [];
-afterEach(() => {for (const node of owned.splice(0)) node.remove();});
+afterEach(() => {vi.restoreAllMocks(); for (const node of owned.splice(0)) node.remove();});
 const initial: InventoryState = {
   scope:{key:'verified-owner', context:{installationId:'047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6', channel:'edge', subject:'a'.repeat(32)}, readOnly:false},
   report:{products:[], locations:[], cursor:null, mayManage:true, mayShop:true, mayRequest:true},
@@ -21,7 +21,7 @@ test('Shopping renders its own loading, failure and recovery actions without iss
   expect(node.shadowRoot!.textContent).toBe('');
   node.view = {...initial, report:null, busy:true}; await node.updateComplete;
   expect(node.shadowRoot!.querySelector('h2')!.textContent).toBe('Shopping');
-  expect(node.shadowRoot!.textContent).toContain('Loading');
+  expect(node.shadowRoot!.textContent).toContain('Loading Shopping.');
   const refresh = node.shadowRoot!.querySelector('vyp-ha-button')!;
   await refresh.updateComplete;
   refresh.shadowRoot!.querySelector('button')!.click();
@@ -39,6 +39,8 @@ test('Shopping renders its own loading, failure and recovery actions without iss
   expect(node.shadowRoot!.querySelector('a')!.getAttribute('href')).toBe('#inventory');
   expect(node.shadowRoot!.querySelector('vyp-ha-feedback')!.state?.message)
     .toBe('Compras no está disponible. Actualiza Compras para consultar la información actual.');
+  node.view = {...initial, report:null, busy:true}; await node.updateComplete;
+  expect(node.shadowRoot!.textContent).toContain('Cargando Compras.');
 });
 
 test('a retained Shopping form survives same-owner view updates and is retired for a new scope', async () => {
@@ -82,4 +84,45 @@ test('a denied read hides retained household facts and keeps an unresolved opera
   expect(node.shadowRoot!.querySelector('vyp-ha-feedback')!.state?.message).toContain('access');
   expect(node.shadowRoot!.querySelector('p[role=status]')).not.toBeNull();
   expect(node.shadowRoot!.querySelectorAll('vyp-ha-button')).toHaveLength(2);
+});
+
+test('stale Shopping sources are disabled until the current catalog is available', async () => {
+  const node = await mount();
+  const current = {...initial, shoppingList:{items:[{productId:'tea', extraId:null, name:'Tea', unit:'piece' as const,
+    total:'2', pantry:'0', tasks:'0', manual:'2', attribution:null}], cursor:null}};
+  node.view = current; await node.updateComplete;
+  const shopping = node.shadowRoot!.querySelector('domus-shopping')!; await shopping.updateComplete;
+  const list = shopping.shadowRoot!.querySelector('domus-shopping-list')!; await list.updateComplete;
+  const source = () => [...list.shadowRoot!.querySelectorAll('vyp-ha-button')].find(button => button.state.label === 'Show shopping sources')!;
+  const events = vi.fn(); node.addEventListener('domus-inventory-intent', events);
+  await source().updateComplete; expect(source().disabled).toBe(false);
+  node.view = {...current, report:null, retainedReport:current.report, retainedShopping:{shoppingList:current.shoppingList}, notice:'unavailable'};
+  await node.updateComplete; await shopping.updateComplete; await list.updateComplete; await source().updateComplete;
+  expect(source().disabled).toBe(true); source().shadowRoot!.querySelector('button')!.click();
+  expect(events).not.toHaveBeenCalled();
+  node.view = current;
+  await node.updateComplete; await shopping.updateComplete; await list.updateComplete; await source().updateComplete;
+  expect(source().disabled).toBe(false); source().shadowRoot!.querySelector('button')!.click();
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'shopping-sources', productId:'tea'});
+});
+
+test('item entry scroll waits for nested layout and respects a later user focus or a retired item', async () => {
+  const frames: FrameRequestCallback[] = [];
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {frames.push(callback); return frames.length;});
+  const node = document.createElement('domus-shopping-list');
+  owned.push(node); node.language = 'en'; node.view = initial; document.body.append(node); await node.updateComplete;
+  node.view = {...initial, shoppingFocus:{key:'product:gone', found:false}}; await node.updateComplete;
+  const title = node.shadowRoot!.querySelector<HTMLElement>('#shopping-list-title')!;
+  const scroll = vi.spyOn(title, 'scrollIntoView');
+  expect(node.shadowRoot!.activeElement).toBe(title);
+  const later = document.createElement('button'); document.body.append(later); owned.push(later); later.focus();
+  for (const callback of frames.splice(0)) callback(0);
+  expect(scroll).not.toHaveBeenCalled(); expect(document.activeElement).toBe(later);
+  // A refresh may retire the requested row before the focus continuation runs.
+  node.view = {...initial, shoppingFocus:{key:'product:gone', found:true}}; await node.updateComplete;
+  for (const callback of frames.splice(0)) callback(0);
+  expect(scroll).not.toHaveBeenCalled(); expect(document.activeElement).toBe(later);
+  node.view = {...initial, shoppingFocus:{key:'product:gone', found:false}}; await node.updateComplete;
+  for (const callback of frames.splice(0)) callback(0);
+  expect(scroll).toHaveBeenCalledWith({block:'center'}); expect(node.shadowRoot!.activeElement).toBe(title);
 });

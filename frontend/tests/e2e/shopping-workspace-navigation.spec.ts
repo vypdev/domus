@@ -54,6 +54,15 @@ async function save(widget: Locator) {
   await widget.getByRole('button', {name:'Close editor',exact:true}).click();
 }
 
+async function expectVisibleItem(row: Locator, tabs: Locator) {
+  await expect(row).toBeFocused();
+  await expect.poll(async () => {
+    const item = await row.boundingBox(), navigation = await tabs.boundingBox();
+    return item !== null && navigation !== null && item.y >= navigation.y + navigation.height - 1
+      && item.y + item.height <= 844;
+  }).toBe(true);
+}
+
 for (const mode of ['native','standalone'] as const) {
   test(`inventory1-C01 (#162): distinct localized Shopping, keyboard, touch and overflow in ${mode}`, async ({page,context,request},info) => {
     const {base,tabs,shop,stock,stats} = await create(page,context,request,mode);
@@ -75,8 +84,17 @@ for (const mode of ['native','standalone'] as const) {
       await expect(stock).toBeHidden();
       await expect(tab).toHaveCSS('border-bottom-width','2px');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(locale === 'en' ? 1120 : 390);
+      // Returning from a form must reveal the destination heading below the
+      // sticky navigation, including repeated activation of the current tab.
+      await shop.getByRole('textbox', {name:locale === 'en' ? 'Note (optional)' : 'Nota (opcional)',exact:true}).focus();
       if (locale === 'es') await tab.tap(); else await tab.press('Enter');
       await expect(shop).toBeFocused();
+      await expect.poll(async () => {
+        const heading = await shop.getByRole('heading', {name,exact:true,level:2}).boundingBox();
+        const navigation = await tabs.boundingBox();
+        return heading !== null && navigation !== null && heading.y >= navigation.y + navigation.height - 1
+          && heading.y < 844 / 2;
+      }).toBe(true);
       await shop.getByRole('link', {name:locale === 'en' ? 'Manage products and stock in Inventory' : 'Gestionar productos y stock en Inventario',exact:true}).press('Enter');
       await expect(stock).toBeFocused(); await expect(stock.locator('domus-shopping')).toHaveCount(0);
       await expect(stock.getByRole('button', {name:locale === 'en' ? 'Register product' : 'Registrar producto',exact:true})).toBeEnabled();
@@ -87,6 +105,7 @@ for (const mode of ['native','standalone'] as const) {
   });
 
   test(`inventory1-C02 (#162): direct, history, Overview and legacy item entry in ${mode}`, async ({page,context,request},info) => {
+    await page.setViewportSize({width:390,height:844});
     const {base,tabs,shop,write,stats} = await create(page,context,request,mode);
     const product = (await write('navigation-product',{action:'inventory.register-product',name:'Navigation tea',base_unit:'piece'})).result;
     await write('navigation-policy',{action:'inventory.configure-replenishment',product_id:product.product_id,minimum:'1',target:'2',expected_revision:'0'});
@@ -97,12 +116,12 @@ for (const mode of ['native','standalone'] as const) {
     for (const [kind,id,name] of [['product',product.product_id,'Navigation tea'],['extra',extra.extra_id,'Navigation bags']]) {
       await page.goto(base + '#shopping/' + kind + ':' + id);
       const row = list.getByRole('listitem').getByText(name,{exact:true});
-      await expect(row).toBeFocused();
-      await page.reload(); await expect(row).toBeFocused();
+      await expectVisibleItem(row,tabs);
+      await page.reload(); await expectVisibleItem(row,tabs);
       await tabs.getByRole('link',{name:'Inventory',exact:true}).press('Enter');
       await page.goBack();
       await expect(page).toHaveURL(base + '#shopping/' + kind + ':' + id);
-      await expect(row).toBeFocused().catch(async error => {
+      await expectVisibleItem(row,tabs).catch(async error => {
         const observation = await page.evaluate(() => {
           const focus:string[] = []; let element = document.activeElement;
           while(element) {focus.push(element.tagName+'#'+element.id+':'+element.textContent?.slice(0,90));element=element.shadowRoot?.activeElement??null;}
@@ -113,9 +132,9 @@ for (const mode of ['native','standalone'] as const) {
       await page.goForward(); await expect(page.locator('domus-app #inventory')).toBeFocused();
       await tabs.getByRole('link',{name:'Overview',exact:true}).press('Enter');
       await page.locator('domus-shopping-attention').getByRole('link',{name:new RegExp('^'+name+' ')}).press('Enter');
-      await expect(page).toHaveURL(base + '#shopping/' + kind + ':' + id); await expect(row).toBeFocused();
+      await expect(page).toHaveURL(base + '#shopping/' + kind + ':' + id); await expectVisibleItem(row,tabs);
       await page.evaluate(fragment => {location.hash = fragment;},'inventory-shopping/' + kind + ':' + id);
-      await expect(row).toBeFocused();
+      await expectVisibleItem(row,tabs);
       await expect(tabs.getByRole('link',{name:'Shopping',exact:true})).toHaveAttribute('aria-current','page');
     }
     await page.goto(base + '#shopping');

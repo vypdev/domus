@@ -148,7 +148,9 @@ export class DomusApp extends LitElement {
       this.view.notice !== 'context_changed' && (this.view.busy || this.administration !== null || this.tasks !== null);
   }
   private focusWorkspace(destination: WorkspaceDestination): void {
-    this.renderRoot.querySelector<HTMLElement>('#' + destination)!.focus();
+    const region = this.renderRoot.querySelector<HTMLElement>('#' + destination)!;
+    region.focus();
+    if (destination === 'shopping') region.scrollIntoView({block:'start'});
   }
   requestWorkspaceFocus(): void {
     // Rapid history changes can deliver two hash events for the same final URL.
