@@ -61,6 +61,10 @@ export interface InventoryJournal {
 export interface InventoryState {
   readonly scope: InventoryScope;
   readonly report: InventoryReport | null;
+  /** Display continuity only. Command authorization always requires the current report. */
+  readonly retainedReport?: InventoryReport | null;
+  readonly retainedShopping?: ShoppingReadModel | null;
+  readonly accessDenied?: boolean;
   readonly history: MovementHistory | null;
   readonly barcode?: Readonly<{code: string; lookup: BarcodeLookup | null; unavailable: boolean}> | null;
   readonly purchases?: Purchases | null;
@@ -76,7 +80,25 @@ export interface InventoryState {
   readonly notice: 'unavailable' | 'uncertain' | null;
 }
 
-function mayWrite(report: InventoryReport | null, action: InventoryCommand['action']): boolean {
+type ShoppingReadModel = Pick<InventoryState, 'purchases' | 'purchaseReceipts' | 'purchaseSessions'
+  | 'purchaseSession' | 'shoppingList' | 'shoppingSources' | 'shoppingFocus'>;
+
+/** Retained reads fill only absent projections; current selections always take precedence. */
+export function shoppingReadSnapshot(state: InventoryState): ShoppingReadModel {
+  const previous = state.retainedShopping;
+  return {
+    purchases:state.purchases ?? previous?.purchases,
+    purchaseReceipts:state.purchaseReceipts ?? previous?.purchaseReceipts,
+    purchaseSessions:state.purchaseSessions ?? previous?.purchaseSessions,
+    purchaseSession:state.purchaseSession ?? previous?.purchaseSession,
+    shoppingList:state.shoppingList ?? previous?.shoppingList,
+    shoppingSources:state.shoppingSources ?? previous?.shoppingSources,
+    shoppingFocus:state.shoppingFocus ?? previous?.shoppingFocus,
+  };
+}
+
+function mayWrite(report: InventoryReport | null, action: InventoryCommand['action'], retained: boolean): boolean {
+  if (retained && action.startsWith('shopping.')) return false;
   if (action === 'shopping.correct-posted-receipt' || action === 'shopping.return-receipt') return report?.mayManage === true && report.mayShop;
   if (action === 'shopping.add-extra') return report?.mayRequest === true;
   if (action === 'shopping.purchase' || action === 'shopping.receive' || action === 'shopping.clear-extra'
@@ -89,6 +111,7 @@ export class InventoryController {
   private view: InventoryState | null = null;
   private owned: EntryRead<unknown> | null = null;
   private request: InventoryRequest | null = null;
+  private shoppingTarget: string | null = null;
 
   constructor(private readonly server: InventoryServer, private readonly journal: InventoryJournal,
     private readonly entropy: EntryEntropy, private readonly publish: (state: InventoryState | null) => void) {}
@@ -100,6 +123,7 @@ export class InventoryController {
     this.owned?.cancel();
     this.owned = null;
     this.request = null;
+    this.shoppingTarget = scope?.shoppingTarget ?? null;
     this.view = scope === null ? null : {scope, report: null, history: null, pending: false, busy: false, result: null, notice: null};
     this.publish(this.view);
     if (scope === null) return;
@@ -111,7 +135,8 @@ export class InventoryController {
   }
 
   async refresh(): Promise<void> {
-    const state = this.view;
+    const previous = this.view;
+    const state = previous?.retainedShopping ? {...previous, ...shoppingReadSnapshot(previous)} : previous;
     await this.load(null);
     if (state?.history && this.view?.scope === state.scope && this.view.history)
       await this.showHistory(state.history.productId);
@@ -124,7 +149,7 @@ export class InventoryController {
     if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts)
       await this.showPurchaseReceipts(state.purchaseReceipts.purchase.id);
     if (state && this.view?.scope === state.scope && this.view.report) {
-      if (state.scope.shoppingTarget) await this.openShoppingItem(state.scope, state.scope.shoppingTarget);
+      if (this.shoppingTarget) await this.openShoppingItem(state.scope, this.shoppingTarget);
       else if (state.shoppingList) await this.showShoppingList();
     }
     if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
@@ -187,7 +212,7 @@ export class InventoryController {
       this.set({purchaseSessions:more ? {...page, items:[...state.purchaseSessions!.items, ...page.items]} : page,
         notice:state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({purchaseSessions:null});
+    if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), purchaseSessions:null});
   }
 
   async showPurchaseSession(sessionId: string): Promise<void> {
@@ -196,7 +221,7 @@ export class InventoryController {
     const loaded = await this.run(this.server.purchaseSession(state.scope, sessionId), page => {
       this.set({purchaseSession:page, notice:state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({purchaseSession:null});
+    if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), purchaseSession:null});
   }
 
   async showShoppingList(more = false): Promise<void> {
@@ -208,12 +233,21 @@ export class InventoryController {
       this.set({shoppingList:more ? {...page, items:[...state.shoppingList!.items, ...page.items]} : page,
         notice:state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({shoppingList:null, shoppingSources:null});
+    if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), shoppingList:null, shoppingSources:null});
+  }
+
+  async showShoppingItem(key: string): Promise<void> {
+    const state = this.view;
+    if (state === null || state.report === null || this.owned !== null) return;
+    this.shoppingTarget = key;
+    await this.openShoppingItem(state.scope, key);
   }
 
   private async openShoppingItem(scope: InventoryScope, key: string): Promise<void> {
-    if (this.owned !== null) return;
-    this.set({shoppingList:null, shoppingSources:null, shoppingFocus:undefined});
+    const state = this.view;
+    if (state === null || state.scope !== scope || this.owned !== null) return;
+    const retained = state.retainedShopping ?? null;
+    this.set({retainedShopping:shoppingReadSnapshot(state), shoppingList:null, shoppingSources:null, shoppingFocus:undefined});
     const items: ShoppingList['items'][number][] = [];
     const seen = new Set<string>();
     let first: ShoppingList | null = null;
@@ -226,20 +260,23 @@ export class InventoryController {
         found = page.items.some(item => item.total !== '0' && shoppingItemKey(item) === key);
         cursor = page.cursor;
       }, 'unavailable');
-      if (!loaded || this.view?.scope !== scope) return;
+      if (!loaded || this.view?.scope !== scope) {
+        if (this.view?.scope === scope) this.set(this.retainShopping(state));
+        return;
+      }
       if (found) {
-        this.set({shoppingList:{items, cursor}, shoppingFocus:{key, found}});
+        this.set({shoppingList:{items, cursor}, shoppingFocus:{key, found}, retainedShopping:retained});
         return;
       }
       if (cursor !== null) {
         if (seen.has(cursor)) {
-          this.set({notice:'unavailable'});
+          this.set({...this.retainShopping(state), notice:'unavailable'});
           return;
         }
         seen.add(cursor);
       }
     } while (cursor !== null);
-    this.set({shoppingList:first, shoppingFocus:{key, found:false}});
+    this.set({shoppingList:first, shoppingFocus:{key, found:false}, retainedShopping:retained});
   }
 
   async showShoppingSources(productId: string, more = false): Promise<void> {
@@ -251,7 +288,7 @@ export class InventoryController {
       this.set({shoppingSources:more ? {...page, items:[...state.shoppingSources!.items, ...page.items]} : page,
         notice:state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({shoppingSources:null});
+    if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), shoppingSources:null});
   }
 
   async moreShoppingSources(): Promise<void> {
@@ -265,7 +302,7 @@ export class InventoryController {
     let request: InventoryRequest;
     try {
       const command = inventoryCommand(value);
-      if (!mayWrite(state.report, command.action)) return;
+      if (!mayWrite(state.report, command.action, state.retainedReport != null)) return;
       request = {key: this.entropy.requestKey(), scope: state.scope.key, command};
       this.journal.save(request);
     } catch {this.set({notice: 'unavailable'}); return;}
@@ -282,7 +319,7 @@ export class InventoryController {
     }, 'uncertain');
     if (!read || this.view?.scope !== scope) return;
     if (this.request === null) await this.refresh();
-    else if (!scope.readOnly && mayWrite(this.view.report, request.command.action)) await this.send(scope, request);
+    else if (!scope.readOnly && mayWrite(this.view.report, request.command.action, this.view.retainedReport != null)) await this.send(scope, request);
   }
 
   private set(patch: Partial<InventoryState>): void {
@@ -290,16 +327,33 @@ export class InventoryController {
     this.publish(this.view);
   }
 
+  private retainShopping(state: InventoryState): Partial<InventoryState> {
+    return this.view?.accessDenied ? {} : {
+      retainedReport:state.report,
+      retainedShopping:shoppingReadSnapshot(state),
+    };
+  }
+
   private async load(cursor: string | null): Promise<void> {
     const state = this.view;
     if (state === null || this.owned !== null) return;
     const loaded = await this.run(this.server.read(state.scope, cursor), page => {
-      this.set({report: cursor === null ? page : {...page, products: [...state.report!.products, ...page.products]},
+      this.set({...(cursor === null && state.retainedShopping ? shoppingReadSnapshot(state) : {}),
+        report: cursor === null ? page : {...page, products: [...state.report!.products, ...page.products]},
+        ...(cursor === null ? {retainedReport:null, retainedShopping:null, accessDenied:false} : {}),
         notice: state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope)
-      this.set({report:null, history:null, purchases:null, purchaseReceipts:null,
-        shoppingList:null, shoppingSources:null, purchaseSessions:null, purchaseSession:null, barcode:null});
+    if (!loaded && this.view?.scope === state.scope) {
+      const denied = this.view.accessDenied === true;
+      this.set({report:null, history:null, purchases:null, purchaseReceipts:null, shoppingList:null,
+        shoppingSources:null, shoppingFocus:undefined, purchaseSessions:null, purchaseSession:null, barcode:null,
+        retainedReport:denied ? null : state.report ?? state.retainedReport ?? null,
+        retainedShopping:denied ? null : state.retainedShopping ?? {
+          purchases:state.purchases, purchaseReceipts:state.purchaseReceipts, purchaseSessions:state.purchaseSessions,
+          purchaseSession:state.purchaseSession, shoppingList:state.shoppingList,
+          shoppingSources:state.shoppingSources, shoppingFocus:state.shoppingFocus,
+        }});
+    }
   }
 
   private async loadPurchases(cursor: string | null): Promise<void> {
@@ -309,17 +363,17 @@ export class InventoryController {
       this.set({purchases: cursor === null ? page : {...page, items:[...state.purchases!.items, ...page.items]},
         notice: state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({purchases:null, purchaseReceipts:null});
+    if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), purchases:null, purchaseReceipts:null});
   }
 
   private async loadPurchaseReceipts(purchaseId: string, cursor: string | null): Promise<void> {
     const state = this.view;
-    if (state === null || (state.purchases == null && state.purchaseSession == null) || this.owned !== null) return;
+    if (state === null || state.report === null || (state.purchases == null && state.purchaseSession == null) || this.owned !== null) return;
     const loaded = await this.run(this.server.purchaseReceipts(state.scope, purchaseId, cursor), page => {
       this.set({purchaseReceipts: cursor === null ? page : {...page, items:[...state.purchaseReceipts!.items, ...page.items]},
         notice: state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({purchaseReceipts:null});
+    if (!loaded && this.view?.scope === state.scope) this.set({...this.retainShopping(state), purchaseReceipts:null});
   }
 
   private async loadHistory(productId: string, cursor: string | null): Promise<void> {
@@ -357,7 +411,7 @@ export class InventoryController {
     } catch (error) {
       if (this.owned === owned) {
         if (error instanceof EntryReadError && (error.code === 'authentication_required' || error.code === 'forbidden'))
-          this.set({report:null, history:null, purchases:null, purchaseReceipts:null,
+          this.set({report:null, retainedReport:null, retainedShopping:null, accessDenied:true, history:null, purchases:null, purchaseReceipts:null,
             shoppingList:null, shoppingSources:null, purchaseSessions:null, purchaseSession:null,
             shoppingFocus:undefined, barcode:null, result:null, notice:this.view!.pending ? 'uncertain' : 'unavailable'});
         else this.set({notice});

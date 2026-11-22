@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "issue": 162,
+  "status": "Implementation in progress; immutable candidate and acceptance pending",
+  "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
+  "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
+  "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
+  "nativeRequirementCount": 11,
+  "nativeDistinctCases": 6,
+  "caseIdentityScope": "#162 owning unit only; generic inventory1 references elsewhere remain distinct",
+  "compatibility": {
+    "schema": 37,
+    "schemaChange": false,
+    "backendOrApiChange": false,
+    "journalSerializationChange": false,
+    "haUi": "0.1.0-next.5"
+  },
+  "executedSource": {
+    "frontendTests": 2182,
+    "frontendTestFiles": 50,
+    "authoredRuntimeFiles": 121,
+    "coverage": {
+      "globalAndPerFileAllFourMetrics": 100,
+      "statements": 9495,
+      "branches": 8707,
+      "functions": 2024,
+      "lines": 6909,
+      "authoredFileAudit": "PASS"
+    },
+    "runtimeAndCatalogTypes": "PASS",
+    "productBuild": "PASS",
+    "wheelPackageTests": 1,
+    "all250PythonBytesUnchangedFromAcceptedEdge77": true,
+    "retainedAnnotationBrowserVariants": 4,
+    "retainedFullWorkspaceBrowserVariants": 2,
+    "newBrowserVariants": 12,
+    "newBrowserResult": "PASS, each executed once; six distinct cases x two deployment modes",
+    "catalogBrowserTests": 68,
+    "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
+    "nodePolicyTests": 42,
+    "nodePolicyAllFourMetrics": 100,
+    "pythonArchitectureAndCIContracts": 99,
+    "localDocumentationLinks": "PASS",
+    "sdkCatalogCapabilities": 11,
+    "fullSourceBrowserCampaign": {
+      "inventory": 141,
+      "firstCampaign": {
+        "passed": 139,
+        "failed": 2,
+        "cause": "Barcode403assertions expected old generic unavailable copy; current explicitdenial was observed. All quantities, authority, history and recovery assertions remain."
+      },
+      "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
+      "finalFullSameHeadCI": "PENDING"
+    }
+  },
+  "requiredImageBrowserInventory": 86,
+  "actualImages": {
+    "amd64": "PENDING",
+    "aarch64": "PENDING"
+  },
+  "installedEdge": "PENDING",
+  "finalSameHeadChecks": "PENDING",
+  "mergeAndDestination": "PENDING",
+  "compiledProductFiles": {
+    "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
+    ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
+  },
+  "currentPackage": {
+    "version": "0.0.0-edge.78",
+    "sourceCommit": null,
+    "wheelSHA256": "1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed",
+    "pythonFiles": 250,
+    "actualProductFiles": {
+      "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
+      ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
+    },
+    "status": "Immutable source pin and actual image pending"
+  }
+}

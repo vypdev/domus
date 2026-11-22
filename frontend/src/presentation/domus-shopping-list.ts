@@ -336,7 +336,8 @@ export class DomusShoppingList extends LitElement {
   }
 
   protected render() {
-    const {report, shoppingList, shoppingSources, busy, pending, scope} = this.view;
+    const {report, shoppingList, shoppingSources, pending, scope} = this.view;
+    const busy = this.view.busy || this.view.retainedReport != null;
     const blocked = busy || pending || scope.readOnly;
     const mayClear = report!.mayShop && !scope.readOnly;
     return html`<section aria-labelledby="shopping-list-title">

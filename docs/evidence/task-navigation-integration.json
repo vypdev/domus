@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery. Manual shopping requests retain a literal optional note and an independently localized priority per source, with exact original-command recovery and later-draft retention.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery. Manual shopping requests retain a literal optional note and an independently localized priority per source, with exact original-command recovery and later-draft retention. Shopping has its own localized destination; Inventory retains products and stock. Both reuse the existing command and original-operation recovery owner.",
   "actualProductFiles": {
-    ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+    "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
+    ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
-    "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+    "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -1580,5 +1580,14 @@
       "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46"
     },
     "scope": "Historical76sameUI acceptednativeandcleaned; fullreviewrequiredisolatedsurrogatefix."
+  },
+  "preShoppingWorkspaceNavigation": {
+    "actualProductFiles": {
+      ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+      "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+    },
+    "qualification": "Accepted Edge.77 before #162; original runtime and package records remain in shopping-manual-annotations.json"
   }
 }

@@ -29,6 +29,7 @@ import type {ShoppingAttention} from '../application/shopping-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
 import {InventoryController} from '../application/inventory-controller';
+import type {InventoryScope} from '../application/inventory-controller';
 import {canonicalGtin, inventoryCommand} from '../domain/inventory';
 import type {InventoryIntent} from '../presentation/domus-inventory';
 import {HttpRewardsServer} from '../adapters/reward-http';
@@ -453,23 +454,75 @@ export function mountEntry(page: EntryPage): PageMount {
       await allocations.preview(input);
     }, {signal: widget.signal});
     const inventoryServer = new HttpInventoryServer(source.target, browser.transport);
-    const inventoryController = new InventoryController(inventoryServer,
-      new InventorySessionJournal({getItem:key => browser.storage().getItem(key),
-        setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
-      new BrowserEntropy(browser.random), view => {element.inventory = view;});
+    let shoppingNavigation: {scope: InventoryScope; target: string | null} | null = null;
+    let shoppingNavigationTimer: number | null = null;
+    let shoppingNavigationScope: InventoryScope | null = null;
+    let shoppingNavigationRoute: string | null = null;
+    let inventoryOwner: {identity: string; key: string} | null = null;
+    const clearShoppingNavigation = () => {
+      if (shoppingNavigationTimer !== null) page.clearTimeout(shoppingNavigationTimer);
+      shoppingNavigationTimer = null; shoppingNavigation = null;
+    };
+    const scheduleShoppingNavigation = () => {
+      const view = element.inventory;
+      if (shoppingNavigationTimer !== null || shoppingNavigation === null || !view?.report || view.busy) return;
+      const scheduled = shoppingNavigation;
+      // Let the current command's complete refresh chain finish before a route read.
+      shoppingNavigationTimer = page.setTimeout(() => {
+        // Route and scope changes retire this object; a late tick cannot consume its replacement.
+        if (shoppingNavigation !== scheduled) return;
+        shoppingNavigationTimer = null;
+        const current = element.inventory!;
+        if (current.busy || current.report === null) return;
+        shoppingNavigation = null;
+        if (scheduled.target !== null) void inventoryController.showShoppingItem(scheduled.target);
+        else if (current.shoppingList == null) void inventoryController.showShoppingList();
+      }, 0);
+    };
+    const inventoryJournal = new InventorySessionJournal({getItem:key => browser.storage().getItem(key),
+      setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)});
+    const inventoryController = new InventoryController(inventoryServer, inventoryJournal,
+      new BrowserEntropy(browser.random), view => {element.inventory = view; scheduleShoppingNavigation();});
     inventory = inventoryController;
+    widget.signal.addEventListener('abort', clearShoppingNavigation, {once:true});
     const syncInventory = () => {
       const entry = element.view;
-      if (element.workspaceDestination === 'inventory' && entry?.phase === 'ready'
+      if ((element.workspaceDestination === 'inventory' || element.workspaceDestination === 'shopping') && entry?.phase === 'ready'
           && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session) {
         const context = entry.session.context;
         const key = JSON.stringify([context.installationId, context.channel, context.subject]);
         const authority = element.administration?.access;
+        const home = entry.household?.householdId, member = authority?.member;
+        if (!home || !member || authority?.state !== 'active') {
+          clearShoppingNavigation(); shoppingNavigationScope = null; shoppingNavigationRoute = null;
+          inventoryController.bind(null); return;
+        }
+        const identity = JSON.stringify([key, home, member.memberId]);
+        if (inventoryOwner !== null && inventoryOwner.identity !== identity) {
+          try {
+            const previous = inventoryJournal.open(inventoryOwner.key);
+            if (previous !== null) inventoryJournal.clear(previous);
+          } catch {
+            // Unconfirmed retirement cannot hand another member the prior request.
+            clearShoppingNavigation(); inventoryController.bind(null); fail(); return;
+          }
+        }
+        inventoryOwner = {identity, key};
         const authorityKey = JSON.stringify([entry.household?.householdId, authority?.member?.memberId,
           authority?.member?.revision, authority?.policyRevision]);
-        inventoryController.bind({key, context, readOnly:entry.decision.readOnly,
-          authorityKey, shoppingTarget:element.shoppingTarget});
-      } else inventoryController.bind(null);
+        inventoryController.bind({key, context, readOnly:entry.decision.readOnly, authorityKey});
+        const scope = element.inventory!.scope;
+        const route = element.workspaceDestination === 'shopping' ? element.shoppingTarget ?? '' : null;
+        if (scope !== shoppingNavigationScope || route !== shoppingNavigationRoute) {
+          clearShoppingNavigation();
+          shoppingNavigationScope = scope; shoppingNavigationRoute = route;
+          if (route !== null) shoppingNavigation = {scope, target:element.shoppingTarget};
+        }
+        scheduleShoppingNavigation();
+      } else {
+        clearShoppingNavigation(); shoppingNavigationScope = null; shoppingNavigationRoute = null;
+        inventoryController.bind(null);
+      }
     };
     element.addEventListener('domus-inventory-intent', async event => {
       if (event.target !== element) return;
@@ -674,12 +727,17 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'preview' || (intent?.type === 'time' && typeof intent.value === 'string' && intent.value.length <= 16))
         void dailyPreview.handle(intent);
     }, {signal: widget.signal});
-    const syncWorkspace = () => {
+    const syncWorkspace = (event?: Event) => {
+      if (event?.type === 'hashchange') {
+        element.requestWorkspaceFocus();
+        shoppingNavigationRoute = null;
+      }
       const fragment = new URL(page.location.href).hash;
-      element.shoppingTarget = /^#inventory-shopping\/((?:product|extra):[A-Za-z0-9][A-Za-z0-9_.:-]{0,127})$/u.exec(fragment)?.[1] ?? null;
+      element.shoppingTarget = /^#(?:shopping|inventory-shopping)\/((?:product|extra):[A-Za-z0-9][A-Za-z0-9_.:-]{0,127})$/u.exec(fragment)?.[1] ?? null;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family'
-          : fragment === '#inventory' || element.shoppingTarget !== null ? 'inventory' : null;
+          : fragment === '#shopping' || element.shoppingTarget !== null ? 'shopping'
+            : fragment === '#inventory' ? 'inventory' : null;
       syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncAutomation(); syncInventorySummaries(); syncFamilyOverview();
     };
     syncWorkspace();
