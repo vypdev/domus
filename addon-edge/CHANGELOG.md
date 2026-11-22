@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.85
+
+- Reveal the Inventory heading when returning from Shopping work further down the page.
+- Keep repeated Inventory entry clear on mobile touch and desktop keyboard layouts.
+- Preserve drafts, schema-37 notes, priorities, stock and original receipts.
+
 ## 0.0.0-edge.84
 
 - Keep Inventory available when leaving Shopping during its own refresh or item lookup.

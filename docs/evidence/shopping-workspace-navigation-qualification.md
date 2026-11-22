@@ -3,283 +3,126 @@
 [Issue #162](https://github.com/vypdev/domus/issues/162) implements the bounded
 [owning unit](../../specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace).
 The [implementation map](../../specs/shopping-workspace-navigation.md) links its
-eleven requirements and six scoped acceptance cases without recounting them.
-The [machine-readable record](shopping-workspace-navigation.json) separates
-executed source checks, compiled images, installed Edge and final CI.
+eleven requirements and six scoped cases. The [machine-readable record](shopping-workspace-navigation.json)
+keeps source, package, historical candidates, actual images and installed observations distinct.
+Final current-head acceptance belongs to [PR #163](https://github.com/vypdev/domus/pull/163).
 
-## Current source observations
+## Current source and compatibility
 
-The native Action published specification commit
-`a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The active-entry retirement runtime is published as
-`e53b928411e542ca8bdd849890df10bf19cf65a3` on the admitted managed ref. Edge.84
-pins that exact source and archive SHA-256
-`235e250dd79d53e1d671d109e7af176ca1d21cc4821add78f2818d98e1651057`.
-All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`0325cc9c8cee709d3b661bd5b994791077ec63c74367f599b7a71eaeeddfbca7`.
-The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
-restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
-Its installed native Home Assistant walkthrough then exposed two mobile viewport
-defects: repeated Shopping entry left its heading above the screen, and focusing
-an Overview item before nested control layout left the row below the screen.
-Edge.78 is not accepted. Its original source, wheel, image and findings remain
-distinct in `previousCandidate78`. The previous Edge.79 and Edge.80 images pass
-the same six checks, including all 254 product file hashes. Their installed normal
-journeys, saved literal records and public restart are qualified separately.
-Review then found Edge.80's partial-household-read defect. The previous Edge.81
-actual ARM64 image passes the same six checks. Its native in-place update, normal
-keyboard/touch journeys, saved literal records and public stop/start are qualified
-separately below. Partial-read fault injection remains an owned-fixture check,
-not a claim about faults introduced into native Home Assistant.
-The pre-existing specification prefix and all published #162 requirement/case
-identities are preserved. Two non-normative source-assessment paragraphs now
-explicitly identify the immutable base instead of describing it as current source. Backend, API, schema 37, canonical journal packet format and exact published
-`@vypdev/ha-ui@0.1.0-next.5` are unchanged.
+The native Action published specification `a67ee381043a8e34ca9fec02b811c9cd9d330078`
+from accepted base `7770b1e560800fa4bb78d36b0583b2c1beb784d7`.
+The pre-existing owner prefix and every published requirement/case/trace row remain
+byte-identical. Two non-normative source observations now explicitly name that
+immutable base. No native requirement or case identity was added or recounted.
 
-The complete current frontend campaign passes 2,212 tests across 50 files, with
-all four metrics at 100% globally and per authored runtime file (121 files):
-9,540 statements, 8,766 branches, 2,030 functions and 6,943 lines. Its independent
-source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
-product Vite build and the actual wheel package test pass. All 250 Python module
-bytes equal accepted Edge.77; the four compiled UI resources match the new wheel.
+Current runtime `1826444e659ad9fe5a7827ee448efd80ee8d6452` separates Shopping from Stock while reusing one existing
+command and original-operation recovery owner. Navigation does not submit or
+resend a command. Same-owner drafts, literal notes, priorities and selected work
+survive the transition. A persisted pending packet belongs to the independently
+verified installation, channel, HA subject, household and member. Older ownerless
+or unmatched packets use the existing incompatible-scope retirement, without a
+lookup, resend, reassignment or change to server receipts. Failed retirement
+blocks recovery and writes. Matching owners retain exact packet bytes and keys.
 
-The six new native cases pass twelve Ingress/standalone variants, once each with
-zero skipped, flaky or unexpected results and zero retries. They cover keyboard
-and touch, both themes/locales, item/history entry, literal drafts and original
-receipt recovery, separate reader/requester/shopper authority, denied/stale
-reads, logout and actual restart/restore. The prior four annotation journeys and
-both complete shared-workspace journeys also pass with their original domain
-assertions and explicit visits to the correct Shopping or Stock owner. The
-complete source browser campaign executes all 141 variants: 139 pass and two
-barcode-403 cases retain an obsolete generic-unavailable message expectation.
-The actual explicit denial was verified; both expectations now require that
-denied guidance; both targeted regressions pass, including the retained
-private-fact removal, recovery focus, barcode and stock assertions. Final same-head
-CI must execute the entire inventory without failures.
+All 250 Python modules remain byte-identical to accepted Edge.77. Backend/API,
+schema37, ledger, receipt and canonical journal packet formats are unchanged.
+The package cohort remains exact public `@vypdev/ha-ui@0.1.0-next.5`.
 
-All 68 built-catalog tests pass, including the eight retained Shopping states.
-The 42 Node policy cases pass with all four tooling coverage metrics at 100%;
-99 Python architecture/CI-contract cases and the documentation-link check pass.
-The unmodified SDK catalog entrypoint `main(['--write'], process.cwd())` followed
-by `main([], process.cwd())` validates all eleven capabilities and the generated
-view. The new implementation note belongs to application-experience; it does
-not introduce a duplicate native inventory or claim the wider capability done.
+## Executed current source checks
 
-A new browser regression reproduced rapid Back navigation leaving focus in the
-previous tab when two delayed hash events observe the same final item URL.
-The composition now requests destination focus and schedules the current item
-read even in that ordering. Both deployment variants pass the red/green
-regression. Existing source coverage and semantic assertions remain enforced.
-The stronger C01/C02 regressions also reproduce the installed Edge.78 geometry
-failures against its old bundle. With Edge.79's runtime, all twelve variants pass:
-the Shopping heading is visible below fixed navigation, and each focused item
-is inside the mobile viewport after direct entry, reload, history and Overview.
-Only local fixture ports differ while concurrent self-hosted CI owns the canonical
-ports; reverse substitution verifies all other authored test bytes are identical.
-There are no retries or reused fixture servers. A later user focus wins over a
-pending post-layout scroll. Review regressions also verify that stale source
-buttons stay disabled until refresh and that base Shopping retires an item filter
-and reads the shared first page without a command.
-The CI selection explicitly includes the new file and requires all 86 actual
-image browser journeys with zero skipped, flaky or unexpected results and zero
-retries in each CPU job. Actual execution of those jobs remains pending.
+The whole frontend passes 2,212 tests across 50 files. All four coverage metrics
+are 100% globally and per authored runtime file, with all 121 files independently
+accounted for: 9,540 statements, 8,768 branches, 2,030 functions and 6,943 lines.
+The independent authored-file coverage audit, runtime/catalog TypeScript checks
+and product Vite build pass.
 
-## Remaining qualification
+All twelve Ingress/standalone variants of the six native cases pass once in
+32.8 seconds, without retries, skipped, flaky or unexpected results. They retain
+keyboard/touch, both themes/locales, contextual items, history, literal drafts,
+original receipt recovery, separate reader/requester/shopper authority, denied
+and stale reads, protected-state retirement and actual restart/restore assertions.
+C02 also holds both an initially queued catalog read and a refresh already admitted
+by Shopping entry, leaves for Stock and releases the read; Stock remains usable
+and no hidden Shopping GET begins. C03 captures actual upstream recovery GET bytes
+before delivering the unmodified response, retaining one original POST, exact
+receipt, unrelated drafts and SQLite receipt/audit/outbox assertions.
 
-Complete the full source browser campaign and retain its original result. Qualify both current actual CPU images, including original
-receipt/ledger compatibility and restart/restore. Record source, wheel, image,
-runtime and package identities, review responsive focus/contrast and permission
-states, then retire only owned obsolete QA artifacts. Same-head CI, Branch Sync,
-review/progress, normal merge, destination checks and native issue closure remain
-required. This is one bounded navigation increment, not completion of the wider
-application-experience capability or M4/M5 roadmap.
+The installed Edge.84 walkthrough exposed Stock focus below a deep shared scroll
+position. Both exact compiled84 C01 deployments fail before correction. Current
+C01 additionally returns from a deep Shopping control and repeats Stock entry
+after focusing a lower field, verifying its heading below sticky navigation in
+English keyboard and Spanish touch, both themes. The native screenshot and both
+original source failure trace/screenshot/context families are retained. The
+presentation now reveals both Shopping and Inventory on entry; controller,
+command, permission and draft ownership are unchanged.
 
-## Installed Edge.79 (previous viewport candidate)
+Earlier B5 local source acceptance passed all 141 variants. Its GitHub campaign
+reported140 passes and one C03 Chromium response-body handle failure; catalog
+execution did not begin. The producer correction is retained in current source
+and both C03 variants pass. Those historical results do not establish current
+full-source/catalog acceptance. Current final CI must run all 141 source and 68
+catalog variants. Prior 42 Node policy and 99 Python architecture/CI-contract
+checks are likewise historical until current-head CI completes.
 
-Supervisor reported installed Edge.78 and available Edge.79 before an in-place
-update of the independent synthetic installation. It then reported installed
-Edge.79. The native UI preserved its household, Tea product and two manual extras:
-Tea quantity two/Urgent and Bags quantity one/Low. Both notes retained their exact
-LF, HT, emoji and literal markup-looking text, with no HTML children. A public
-Supervisor restart and fresh app entry preserved those values. Recorded, reserved
-and available stock remain zero; movement history, purchases and sessions are empty.
+## Immutable Edge.85 package
 
-The Spanish dark-mode 390-by-844 touch walkthrough used actual touch input for
-tab overflow, Shopping and Inventory. The focused Overview product is at
-389–414.59 within the 804-pixel Ingress frame, below navigation ending at 56.
-Repeated Shopping entry reveals its heading at 67.77–106.16 and focuses its active
-region. The English light-mode 1120-by-844 keyboard journey reveals the heading
-at 68.16–106.55. Stock and Shopping drafts and the literal unsent note survive
-switching between those destinations. Temporary viewport, touch and media
-overrides were reset. These observations directly exercise C01–C03; the source
-and both-CPU campaigns retain the broader permission, interruption and restore
-inventory.
+Edge.85 pins runtime `1826444e659ad9fe5a7827ee448efd80ee8d6452`, archive SHA-256
+`ce60eb382ffada35c97dc9e976fdd854a6a38cdcda7902254b03d0b065cf48b1`, and wheel SHA-256
+`84314084096c5d9ee30c3d571325b8ae699951fd3fcf2788d6a8abb385e039ae`. All 1,025 public archive files match their Git blobs.
+All 250 wheel Python modules match that immutable source and the previous
+candidate; the four compiled UI files match the qualified wheel. The full asset
+hash map is in the JSON record and `addon-edge/artifact.json`.
 
-The owned app is stopped. Home Assistant's permanent-uninstall warning requires
-action-time browser-policy confirmation for the synthetic app/data and exact
-temporary source; that confirmation is pending. No backup was created. The
-original twelve apps and eight repository sources remain protected. This native
-acceptance does not substitute for current same-head CI or final review.
+The actual local ARM64 image `sha256:676af5cb8c0517d9a57dfa89d890eddfd99564bf639805d65b52698826a6dd46` passes all six exact-byte, authority, native/standalone listener, restart, genuine schema-20/schema-36 migration and snapshot-restoration checks in 18.92 seconds. All 17 package/wheel/docs checks pass in 0.15 seconds. Native installed Edge.85 and final-head image/source checks remain separate required outcomes. No installed acceptance is inferred from these checks or an earlier candidate.
 
-## Durable owner after reload
+## Historical corrections and observations
 
-The next same-head review found that mount-local member tracking could not retire
-a previous member's request after reload under the same HA subject. A real
-composition regression reproduced three failures: replacement-member adoption,
-legacy ownerless-scope adoption and recovery after failed retirement. The same
-owner already preserved its request. All four variants now pass. The persisted
-scope includes the verified household/member with installation, channel and HA
-subject. Destination and permission revisions do not change the owner.
+| Candidate | Observation and limit |
+| --- | --- |
+| Edge.78 | Installed narrow layouts exposed repeated Shopping-heading and item-focus geometry failures; both were reproduced with its old compiled bytes. |
+| Edge.79–81 | Normal native journeys retained saved records and public stop/start. Review separately found durable member ownership and partial-household-read availability defects. Their original regressions and qualifications remain distinct. |
+| Edge.82 | Stock refresh could repeat hidden Shopping reads, and denied purchase guidance named the wrong grant. Subsequent review also reproduced a queued route read surviving exit. |
+| Edge.83 | Queue retirement, EN/ES keyboard/touch, saved notes and public restart passed. Review 4658614224 then reproduced an entry continuation after its own catalog refresh; four controller and both actual C02 regressions failed first. Current source retires future entry, retained-projection and item-pagination reads by destination identity, without cancelling an admitted read or original command. |
+| Edge.84 | Exact installed module `index-CUfMikor.js`, desktop drafts and saved literal notes qualified. Spanish narrow-touch return from deep Shopping left Stock heading above the viewport. It is partial qualification, not acceptance. The app is stopped and temporary emulation is reset. |
 
-The existing slot, packet fields, canonical format and original request key stay
-compatible. A matching owner reopens the exact original bytes. Older ownerless or
-unmatched scopes follow the journal's existing incompatible-scope retirement;
-there is no lookup, resend, reassignment or change to committed server receipts.
-Failure to retire blocks recovery and writes. The actual C05 browser journey also
-reloads with a pending request, proves exact packet equality and zero automatic
-lookups/resends, then closes the protected view. Both deployment variants pass,
-as do all twelve current cases, once each without retries. The full 2,188-case
-frontend run preserves all four coverage metrics at 100% with the same runtime
-inventory. Catalog readiness now points to the owning executed record rather
-than duplicating a test count that can drift. Edge.80 qualifies this corrected
-runtime separately from the historical Edge.79 acceptance above.
+The historical B5 backend initially reported 6,031 passes and one permitted
+`StorageBusy` before the unchanged opposite-edge graph assertion. The contract
+allows bounded 250ms writer contention; original holder duration/scheduling was
+not logged. Original failure/coverage are retained; the isolated 33 diagnostics
+and exactly one launched backend-only retry passed, the latter all 6,032 cases
+with all 250 modules at 100%. No source, assertion or deadline changed. Recurrence
+requires reassessing that permitted-busy test contract rather than another
+unchanged retry. Both historical actual CPU jobs qualified 62 container and 86
+browser cases, plus all ten native HA modules at 100%; none is rebound to this
+changed runtime or final packaging head.
 
-## Independently verified household identity during partial reads
+## Installed and final acceptance still required
 
-Review 4657842084 found that requiring display household facts unnecessarily
-emptied Inventory/Shopping after a non-authentication household-read failure.
-The existing HouseholdController deliberately supports this verified partial
-view. Two workspace regressions reproduced the failure; the negative case keeps
-both workspaces unbound when no household identity can be verified. The binding
-now uses current matched administration capabilities when entry facts are
-unavailable, and the same resolved household for authority revisions. All three
-cases pass within the 2,190-test, 100%-on-four-metrics campaign. The actual C04
-browser journey returns household-facts 503s and reloads both deployments, verifies
-Shopping remains usable and navigation issues no writes, then retains every
-existing stale-read, denial and independent-grant assertion. All twelve variants
-pass once each without retries. Edge.81 qualifies that runtime; the historical
-Edge.80 normal native journeys, saved records and real stop/start are retained
-separately and do not establish acceptance of this partial-read correction.
+Update the same independent synthetic app to 85 through public Home Assistant UI,
+verify Supervisor version and matching DOM-backed module basename, and repeat
+wide English light keyboard and narrow Spanish dark touch journeys. Check deep
+Shopping-to-Stock heading entry, repeated tabs, Stock refresh/reentry, both drafts,
+visible contextual item focus, exact saved notes/priorities/quantities, zero stock
+and empty movement/purchase/session history through a real public stop/start.
+Do not inject private HA state, faults or clocks. The deterministic adversarial
+races belong to owned actual-browser fixtures; normal native acceptance and exact
+source/image identity complement them.
 
-## Installed Edge.81 (previous partial-read candidate)
+Require the final packaging head's complete applicable CI, Branch Sync and
+substantive review in green, with no valid findings. CI must qualify all 6,032
+backend cases/250 authored modules, 2,212 frontend cases/121 authored modules,
+all four required coverage metrics globally and per file, all 141 source and 68
+catalog variants, and 62 container plus86 actual-browser journeys per CPU with
+zero retries/skips/flakiness. Each CPU also audits all ten native HA modules.
+Compute remains self-hosted; amd64 runs emulated on the Apple Silicon host and
+ARM64 natively. Released exact action tags, existing assertions and deadlines
+remain unchanged. Then use a normal merge and verify destination commit,
+CI/Branch Sync and native issue closure.
 
-Supervisor reported installed Edge.80, then installed Edge.81 after the in-place
-update of the same independent app. The DOM-backed module basename is
-`index-BzSz5xDX.js`, matching the qualified wheel. No backup or new persisted
-records were created for this update. The English light-mode 1120-by-844 keyboard
-journey and Spanish dark-mode 390-by-844 actual touch journey preserve Stock and
-Shopping drafts in both directions. Shopping's focused heading is visible below
-fixed navigation (68.16–106.55 desktop; 67.77–106.16 mobile). Overview's focused
-Tea row remains within the 804-pixel mobile frame at 389–414.59, below navigation
-ending at 56. Temporary viewport, touch and media overrides were reset.
-
-An actual public Supervisor Stop reached **Detenido/Iniciar**, and Start reached
-**En ejecución/Open Web UI** at version Edge.81. Fresh app entry retained Tea
-quantity two/Urgent and Bags quantity one/Low, both original LF/HT/emoji notes
-and literal markup-looking text with zero HTML children. Recorded, reserved and
-available stock remain zero; movement history, purchases and purchase sessions
-are empty. The app is stopped again. The exact same synthetic app/data/source
-permanent-uninstall confirmation requested earlier remains pending; no deletion
-has been inferred from elapsed time or general cleanup authorization.
-
-These installed observations exercise the normal C01–C03 journeys and data
-compatibility. The corrected partial-household-read failure and cross-member
-pending-packet retirement are exercised by the current source/browser fixtures;
-no private Home Assistant APIs, hidden state, injected native failures or clock
-changes were used. At packaging head `5f0bb08`, Review, Verification, Commit and
-Branch Sync pass and all five historical findings are resolved. The final
-evidence head still requires its own applicable CI and review, followed by normal
-merge, destination CI/Branch Sync and native issue closure.
-
-## Active destination refresh and denied-command guidance
-
-The final evidence-head review found that Stock refresh could resume the former
-Shopping item read. A Shopping-only denial then retired the independently readable
-Stock view. Real composition regressions reproduce this for manual refresh and
-post-save refresh. The shared controller now retains Shopping projections while
-Stock refreshes, and revalidates them only on Shopping entry with the current
-route. It preserves drafts, selections, pending command ownership and current
-scope checks. Failed catalog proof or scope retirement stops that continuation.
-
-Two EN/ES regressions also reproduce purchase denials recommending Inventory
-access. Feedback now distinguishes Shopping request access, Shopping management,
-Inventory receipt posting and the combined grants for posted corrections/returns.
-The existing C02 actual-browser journey verifies zero hidden Shopping reads during
-Stock refresh even when those reads would return 403. C04 verifies the denied
-purchase message, retained purchase fields and an explicit successful retry. All
-original assertions remain. All twelve variants pass once, without retries, and
-all 2,196 frontend tests preserve global/per-file 100% on all four metrics. The
-independent source coverage audit, types, SDK catalog and package/docs checks pass.
-
-Edge.81's installed acceptance above is historical and does not include these
-last two runtime corrections. The immutable Edge.82 actual local ARM64 image passes all six byte, authority,
-standalone, restart, genuine schema-20/schema-36 migration and snapshot-restore
-checks in 18.28 seconds. Current full CPU images, installed Edge.82 walkthrough
-and final same-head checks remain required.
-The two stale source-assessment paragraphs in the Action-published unit now name
-the immutable base explicitly. The preceding owner prefix and every published
-requirement/case row remain byte-identical; no acceptance identity was changed.
-
-This is the Edge.82 packaging snapshot. The linked [PR #163](https://github.com/vypdev/domus/pull/163) retains final current-head CI, review and installed acceptance. Earlier installed candidates above remain historical; their observations do not establish acceptance of a later source.
-
-## Retiring a queued destination when leaving Shopping
-
-Review 4658107744 reproduced a remaining route race: resetting the route tracker
-to null before comparing an Inventory route left a queued Shopping object/timer
-alive. A later catalog completion could consume it outside Shopping. Both a
-controlled busy-catalog composition case and an already-queued-tick case fail
-before the fix. The actual C02 browser variants also fail against all four exact
-compiled Edge.82 resources: holding the catalog, visiting Shopping then Inventory,
-and releasing the read causes a hidden Shopping 403 to disable Stock registration.
-The original reports, screenshots and traces are retained.
-
-Each hash change now retires the old Shopping object/timer before resetting its
-route tracker. No command or original recovery owner is cancelled. Both
-composition regressions pass and prove that a later legitimate Shopping entry
-still works. All twelve actual variants pass once in 30.2 seconds without retries,
-with unchanged assertions and deadlines. All 2,198 frontend tests pass; the four
-coverage metrics remain 100% globally and per file (9,524 statements, 8,748
-branches, 2,027 functions, 6,931 lines). Types and the independent source-inventory
-coverage audit pass. The six native case identities remain unchanged.
-
-Edge.82's normal installed EN/ES keyboard/touch, Stock-refresh/reentry drafts,
-literal saved records and public stop/start are independently observed. Its
-matching module is `index-CpDS3NEI.js`; the selected mobile Tea row after restart
-is uniquely identified, focused and visible at 389–414.59 in the 804-pixel frame.
-Both saved notes/priorities/quantities remain exact; stock and movement history
-stay zero, with no purchases or sessions. It is stopped, with the same exact
-app/data/source cleanup confirmation pending and no new household records or
-backup. This normal native qualification does not accept the known queued-read
-race: the next immutable Edge.83 and final current-head acceptance remain required.
-
-This Edge.83 packaging snapshot pins the queue-retirement runtime. The linked PR retains final current-head CI/review and installed acceptance; the previous Edge.82 normal walkthrough does not establish this correction's acceptance.
-
-The current Edge.83 actual local ARM64 image passes all six exact-byte, authority, native/standalone listener, restart, genuine schema-20/schema-36 migration and snapshot-restore checks in 18.44 seconds. Its native installed walkthrough and complete current-head CPU/source CI remain required.
-
-## Retiring an entry that has already begun refreshing
-
-Review [4658614224](https://github.com/vypdev/domus/pull/163#discussion_r4658614224)
-identified a continuation beyond the former queued tick. After Stock refresh, a
-Shopping entry could begin its own catalog refresh, leave for Stock, and then
-start a hidden Shopping read. A Shopping-only 403 could disable Stock. Four
-controller cases and both actual compiled Edge.83 C02 variants fail before the
-correction; the original reports, traces and screenshots are retained.
-
-A destination identity now retires when activity changes, on every hash change
-and at widget teardown. Entry refresh, retained projection chains and paged item
-reads check that identity before starting another Shopping read. Leaving and
-returning cannot adopt the retired continuation. An admitted read and the original
-command are allowed to finish; no command, pending packet or recovery owner is
-cancelled or resent. Fourteen controller regressions cover entry, hidden admission,
-all six retained projection stages and paged-item continuation. The whole 2,212-test
-frontend campaign passes with all four coverage metrics at 100% globally and per
-file, and the independent authored-file audit passes. Types and product build pass.
-All twelve actual browser variants pass once in 29.1 seconds with zero retries
-and unchanged prior assertions and deadlines. The six native case IDs are unchanged.
-
-The installed Edge.83 normal walkthrough and earlier CI results remain historical.
-They do not accept this newly reproduced race. Immutable Edge.84 packaging, actual
-image qualification, native installed acceptance and full same-head checks are
-required before merge. Final terminal observations belong to the linked PR.
-
-This Edge.84 packaging snapshot pins runtime `e53b928411e542ca8bdd849890df10bf19cf65a3`. Its actual local ARM64 image passes all six byte, authority, native/standalone listener, restart, genuine schema-20/schema-36 migration and snapshot-restoration checks in 17.61 seconds. Installed84 acceptance and the final current-head CPU/source CI and review remain required, with terminal observations recorded in [PR #163](https://github.com/vypdev/domus/pull/163).
+Retain only the current immutable candidate and accepted Edge.77 rollback as
+runnable local artifacts after acceptance, plus necessary compact original
+proofs. Own generated builders and obsolete fixtures are retired with receipts;
+unknown/shared resources remain protected. The same synthetic app/data/source
+cleanup confirmation is pending; no permanent native deletion is inferred.
+This increment does not complete the wider application-experience or M4/M5 scope,
+and authorizes no Stable distribution or deployment.

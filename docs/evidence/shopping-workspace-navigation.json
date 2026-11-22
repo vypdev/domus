@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge84 packaging snapshot: immutable source/wheel/actualARM64sixchecksPASS17.61s; source2212/allfourcoverage100 and12 actualvariants29.1sPASS. Native84 and finalsamehead checks remain required in linkedPR.",
+  "status": "Edge85 packaging snapshot: immutable source/wheel and six actual ARM64 checks PASS18.92s;17packagechecks PASS0.15s; source2212/allfourcoverage100 and12actualvariants32.8s PASS. Native85 and finalsameheadchecks required in linkedPR.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -25,7 +25,7 @@
     "coverage": {
       "globalAndPerFileAllFourMetrics": 100,
       "statements": 9540,
-      "branches": 8766,
+      "branches": 8768,
       "functions": 2030,
       "lines": 6943,
       "authoredFileAudit": "PASS"
@@ -37,7 +37,7 @@
     "retainedAnnotationBrowserVariants": 4,
     "retainedFullWorkspaceBrowserVariants": 2,
     "newBrowserVariants": 12,
-    "newBrowserResult": "12PASS29.1s, each once zero retries. C02 also holds the catalog refresh already admitted by Shopping entry, leaves for Stock and releases it: no hidden Shopping read and Stock remains usable. All prior assertions/deadlines retained.",
+    "newBrowserResult": "12 PASS32.8s, each once without retries, skipped, flaky or unexpected results. Existing C01 additionally returns from deep Shopping work and repeats Stock entry after a lower field, EN keyboard/ES touch and both themes. All prior assertions/deadlines remain.",
     "catalogBrowserTests": 68,
     "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
     "nodePolicyTests": 42,
@@ -53,7 +53,7 @@
         "cause": "Barcode403assertions expected old generic unavailable copy; current explicitdenial was observed. All quantities, authority, history and recovery assertions remain."
       },
       "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
-      "finalFullSameHeadCI": "PENDING for active-entry retirement runtime; prior B5 local141PASS is historical."
+      "finalFullSameHeadCI": "PENDING for Stock heading correction; prior B5 full local141 PASS is historical."
     },
     "localPrivatePortQualification": "Canonical ports56174/56175 belong to active selfhostedCI. Private copy differs only by56184/56185, byte-equivalence verified; same actual backend/product and unchanged assertions/deadlines/retry policy.",
     "durableOwnerRegression": {
@@ -82,6 +82,12 @@
       "actualRed": "Both compiled83 Ingress/standalone C02 variants fail with a hidden403 that disables Stock. Original reports/traces/screenshots retained.",
       "green": "All14 new controller regressions and full2212 tests PASS; all12 actual browser variants PASS once29.1s. Covers hidden admission, leave/return, all six retained projection stages and paged item continuations. Original pending packet unchanged; no original lookup, resend or read/command cancellation.",
       "newNormativeCaseIdentities": 0
+    },
+    "stockHeadingVisibilityRegression": {
+      "nativeRed": "ES390 dark actual touch: returning from Shopping sources leaves Stock heading and Refresh inventory offscreen; Refresh rect y=-706.84 in804px frame. Guard prevented offscreen touch.",
+      "actualRed": "Both exact compiled84 C01 deployments fail heading geometry beforefix.",
+      "green": "All12 current variants PASS32.8s; repeated and deep-return Stock entry reveal its heading below sticky navigation in both locales/themes, EN keyboard/ES touch. Full2212 tests/allfourglobal-perfile100.",
+      "newNormativeCaseIdentities": 0
     }
   },
   "requiredImageBrowserInventory": 86,
@@ -89,36 +95,28 @@
     "amd64": "PENDING final current head",
     "aarch64": "PENDING final current head",
     "localPinnedAarch64": {
-      "at": "2026-11-22T15:35:11.043530+00:00",
-      "image": "domus-162-edge84:pinned",
-      "imageId": "sha256:069d0718d703bbe97ffa77031fafaea932894846fbd0cbc6638dfbabcb821d21",
+      "at": "2026-11-22T15:57:12.596800+00:00",
+      "image": "domus-162-edge85:pinned",
+      "imageId": "sha256:676af5cb8c0517d9a57dfa89d890eddfd99564bf639805d65b52698826a6dd46",
       "architecture": "arm64",
-      "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
-      "version": "0.0.0-edge.84",
+      "sourceCommit": "1826444e659ad9fe5a7827ee448efd80ee8d6452",
+      "version": "0.0.0-edge.85",
       "allPythonFiles": 250,
       "allUIFiles": 4,
       "allProductBytesMatchWheel": true,
       "selectedTests": 6,
-      "testSeconds": 17.61,
+      "testSeconds": 18.92,
       "genuineSourceSchemas": [
         20,
         36
       ],
       "restartAndSnapshotRestoration": true,
       "nativeAndStandaloneListeners": true,
-      "originalLog": "/private/tmp/domus-162-edge84-qualified-arm64-original.log",
-      "selection": [
-        "test_pinned_edge_runtime_and_bundle_match_every_reviewed_product_file",
-        "test_pinned_edge_native_launcher_authority_storage_and_restart",
-        "test_pinned_edge_standalone_listener_serves_the_exact_private_bundle",
-        "test_image_requires_supervisor_configuration_and_never_falls_back_to_an_admin",
-        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[20]",
-        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[36]"
-      ]
+      "originalLog": "/private/tmp/domus-162-edge85-qualified-arm64-original.log"
     }
   },
   "installedEdge": {
-    "statusAtPackaging": "No installed84 claim yet. Prior83 normal walkthrough and known active-entry race remain historical; final native84 acceptance belongs to linkedPR.",
+    "statusAtPackaging": "No installed85 claim yet. Prior84 partial native qualification found Stock heading offscreen and is not accepted; final85 native observations belong to linkedPR.",
     "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
     "appSlug": "abb0c2fd_domus_edge",
     "newRecordsPlanned": 0
@@ -126,25 +124,25 @@
   "finalSameHeadChecks": "Required after immutable84 packaging: current source141/catalog68, eachCPU62+86, all global/perfile coverage and substantive review. Historical B5/e48 results are not current runtime acceptance.",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
-    "index.html": "49a2c4daa4b40e72ce87dfd54a514bb88e2109cd668f07184935b02214c36329",
-    ".vite/manifest.json": "c247d0b249d0ec3c4420a3cf59c2b6c738c064848372277da3e98e2301bdeba4",
-    "assets/index-CUfMikor.js": "e95d43c7b92dd9f839438751df04fc21d8dbf1963d6ac0c44760792c62e42b35",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+    "index.html": "8470da65089af054428a2d82e16355a94251e8712e5706848031805e238f118f",
+    ".vite/manifest.json": "76344cb4588d48fc631b9bf5edc4b3b3b083e08105f1a2184c1a41b2e8f93e5f",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-eQtqrWRl.js": "06df87c3c49ccdce9d589d01b55d9b462bb5cdbb088896909702b02ff1ea4410"
   },
   "currentPackage": {
-    "version": "0.0.0-edge.84",
-    "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
-    "sourceArchiveSHA256": "235e250dd79d53e1d671d109e7af176ca1d21cc4821add78f2818d98e1651057",
-    "wheelSHA256": "0325cc9c8cee709d3b661bd5b994791077ec63c74367f599b7a71eaeeddfbca7",
+    "version": "0.0.0-edge.85",
+    "sourceCommit": "1826444e659ad9fe5a7827ee448efd80ee8d6452",
+    "sourceArchiveSHA256": "ce60eb382ffada35c97dc9e976fdd854a6a38cdcda7902254b03d0b065cf48b1",
+    "wheelSHA256": "84314084096c5d9ee30c3d571325b8ae699951fd3fcf2788d6a8abb385e039ae",
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "49a2c4daa4b40e72ce87dfd54a514bb88e2109cd668f07184935b02214c36329",
-      ".vite/manifest.json": "c247d0b249d0ec3c4420a3cf59c2b6c738c064848372277da3e98e2301bdeba4",
-      "assets/index-CUfMikor.js": "e95d43c7b92dd9f839438751df04fc21d8dbf1963d6ac0c44760792c62e42b35",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      "index.html": "8470da65089af054428a2d82e16355a94251e8712e5706848031805e238f118f",
+      ".vite/manifest.json": "76344cb4588d48fc631b9bf5edc4b3b3b083e08105f1a2184c1a41b2e8f93e5f",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-eQtqrWRl.js": "06df87c3c49ccdce9d589d01b55d9b462bb5cdbb088896909702b02ff1ea4410"
     },
-    "status": "Immutable source/wheel and actual ARM64 six checks qualified. Native84 and final samehead CI/review remain required in linkedPR."
+    "status": "Immutable source/wheel and six actual ARM64 checks qualified. Native85 and final samehead CI/review remain required in linkedPR."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
@@ -208,7 +206,8 @@
     "shoppingDeniedGuidance": "Requesters, Shopping managers, Inventory receipt posting and combined Shopping/Inventory correction/return receive distinct current-grant guidance in EN/ES; purchase draft survives deniedresponse and succeeds on explicitretry.",
     "baselineSourceAssessment": "Two non-normative source-assessment paragraphs now explicitly name immutable base7770. Preexisting ownerprefix and every original requirement/case row remain byte-identical; no native inventory changes.",
     "queuedNavigationRetirement": "Every hashchange retires the pending Shopping object/timer before resetting route tracking. Leaving Shopping during an initial busycatalog or alreadyqueuedtick cannot schedule a hiddenread. Later legitimate entry still reads currentShopping; no commands/recovery are cancelled.",
-    "activeEntryRetirement": "A destination identity retires on activity changes, every hashchange and widget teardown. Entry refresh, retained projection chains and item pagination check that identity before starting another Shopping read. Finishing an already admitted read or the original command is not cancelled."
+    "activeEntryRetirement": "A destination identity retires on activity changes, every hashchange and widget teardown. Entry refresh, retained projection chains and item pagination check that identity before starting another Shopping read. Finishing an already admitted read or the original command is not cancelled.",
+    "stockHeadingVisibility": "The existing presentation focus routine explicitly reveals both Shopping and Inventory. It preserves the same owner, drafts, commands and permissions; other destination behavior remains unchanged."
   },
   "previousCandidate79": {
     "package": {
@@ -592,7 +591,7 @@
     "sourceFrontendTests": 2190,
     "remainingFindings": "b7 review identified hidden Shopping refresh after Stock navigation and permission-denial guidance; current82 source fixes both. Native81 observations qualify only the previous runtime."
   },
-  "packagingSnapshotAt": "2026-11-22T15:35:11.043530+00:00",
+  "packagingSnapshotAt": "2026-11-22T15:57:12.596800+00:00",
   "previousCandidate82": {
     "package": {
       "version": "0.0.0-edge.82",
@@ -752,5 +751,53 @@
     },
     "normalNativeAcceptance": "https://github.com/vypdev/domus/pull/163#issuecomment-7079835319",
     "remainingFinding": "4658614224: after Shopping entry had begun its own catalog refresh, leaving it allowed a later Shopping read. Four unit and both actual compiled83 C02 variants reproduce it. Edge84 must qualify the correction."
+  },
+  "previousCandidate84": {
+    "package": {
+      "version": "0.0.0-edge.84",
+      "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
+      "sourceArchiveSHA256": "235e250dd79d53e1d671d109e7af176ca1d21cc4821add78f2818d98e1651057",
+      "wheelSHA256": "0325cc9c8cee709d3b661bd5b994791077ec63c74367f599b7a71eaeeddfbca7",
+      "storageSchema": 37,
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "49a2c4daa4b40e72ce87dfd54a514bb88e2109cd668f07184935b02214c36329",
+        ".vite/manifest.json": "c247d0b249d0ec3c4420a3cf59c2b6c738c064848372277da3e98e2301bdeba4",
+        "assets/index-CUfMikor.js": "e95d43c7b92dd9f839438751df04fc21d8dbf1963d6ac0c44760792c62e42b35",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      "status": "Immutable source/wheel and actual ARM64 six checks qualified. Native84 and final samehead CI/review remain required in linkedPR."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T15:35:11.043530+00:00",
+      "image": "domus-162-edge84:pinned",
+      "imageId": "sha256:069d0718d703bbe97ffa77031fafaea932894846fbd0cbc6638dfbabcb821d21",
+      "architecture": "arm64",
+      "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
+      "version": "0.0.0-edge.84",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 17.61,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true,
+      "originalLog": "/private/tmp/domus-162-edge84-qualified-arm64-original.log",
+      "selection": [
+        "test_pinned_edge_runtime_and_bundle_match_every_reviewed_product_file",
+        "test_pinned_edge_native_launcher_authority_storage_and_restart",
+        "test_pinned_edge_standalone_listener_serves_the_exact_private_bundle",
+        "test_image_requires_supervisor_configuration_and_never_falls_back_to_an_admin",
+        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[20]",
+        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[36]"
+      ]
+    },
+    "nativeQualification": "Partial: exact installed module index-CUfMikor.js; EN keyboard and drafts/literal notes pass. ES390 touch return from deep Shopping leaves Inventory heading above viewport. App stopped; overrides reset; no new household records or backup.",
+    "publicFinding": "https://github.com/vypdev/domus/pull/163#issuecomment-7081605813",
+    "redEvidence": "Both actual compiled84 C01 deployments fail the heading-visibility assertion before correction; original traces/screenshots/context retained."
   }
 }
