@@ -738,8 +738,8 @@ for (const mode of ['native', 'standalone'] as const) {
     const history = stock.getByRole('region', {name:'Movement history · Pantry oil'});
     await expect(history).toBeFocused();
     await expect(history.getByText('+1.250001 millilitres')).toBeVisible();
-    await expect(history.getByText('Author')).toBeVisible();
-    await expect(history.getByText('Date')).toBeVisible();
+    await expect(history.getByText('Author', {exact:true})).toBeVisible();
+    await expect(history.getByText('Date', {exact:true})).toBeVisible();
 
     await page.getByLabel('Language', {exact:true}).selectOption('es');
     const historial = stock.getByRole('region', {name:'Historial de movimientos · Pantry oil'});
