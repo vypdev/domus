@@ -733,6 +733,7 @@ export function mountEntry(page: EntryPage): PageMount {
     const syncWorkspace = (event?: Event) => {
       if (event?.type === 'hashchange') {
         element.requestWorkspaceFocus();
+        clearShoppingNavigation();
         shoppingNavigationRoute = null;
       }
       const fragment = new URL(page.location.href).hash;

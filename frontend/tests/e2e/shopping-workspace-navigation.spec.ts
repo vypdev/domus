@@ -139,7 +139,23 @@ for (const mode of ['native','standalone'] as const) {
           json:{state:'blocked',code:'permission_denied',message:'Shopping denied.',
             action_required:'Review Shopping access.',correlation_id:'cor_hidden_shopping'}});
       });
-      await stock.getByRole('button',{name:'Refresh inventory',exact:true}).click();
+      const catalogPath = new URL(base + 'api/v1/inventory').pathname;
+      const started = Promise.withResolvers<void>(), release = Promise.withResolvers<void>();
+      await page.route(url=>url.pathname===catalogPath,async route=>{
+        started.resolve();await release.promise;await route.continue();
+      },{times:1});
+      const refreshed = page.waitForResponse(response=>new URL(response.url()).pathname===catalogPath);
+      try {
+        await stock.getByRole('button',{name:'Refresh inventory',exact:true}).click();
+        await started.promise;
+        await tabs.getByRole('link',{name:'Shopping',exact:true}).click();
+        await expect(tabs.getByRole('link',{name:'Shopping',exact:true})).toHaveAttribute('aria-current','page');
+        await tabs.getByRole('link',{name:'Inventory',exact:true}).click();
+        await expect(tabs.getByRole('link',{name:'Inventory',exact:true})).toHaveAttribute('aria-current','page');
+      } finally {release.resolve();}
+      expect((await refreshed).ok()).toBe(true);
+      // Flush the queued navigation turn before checking absence of a hidden read.
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
       await expect(stock.getByRole('button',{name:'Register product',exact:true})).toBeEnabled();
       await expect(stock.getByRole('heading',{name:'Navigation tea',exact:true})).toBeVisible();
       expect(hiddenReads).toBe(0);

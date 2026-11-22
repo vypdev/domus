@@ -819,6 +819,36 @@ test.each(['busy', 'unavailable'] as const)('a queued Shopping item waits for an
   expect(f.fetch.mock.calls.filter(([path, init]) => path.endsWith('/inventory/commands') && init.method === 'POST')).toHaveLength(situation === 'busy' ? 1 : 0);
 });
 
+test.each(['busy catalog','queued tick'] as const)('leaving Shopping retires its %s before Inventory can consume it', async situation => {
+  const f = fixture(); f.phase('active'); f.shoppingItem(true);
+  const clock = holdNavigationTimers(f.page), base = f.page.location.href;
+  const navigate = (hash:string) => {f.page.location.href=base+hash;f.events.dispatchEvent(new Event('hashchange'));};
+  const gate = Promise.withResolvers<void>(), original = f.fetch.getMockImplementation()!;
+  let hiddenReads = 0, deny = true;
+  f.fetch.mockImplementation(async (path,init) => {
+    if (situation === 'busy catalog' && path.includes('/api/v1/inventory?')) await gate.promise;
+    if (deny && path.includes('/inventory/shopping-list/')) {
+      hiddenReads++;
+      const reply=new Response(JSON.stringify({state:'blocked',code:'unavailable',message:'Unavailable.',
+        action_required:'Refresh Shopping.',correlation_id:'cor_queued_shopping'}),
+      {status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:corpus.standalone.endpoint.origin+path});return reply;
+    }
+    return original(path,init);
+  });
+  navigate('#shopping/product:product');const {app}=await f.open();
+  if (situation === 'busy catalog') await vi.waitFor(()=>expect(app.inventory?.busy).toBe(true));
+  else await vi.waitFor(()=>expect(app.inventory?.report?.mayManage).toBe(true));
+  navigate('#inventory');gate.resolve();
+  await vi.waitFor(()=>expect(app.inventory?.busy).toBe(false));
+  for (const tick of clock.ticks.splice(0)) tick.run();
+  await vi.waitFor(()=>expect(app.inventory?.busy).toBe(false));
+  expect(hiddenReads).toBe(0);expect(app.inventory?.report?.mayManage).toBe(true);
+  expect(app.inventory?.notice).toBeNull();expect(f.postRequests()).toBe(0);
+  deny=false;navigate('#shopping/product:product');clock.ticks.shift()!.run();
+  await vi.waitFor(()=>expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+});
+
 test('Shopping obtains no catalog before the current household can be verified', async () => {
   const f = fixture(); f.phase('active'); f.page.location.href += '#shopping';
   const original = f.fetch.getMockImplementation()!;

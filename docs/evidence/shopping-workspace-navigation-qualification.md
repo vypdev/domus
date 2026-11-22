@@ -11,7 +11,7 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The previous pinned runtime is published as
 `8ecbf6c145a7a415998766b7b299544487d823fe` on the admitted managed ref. Edge.82
 pins that exact source and archive SHA-256
 `cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0`.
@@ -36,9 +36,9 @@ identities are preserved. Two non-normative source-assessment paragraphs now
 explicitly identify the immutable base instead of describing it as current source. Backend, API, schema 37, canonical journal packet format and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
-The complete current frontend campaign passes 2,196 tests across 50 files, with
+The complete current frontend campaign passes 2,198 tests across 50 files, with
 all four metrics at 100% globally and per authored runtime file (121 files):
-9,523 statements, 8,748 branches, 2,027 functions and 6,930 lines. Its independent
+9,524 statements, 8,748 branches, 2,027 functions and 6,931 lines. Its independent
 source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
 product Vite build and the actual wheel package test pass. All 250 Python module
 bytes equal accepted Edge.77; the four compiled UI resources match the new wheel.
@@ -221,3 +221,33 @@ the immutable base explicitly. The preceding owner prefix and every published
 requirement/case row remain byte-identical; no acceptance identity was changed.
 
 This is the Edge.82 packaging snapshot. The linked [PR #163](https://github.com/vypdev/domus/pull/163) retains final current-head CI, review and installed acceptance. Earlier installed candidates above remain historical; their observations do not establish acceptance of a later source.
+
+## Retiring a queued destination when leaving Shopping
+
+Review 4658107744 reproduced a remaining route race: resetting the route tracker
+to null before comparing an Inventory route left a queued Shopping object/timer
+alive. A later catalog completion could consume it outside Shopping. Both a
+controlled busy-catalog composition case and an already-queued-tick case fail
+before the fix. The actual C02 browser variants also fail against all four exact
+compiled Edge.82 resources: holding the catalog, visiting Shopping then Inventory,
+and releasing the read causes a hidden Shopping 403 to disable Stock registration.
+The original reports, screenshots and traces are retained.
+
+Each hash change now retires the old Shopping object/timer before resetting its
+route tracker. No command or original recovery owner is cancelled. Both
+composition regressions pass and prove that a later legitimate Shopping entry
+still works. All twelve actual variants pass once in 30.2 seconds without retries,
+with unchanged assertions and deadlines. All 2,198 frontend tests pass; the four
+coverage metrics remain 100% globally and per file (9,524 statements, 8,748
+branches, 2,027 functions, 6,931 lines). Types and the independent source-inventory
+coverage audit pass. The six native case identities remain unchanged.
+
+Edge.82's normal installed EN/ES keyboard/touch, Stock-refresh/reentry drafts,
+literal saved records and public stop/start are independently observed. Its
+matching module is `index-CpDS3NEI.js`; the selected mobile Tea row after restart
+is uniquely identified, focused and visible at 389–414.59 in the 804-pixel frame.
+Both saved notes/priorities/quantities remain exact; stock and movement history
+stay zero, with no purchases or sessions. It is stopped, with the same exact
+app/data/source cleanup confirmation pending and no new household records or
+backup. This normal native qualification does not accept the known queued-read
+race: the next immutable Edge.83 and final current-head acceptance remain required.

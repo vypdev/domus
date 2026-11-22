@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge82 packaging snapshot: immutable source/wheel, actualARM64sixchecksPASS18.28s, source2196all4metrics100 and12actualbrowservariantsPASS. Native82 and finalsameheadchecks recorded next in linkedPR.",
+  "status": "Current queued-navigation retirement source qualified2198/all4metrics100 and12actualvariantsPASS; immutable83/latest-head acceptance next. Normal native82 acceptance is historical and has the known queued-read finding.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -19,15 +19,15 @@
     "legacyPendingPacketHandling": "Existing incompatible-scope retirement for ownerless or unmatched packets; no lookup/resend/reassignment and no change to committed server receipts."
   },
   "executedSource": {
-    "frontendTests": 2196,
+    "frontendTests": 2198,
     "frontendTestFiles": 50,
     "authoredRuntimeFiles": 121,
     "coverage": {
       "globalAndPerFileAllFourMetrics": 100,
-      "statements": 9523,
+      "statements": 9524,
       "branches": 8748,
       "functions": 2027,
-      "lines": 6930,
+      "lines": 6931,
       "authoredFileAudit": "PASS"
     },
     "runtimeAndCatalogTypes": "PASS",
@@ -37,7 +37,7 @@
     "retainedAnnotationBrowserVariants": 4,
     "retainedFullWorkspaceBrowserVariants": 2,
     "newBrowserVariants": 12,
-    "newBrowserResult": "12PASS30.4seconds, each once zero retries. C02 includes Stock refresh afteritemroute whileShopping-list reads would return403; zero hiddenShopping reads and Stock remains usable. C04 verifies deniedpurchase guidance, retaineddraft and successfulretry; all previous assertions retained.",
+    "newBrowserResult": "12PASS30.2s, each once zero retries. C02 holds the actual catalog response while navigating Shopping->Inventory, then releases it and asserts zero hiddenShopping reads/Stock usable. Both compiled82 variants reproduced the failure before one-line queue retirement. Every prior assertion retained.",
     "catalogBrowserTests": 68,
     "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
     "nodePolicyTests": 42,
@@ -68,6 +68,13 @@
     "hiddenShoppingAndGuidanceRegression": {
       "beforeFix": "4failures: manualStockrefresh andsuccessfulStocksave each repeat a hiddenShopping read; EN/ES purchase denial reportswronggrant.",
       "afterFix": "All4pass; scope retirement/unavailable during reentry also stop new route reads. Full2196 tests/all4metrics100; actualC02/C04bothdeployments pass."
+    },
+    "queuedNavigationRetirementRegression": {
+      "finding": 4658107744,
+      "unitRed": "Both busycatalog andalreadyqueuedtick fail with one hiddenShopping read",
+      "actualRed": "Both actual compiled82 C02 deployment variants fail: hiddenShopping403 disables Stock registration",
+      "green": "Both controlled composition cases and all12actualbrowservariantsPASS;2198 frontend/all4metrics100",
+      "newNormativeCaseIdentities": 0
     }
   },
   "requiredImageBrowserInventory": 86,
@@ -121,7 +128,7 @@
       "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
     },
     "storageSchema": 37,
-    "status": "Immutable source/wheel and actuallocalARM64sixchecks qualified. Native82 and final required current-head CI/review remain required, with final acceptance retained in linkedPR."
+    "status": "Historical native-normal-qualified82, with known queuedreadfinding4658107744. Sourcefix qualified separately; newimmutable83 stillrequired beforemerge."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
@@ -183,7 +190,8 @@
     "partialHouseholdFacts": "Use matching independentlyverified administration capabilityhousehold when entrydisplayfacts unavailable. Use the same resolvedhome in authorityrevisionbinding. No catalogwithoutverifiedhome/member and no newwrites.",
     "hiddenShoppingRefresh": "Stock refresh and post-command refresh do not resume hidden Shopping reads. Retained selected projections/drafts remain; Shopping reentry refreshes them using the current route. Scope retirement/failure stops the continuation.",
     "shoppingDeniedGuidance": "Requesters, Shopping managers, Inventory receipt posting and combined Shopping/Inventory correction/return receive distinct current-grant guidance in EN/ES; purchase draft survives deniedresponse and succeeds on explicitretry.",
-    "baselineSourceAssessment": "Two non-normative source-assessment paragraphs now explicitly name immutable base7770. Preexisting ownerprefix and every original requirement/case row remain byte-identical; no native inventory changes."
+    "baselineSourceAssessment": "Two non-normative source-assessment paragraphs now explicitly name immutable base7770. Preexisting ownerprefix and every original requirement/case row remain byte-identical; no native inventory changes.",
+    "queuedNavigationRetirement": "Every hashchange retires the pending Shopping object/timer before resetting route tracking. Leaving Shopping during an initial busycatalog or alreadyqueuedtick cannot schedule a hiddenread. Later legitimate entry still reads currentShopping; no commands/recovery are cancelled."
   },
   "previousCandidate79": {
     "package": {
