@@ -99,6 +99,24 @@ for (const mode of ['native','standalone'] as const) {
       await expect(stock).toBeFocused(); await expect(stock.locator('domus-shopping')).toHaveCount(0);
       await expect(stock.getByRole('button', {name:locale === 'en' ? 'Register product' : 'Registrar producto',exact:true})).toBeEnabled();
       await tab.press('Enter');
+      // A deep Shopping control leaves the shared document scrolled. Returning
+      // to Stock must reveal its own heading, including narrow touch entry.
+      await shop.getByRole('button', {name:locale === 'en' ? 'Show purchases' : 'Mostrar compras',exact:true}).focus();
+      const stockTab = tabs.getByRole('link', {name:locale === 'en' ? 'Inventory' : 'Inventario',exact:true});
+      const revealStock = async () => {
+        if (locale === 'es') await stockTab.tap(); else await stockTab.press('Enter');
+        await expect(stock).toBeFocused();
+        await expect.poll(async () => {
+          const heading = await stock.getByRole('heading', {name:locale === 'en' ? 'Inventory' : 'Inventario',exact:true,level:2}).boundingBox();
+          const navigation = await tabs.boundingBox();
+          return heading !== null && navigation !== null && heading.y >= navigation.y + navigation.height - 1
+            && heading.y < 844 / 2;
+        }).toBe(true);
+      };
+      await revealStock();
+      await stock.getByRole('textbox', {name:locale === 'en' ? 'Location name' : 'Nombre de la ubicación',exact:true}).focus();
+      await revealStock();
+      await tab.press('Enter');
       await page.screenshot({path:info.outputPath(`shopping-${locale}-${theme}.png`),fullPage:true});
     }
     expect(mutations).toEqual([]); expect(await stats()).toEqual(before);
