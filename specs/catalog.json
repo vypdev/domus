@@ -742,9 +742,12 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-11-17",
       "specs": [
-        "specs/shopping-management.md"
+        "specs/shopping-management.md",
+        "specs/shopping-manual-annotations.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [
         "backend/src/domus/entrypoints/inventory_http.py"
       ],
@@ -759,7 +762,15 @@
         "frontend/src/presentation/domus-shopping-list.ts",
         "frontend/src/application/shopping-attention.ts",
         "frontend/src/adapters/inventory-http.ts",
-        "frontend/src/presentation/domus-shopping-attention.ts"
+        "frontend/src/presentation/domus-shopping-attention.ts",
+        "backend/src/domus/domain/shopping_annotations.py",
+        "backend/src/domus/application/shopping_annotations.py",
+        "frontend/src/domain/inventory.ts",
+        "frontend/src/application/inventory-controller.ts",
+        "frontend/src/adapters/inventory-journal.ts",
+        "frontend/src/presentation/domus-inventory.ts",
+        "frontend/src/presentation/inventory-messages.ts",
+        "frontend/stories/shopping.stories.ts"
       ],
       "tests": [
         "tests/backend/test_shopping_http.py",
@@ -781,7 +792,21 @@
         "frontend/tests/inventory.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts",
         "frontend/tests/shopping-attention.test.ts",
-        "frontend/tests/page.test.ts"
+        "frontend/tests/page.test.ts",
+        "tests/backend/test_shopping_annotations.py",
+        "tests/backend/test_shopping_annotations_http.py",
+        "tests/fixtures/sqlite/generate_v36_shopping_annotations_source.py",
+        "tests/fixtures/sqlite/v36-shopping-annotations-source.sql",
+        "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json",
+        "frontend/tests/shopping-annotations.test.ts",
+        "frontend/tests/fixtures/edge72-inventory-journal.mjs",
+        "frontend/tests/fixtures/edge72-inventory-journal.d.mts",
+        "frontend/tests/fixtures/edge72-inventory-journal.provenance.json",
+        "frontend/tests/e2e/catalog.spec.ts",
+        "tests/containers/shopping_annotations_runtime.py",
+        "tests/containers/test_shopping_annotations_image.py",
+        "tests/fixtures/schema36-app/Dockerfile",
+        "frontend/tests/e2e/shopping-annotations.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -798,11 +823,16 @@
         "docs/evidence/physical-receipt-return-qualification.md",
         "docs/evidence/purchase-session-store-qualification.md",
         "docs/contracts/household-api.openapi.json",
-        "docs/contracts/native-household-api.openapi.json"
+        "docs/contracts/native-household-api.openapi.json",
+        "docs/evidence/shopping-manual-annotations-qualification.md",
+        "docs/evidence/shopping-manual-annotations.json",
+        "addon-edge/README.md",
+        "addon-edge/DOCS.md",
+        "addon-edge/CHANGELOG.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item\u2019s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }

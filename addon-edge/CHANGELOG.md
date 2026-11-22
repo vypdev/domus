@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.0.0-edge.76
+
+- Publish the same shopping note character restrictions enforced by the command, including allowed tabs and line breaks.
+- Preserve existing note values, validation errors, priorities and schema-37 data.
+
+## 0.0.0-edge.75
+
+- Reject unsupported C1 controls in shopping notes, retain accepted text and allow a corrected retry with the original request key.
+- Keep existing schema-37 annotations and original receipts unchanged.
+
+## 0.0.0-edge.74
+
+- Keep shopping note and priority labels in the household interface's font with a generic fallback.
+- Preserve the same schema-37 data, annotations and original requests as Edge.73.
+
+## 0.0.0-edge.73
+
+- Retain an optional literal multiline note and priority on each manual shopping request.
+- Show independent request annotations in source details and preserve later drafts during original-request recovery.
+- Use the published shared note and priority controls with English/Spanish, keyboard and mobile touch support.
+- Migrate genuine schema-36/schema-20 data to schema 37; binary rollback requires the compatible image and cold private-data pair.
+
 ## 0.0.0-edge.72
 
 - Retain each cancelled trigger's terminal receipt through checkpoint restoration and rollback.

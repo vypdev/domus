@@ -139,10 +139,11 @@ jobs:
         env:
           TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend-toolchain
-      - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-browser
+      - run: mkdir -p "${HOME:?}/.cache/domus-ci"
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/toolchain-browser.lock" pnpm test:frontend-browser
         env:
           TMPDIR: ${{ runner.temp }}
-      - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-guards
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/toolchain-browser.lock" pnpm test:frontend-guards
         env:
           TMPDIR: ${{ runner.temp }}
       - name: Retain distinct framework fixture outputs and coverage
@@ -210,11 +211,13 @@ jobs:
           stat --file-system \
             --format='source browser filesystem=%T free_blocks=%a block_size=%S' \
             "$browser_fixture_root"
-      - run: flock -w 600 /tmp/domus-ci-entry-browser.lock pnpm test:frontend-entry
+      # Keep shared lock inodes persistent across concurrent runner jobs.
+      - run: mkdir -p "${HOME:?}/.cache/domus-ci"
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/entry-browser.lock" pnpm test:frontend-entry
         env:
           TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend-catalog
-      - run: flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog
+      - run: flock -w 600 "${HOME:?}/.cache/domus-ci/catalog-browser.lock" pnpm test:frontend-catalog
         env:
           TMPDIR: ${{ runner.temp }}
       - name: Retain distinct application coverage
@@ -223,12 +226,14 @@ jobs:
         with:
           name: frontend-application-${{ github.sha }}
           include-hidden-files: true
+          # Failed teardown may still retire worker staging ZIPs; retain final captures and reports.
           path: |
             frontend/coverage/
             frontend/storybook-static/
             frontend/test-results/
             backend/src/domus/ui/
             dist/*.whl
+            !frontend/test-results/**/.playwright-artifacts-*/**
           if-no-files-found: error
           retention-days: 7
 
@@ -370,6 +375,11 @@ jobs:
           docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
           --build-arg BUILD_ARCH=${{ matrix.arch }}
           -t "$DOMUS_IMAGE_PREFIX:schema35" tests/fixtures/schema35-app
+      - name: Build the immutable previous schema-36 shopping application
+        run: >-
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t "$DOMUS_IMAGE_PREFIX:schema36" tests/fixtures/schema36-app
       - name: Build the immutable published schema-8 image for profile migration compatibility
         run: >-
           docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
@@ -429,6 +439,7 @@ jobs:
           DOMUS_SCHEMA9_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema9
           DOMUS_SCHEMA14_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema14
           DOMUS_SCHEMA35_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema35
+          DOMUS_SCHEMA36_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema36
         run: uv run pytest tests/containers --no-cov
       - name: Retain native calendar coverage
         uses: actions/upload-artifact@v7.0.2
@@ -448,19 +459,20 @@ jobs:
           cache: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @domus/frontend exec playwright install chromium
+      - run: mkdir -p "${HOME:?}/.cache/domus-ci"
       - name: Execute household workflows in the actual isolated image from Chromium
         env:
           DOMUS_BROWSER_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:current
           DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
           DOMUS_TEST_ARCH: ${{ matrix.arch }}
         run: >-
-          lockf -k -t 600 /tmp/domus-ci-entry-browser.lock pnpm --filter @domus/frontend exec playwright test
-          -c playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts tests/e2e/workspace-navigation.spec.ts
-      - name: Require all seventy actual-image household journeys
+          lockf -k -t 600 "${HOME:?}/.cache/domus-ci/entry-browser.lock" pnpm --filter @domus/frontend exec playwright test
+          -c playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts tests/e2e/workspace-navigation.spec.ts tests/e2e/shopping-annotations.spec.ts
+      - name: Require all seventy-four actual-image household journeys
         run: >-
           uv run python -c "import json; from pathlib import Path;
           result=json.loads(Path('frontend/test-results/entry-results.json').read_text());
-          assert result['stats']['expected']==70 and result['stats']['unexpected']==0
+          assert result['stats']['expected']==74 and result['stats']['unexpected']==0
           and result['stats']['skipped']==0 and result['stats']['flaky']==0"
 
       - name: Retain actual-image browser evidence
@@ -485,7 +497,7 @@ jobs:
       - name: Remove this job's image tags
         if: ${{ always() }}
         run: |
-          for name in current edge edge5 schema8 schema9 schema14 previous installed; do
+          for name in current edge edge5 schema8 schema9 schema14 schema35 schema36 previous installed; do
             image="$DOMUS_IMAGE_PREFIX:$name"
             if docker image inspect "$image" >/dev/null 2>&1; then
               docker image rm "$image"

@@ -895,8 +895,12 @@ const wireTaskSource = {source_id:'task-source',kind:'task',origin_id:'occurrenc
   quantity:'1.25',reserved:'0.25',stock:'0.5',incoming:'0.5',to_buy:'0',attribution:null};
 const wireExtraSource = {source_id:'extra-source',kind:'extra',origin_id:'extra',line_id:null,name:'Olive oil',
   quantity:'2.000002',reserved:'0',stock:'0',incoming:'0',to_buy:'2.000002',attribution:{...extraAuthor,author_alias:null}};
-const wireList = {items:[wireShoppingItem,wireFreeExtra],next_cursor:'list-more'};
-const wireSources = {item:wireShoppingItem,sources:[wireTaskSource,wireExtraSource],next_cursor:'sources-more'};
+const annotatedItem = (item: Record<string,unknown>) => ({item,
+  annotation:item.extra_id === null ? null : {note:'',priority:'normal'}});
+const annotatedSource = (source: Record<string,unknown>) => ({source,
+  annotation:source.kind === 'extra' ? {note:'',priority:'normal'} : null});
+const wireList = {items:[annotatedItem(wireShoppingItem),annotatedItem(wireFreeExtra)],next_cursor:'list-more'};
+const wireSources = {item:wireShoppingItem,sources:[annotatedSource(wireTaskSource),annotatedSource(wireExtraSource)],next_cursor:'sources-more'};
 
 async function shoppingPages() {
   const {server} = http([[200,wireList],[200,wireSources]]);
@@ -913,20 +917,20 @@ test('shared Shopping decodes bounded pages, exact quantities, linked sources an
     items:[{productId:'product',total:'6.000002'},{extraId:'free',attribution:{authorAlias:'Shopper'}}]});
   expect(await server.shoppingSources(scope,'product',null).result).toMatchObject({cursor:'sources-more',
     items:[{kind:'task',lineId:'line',toBuy:'0'},{kind:'extra',originId:'extra',toBuy:'2.000002'}]});
-  expect(fetch.mock.calls[0][0]).toMatch(/inventory\/shopping-list\?limit=25&cursor=previous$/u);
-  expect(fetch.mock.calls[1][0]).toMatch(/inventory\/shopping-list\/product\/sources\?limit=25$/u);
+  expect(fetch.mock.calls[0][0]).toMatch(/inventory\/shopping-list\/annotated\?limit=25&cursor=previous$/u);
+  expect(fetch.mock.calls[1][0]).toMatch(/inventory\/shopping-list\/product\/sources\/annotated\?limit=25$/u);
   expect(await server.send(scope,{...request,command:addExtra}).result).toMatchObject({shoppingAction:addExtra.action});
   expect(await server.original(scope,{...request,command:clearExtra}).result).toMatchObject({kind:'historical',shoppingAction:clearExtra.action});
   await expect(server.send(scope,{...request,command:clearExtra}).result).rejects.toThrow();
   expect(() => inventoryCommand({...clearExtra,forged:true})).toThrow();
   expect(() => inventoryCommand({...addExtra,product_id:null})).toThrow();
   const huge = {...wireShoppingItem,pantry:'0',manual:'999999999999999.999999',total:'999999999999999.999999'};
-  expect(await http([[200,{...wireList,items:[huge]}]]).server.shoppingList(scope,null).result)
+  expect(await http([[200,{...wireList,items:[annotatedItem(huge)]}]]).server.shoppingList(scope,null).result)
     .toMatchObject({items:[{total:'999999999999999.999999'}]});
 
   for (const value of [
-    {...wireList,items:{}}, {...wireList,items:Array(26).fill(wireShoppingItem)},
-    {...wireList,items:[wireShoppingItem,wireShoppingItem]},
+    {...wireList,items:{}}, {...wireList,items:Array(26).fill(annotatedItem(wireShoppingItem))},
+    {...wireList,items:[annotatedItem(wireShoppingItem),annotatedItem(wireShoppingItem)]},
     ...[
       {...wireShoppingItem,total:'6'}, {...wireShoppingItem,total:'06.000002'},
       {...wireShoppingItem,extra_id:'also-extra'}, {...wireShoppingItem,attribution:extraAuthor},
@@ -934,13 +938,14 @@ test('shared Shopping decodes bounded pages, exact quantities, linked sources an
       {...wireFreeExtra,base_unit:'gram'}, {...wireFreeExtra,pantry:'1',total:'2'},
       {...wireFreeExtra,tasks:'1',total:'2'}, {...wireFreeExtra,manual:'0',total:'0'},
       {...wireFreeExtra,manual:'0.5',total:'0.5'},
-    ].map(item => ({...wireList,items:[item]})),
+    ].map(item => ({...wireList,items:[annotatedItem(item)]})),
   ]) await expect(http([[200,value]]).server.shoppingList(scope,null).result).rejects.toThrow();
   for (const value of [
     {...wireSources,item:wireFreeExtra}, {...wireSources,sources:{}},
-    {...wireSources,sources:Array(26).fill(wireTaskSource)}, {...wireSources,sources:[wireTaskSource,wireTaskSource]},
+    {...wireSources,sources:Array(26).fill(annotatedSource(wireTaskSource))},
+    {...wireSources,sources:[annotatedSource(wireTaskSource),annotatedSource(wireTaskSource)]},
     ...[{...wireTaskSource,reserved:'0'}, {...wireTaskSource,line_id:null},
-      {...wireExtraSource,attribution:null}].map(source => ({...wireSources,sources:[source]})),
+      {...wireExtraSource,attribution:null}].map(source => ({...wireSources,sources:[annotatedSource(source)]})),
   ]) await expect(http([[200,value]]).server.shoppingSources(scope,'product',null).result).rejects.toThrow();
 });
 
@@ -1091,10 +1096,10 @@ test('shared Shopping renders bilingual per-source totals and controls for autho
   quantity.value='1'; submit(form); await list.updateComplete;
   expect(name.getAttribute('aria-invalid')).toBe('true');
   name.value='Olive oil'; submit(form); await list.updateComplete;
-  expect(command()).toEqual({type:'submit',command:{...addExtra,product_id:null,name:'Olive oil',quantity:'1'}});
+  expect(command()).toEqual({type:'submit',command:{...addExtra,product_id:null,name:'Olive oil',quantity:'1',note:'',priority:'normal'}});
   selector.value='product'; selector.dispatchEvent(new Event('change')); await list.updateComplete;
   quantity.value='2.000002'; submit(form); await list.updateComplete;
-  expect(command()).toEqual({type:'submit',command:addExtra});
+  expect(command()).toEqual({type:'submit',command:{...addExtra,note:'',priority:'normal'}});
   await assign({...current,pending:true});
   events.mockClear(); submit(form);
   expect(events).not.toHaveBeenCalled();

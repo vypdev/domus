@@ -1,0 +1,495 @@
+{
+  "repository": "vypdev/domus",
+  "sourceCommit": "31553dda1f3782b916c16b13818154cdc66ec520",
+  "acceptedMerge": "0cdc633e3d4bb374f31277cb4861fbe13de9b9ea",
+  "acceptedSourceArchiveSHA256": "60496a355532ca2607fe617fcfe94251852dc5b2452e5a715fd2a542921cfa5b",
+  "acceptedWheelSHA256": "d153f113ca7a965ebdb868f18de495526c69e764fe2b60adaae6b3264a36df5c",
+  "sourceFiles": [
+    {
+      "path": "frontend/src/adapters/administration-http.ts",
+      "sha256": "76f47c54e6fc84ca451705fde6c875b1f81d189d6e225225f769c178b1675665"
+    },
+    {
+      "path": "frontend/src/adapters/administration-journal.ts",
+      "sha256": "cc21e12d9753fcadf8e986f92d5fe0b2868d4cd543a481a26b9dd21e50185752"
+    },
+    {
+      "path": "frontend/src/adapters/administration-json.ts",
+      "sha256": "a181fe55fe77279fa3825649ba6c6740ca63ecf1be4946e3c1f74f41db37a0c4"
+    },
+    {
+      "path": "frontend/src/adapters/administration-values.ts",
+      "sha256": "ccbf2457a9867722fa229aea7b472d15538948455d7f9d39d16f62b0134a47cf"
+    },
+    {
+      "path": "frontend/src/adapters/allocation-http.ts",
+      "sha256": "7f6aa338bcff4157672ab49b7bb6a5e51ea121a4f5f4f3b18ecc12d5bf1b6b8c"
+    },
+    {
+      "path": "frontend/src/adapters/allocation-journal.ts",
+      "sha256": "05bfd8a6754f57394e5222b2079e3ec53f01979d5d52eb6144f170897d7e75c6"
+    },
+    {
+      "path": "frontend/src/adapters/allocation-values.ts",
+      "sha256": "e6421511b4268c87f57eb9131590fb558c47723ee3cfc2ca02eb11cdd5be44e5"
+    },
+    {
+      "path": "frontend/src/adapters/automation-condition-values.ts",
+      "sha256": "c3da2adce8cdd3a699632ecfc13ff687e60fa30085669f4c362d5e9a9e0f35c5"
+    },
+    {
+      "path": "frontend/src/adapters/automation-daily-history-http.ts",
+      "sha256": "76da9cf9d5ba93cce0799516e50cbff44adcbcd3607b17456d17b879993c2fcc"
+    },
+    {
+      "path": "frontend/src/adapters/automation-daily-http.ts",
+      "sha256": "b64c5222cb1a739f27d29a53a170d4f96de0479de3d9092956e4711ee221dd81"
+    },
+    {
+      "path": "frontend/src/adapters/automation-daily-journal.ts",
+      "sha256": "5965d673636a68e9a4cea4c868d3632061478e65d20229c90e699d9a90542452"
+    },
+    {
+      "path": "frontend/src/adapters/automation-daily-values.ts",
+      "sha256": "5e4129303551123cb6e99afb90b836baa47faf611536487275d549368a20e638"
+    },
+    {
+      "path": "frontend/src/adapters/automation-draft-http.ts",
+      "sha256": "475215c9178963bb084044c9ee09dd1141f48acbc3add77676be088a00d4833a"
+    },
+    {
+      "path": "frontend/src/adapters/automation-draft-journal.ts",
+      "sha256": "31283636df3786b97c091be67d18e347485a0df09aafb3dec08edcbd3ce38449"
+    },
+    {
+      "path": "frontend/src/adapters/automation-execution-http.ts",
+      "sha256": "720fe7a5e30f6920d5211deb66884b908208e8d297bb3c86f5ab44808f7075c2"
+    },
+    {
+      "path": "frontend/src/adapters/automation-execution-journal.ts",
+      "sha256": "3d6a113ea1003b724b98829d5492ccadef3f403220953c2f756d830cf6381f15"
+    },
+    {
+      "path": "frontend/src/adapters/automation-preview-http.ts",
+      "sha256": "b6f885f10bfdc9946bd6394dceeeb79779a3037aea47fc09a9c79f3e30cb0864"
+    },
+    {
+      "path": "frontend/src/adapters/automation-run-history-http.ts",
+      "sha256": "7d1a14fddbcbe8ffa8b7f720a50ec11288f2d5e0ad983405695c1ab9b2315bbc"
+    },
+    {
+      "path": "frontend/src/adapters/automation-schedule-preview-http.ts",
+      "sha256": "6ab075ba43ee90999b51b10a26d5cdbf5ed605c81d06fbffe5c06f887c369712"
+    },
+    {
+      "path": "frontend/src/adapters/bootstrap.ts",
+      "sha256": "21d929dd9b20a23a0b236cd30cc400b9ba1ae241ab2c50e297a21ff6c5be029a"
+    },
+    {
+      "path": "frontend/src/adapters/browser-capabilities.ts",
+      "sha256": "afeeab1f86293581f79eeb55ca76aa59f959653c83ea3ee352d02b73c048e38b"
+    },
+    {
+      "path": "frontend/src/adapters/calendar-http.ts",
+      "sha256": "233c0e36fb7ba4657397249d7639881fd157e5fdfea6423c3c646b692c7f2d9e"
+    },
+    {
+      "path": "frontend/src/adapters/calendar-journal.ts",
+      "sha256": "1cb1a905d2f50531a2593cbd5cfea1b6b0990685412426e18fc29b439a77ba72"
+    },
+    {
+      "path": "frontend/src/adapters/calendar-preference-http.ts",
+      "sha256": "ec26ac2339f7057bf3c696fe7998599a4a35fe21268d7d790cc0638655dc934d"
+    },
+    {
+      "path": "frontend/src/adapters/family-http.ts",
+      "sha256": "e0af4e2a72839ba3bee01ab8ab0f6bf2058463c2c21d1879787edcfc6f9fbca6"
+    },
+    {
+      "path": "frontend/src/adapters/http-transport.ts",
+      "sha256": "34b3d99cd9896ea2a57eb658d341937ec88502daeaea342bba875e3b115a15fa"
+    },
+    {
+      "path": "frontend/src/adapters/http-values.ts",
+      "sha256": "9942b51041ec964b9330e28b22e16eeca45eee773a80ec99bb01e35ab981d1d3"
+    },
+    {
+      "path": "frontend/src/adapters/http.ts",
+      "sha256": "a2eadd19e34a112559d9cfa38dba7098cdba82b37c81f934c1ed33df8233043f"
+    },
+    {
+      "path": "frontend/src/adapters/inventory-http.ts",
+      "sha256": "e967b9b4fbbf3ae5e04b4b89b74d4e5e8180081f99bfde6587a76709ae14fa7f"
+    },
+    {
+      "path": "frontend/src/adapters/inventory-journal.ts",
+      "sha256": "cc647edaf93a5e550cd6aeb32aa55150c3b1937b89992225521c10ae803ac3fd"
+    },
+    {
+      "path": "frontend/src/adapters/json-values.ts",
+      "sha256": "05107e90176911e3088ad0cb252c44ad4426f0bb92ae9a96dabb8c20cea9fcad"
+    },
+    {
+      "path": "frontend/src/adapters/recurrence-http.ts",
+      "sha256": "6d66d1fc8f13038f8ff63340e5999666dd4555665e4a66bca11ccab46d929fd2"
+    },
+    {
+      "path": "frontend/src/adapters/recurrence-journal.ts",
+      "sha256": "7d0b11f9203ded161d20521c31b60c3f32ffb8db253e4da8f509f51b0750ae80"
+    },
+    {
+      "path": "frontend/src/adapters/reward-http.ts",
+      "sha256": "c3db46630f91078ff9de3a82404bc51b6e7487d7a212734ba8179114ede18f28"
+    },
+    {
+      "path": "frontend/src/adapters/reward-journal.ts",
+      "sha256": "1797614f86ced6ccee5f811ef40c729b9e89c10a5ea21c544de33b73522c1fbd"
+    },
+    {
+      "path": "frontend/src/adapters/scoped-command-journal.ts",
+      "sha256": "6404bde0142e046b1827357aae7b0257ddc4bf477450cc8c15b7f40aa52db508"
+    },
+    {
+      "path": "frontend/src/adapters/session-journal.ts",
+      "sha256": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3"
+    },
+    {
+      "path": "frontend/src/adapters/task-http.ts",
+      "sha256": "7275255821ff60287989a82c97e1c880b280fb8b33c2eb9d5453ebd7173f423b"
+    },
+    {
+      "path": "frontend/src/adapters/task-journal.ts",
+      "sha256": "8b1b5a7d300c7bb12655989a3c0f58e373ceca1f32683982b82aaf7fbac63963"
+    },
+    {
+      "path": "frontend/src/adapters/task-values.ts",
+      "sha256": "2a4f7f9da0832e7f30c8e57ff6f82dd8977305f749a7a2559622b0930cf1578c"
+    },
+    {
+      "path": "frontend/src/application/administration-controller.ts",
+      "sha256": "f3302cdeee1b042df708c49110c7b245c2480515e5003df02eb655395b189453"
+    },
+    {
+      "path": "frontend/src/application/administration-ports.ts",
+      "sha256": "c1b58b057788d924aa988c28a2c9d7470252ada21ff5e8b96e846e0469774cea"
+    },
+    {
+      "path": "frontend/src/application/allocation-controller.ts",
+      "sha256": "30f0159ee057122e91227f55ada3c2bd3b681c5773e9e206a110797d4d2949eb"
+    },
+    {
+      "path": "frontend/src/application/automation-daily-history.ts",
+      "sha256": "828786cc0d35ff808dd543e436f89fe78721b3155f0cf0ad9d5c1819cc4bfb69"
+    },
+    {
+      "path": "frontend/src/application/automation-daily.ts",
+      "sha256": "971bb64b8cd0448a84354d909e1f5db155f70bb131d1c64d931537be3a7808e6"
+    },
+    {
+      "path": "frontend/src/application/automation-drafts.ts",
+      "sha256": "60e3f9bc25893ec21eef84e748ac5a5540a7a6c092a79354762096e762bd8860"
+    },
+    {
+      "path": "frontend/src/application/automation-execution.ts",
+      "sha256": "3377bc9c69d9549347e14751463d023e13fe6125f7d2c454cb47ad24971dd4d2"
+    },
+    {
+      "path": "frontend/src/application/automation-preview.ts",
+      "sha256": "50e29f820f553c3cb39a859829837fbffe68f6252817dd4df49cd2d4e2860730"
+    },
+    {
+      "path": "frontend/src/application/automation-run-history.ts",
+      "sha256": "daccf16448fd94fca799109461c7b2180fbca0a993fba7443d1b2113ca09eadd"
+    },
+    {
+      "path": "frontend/src/application/automation-schedule-preview.ts",
+      "sha256": "27eb48b58ca50ce8ff6eb9650b597ab34bfcfa288ec32336836a8efd2c3f8a39"
+    },
+    {
+      "path": "frontend/src/application/calendar-controller.ts",
+      "sha256": "f4f817c1dee23b4b0bd32628bb12851c27ea73ac214a0f68fecb7b2e0e3b1eb6"
+    },
+    {
+      "path": "frontend/src/application/calendar-preferences.ts",
+      "sha256": "8d74c704c4200c118729fd92f5e1b7a8463ac9d9ffb306c1f2877c813eeffad4"
+    },
+    {
+      "path": "frontend/src/application/entry-controller.ts",
+      "sha256": "770d3cb22b8bf6fad0c34fead0658b2d54fcf99685400bf318f878e5e74df8f7"
+    },
+    {
+      "path": "frontend/src/application/family-controller.ts",
+      "sha256": "6ed9c325e718acfa4d13c04fda24de2d2ab380bba25cb1a9f3a0e6f609573d11"
+    },
+    {
+      "path": "frontend/src/application/household-controller.ts",
+      "sha256": "80fb28d008b3183e85e9564e6d1fce233b804388abb02ea6e25c658c113c1f2c"
+    },
+    {
+      "path": "frontend/src/application/inventory-controller.ts",
+      "sha256": "b2a0bb57efbb01896185d4aec7cf4c0791d8698d17d3d99be56f6c25a8494156"
+    },
+    {
+      "path": "frontend/src/application/overview-read.ts",
+      "sha256": "3e02b3b196b7b6cf9d471688c4f31839bed0b3df9f4f2e90e9e874a7f4bb2078"
+    },
+    {
+      "path": "frontend/src/application/ports.ts",
+      "sha256": "0ceac47de2fe6f0d886704051803325ba9b0a221409d05f818c9c04ee1828d6e"
+    },
+    {
+      "path": "frontend/src/application/recurrence-review-controller.ts",
+      "sha256": "5f61ab04dbab879a0d0b01c76a21a0f85a281fe904aba891eadb699f6d168971"
+    },
+    {
+      "path": "frontend/src/application/rewards-controller.ts",
+      "sha256": "d1d7a518a00ec7be17cdabd712a2e189241b94cfcf546f96bc3b3fe1329ff5f5"
+    },
+    {
+      "path": "frontend/src/application/shopping-attention.ts",
+      "sha256": "936603ee13f45464eb8bad23e5098ef799929b9eb9ef80c6f5837ae435c24173"
+    },
+    {
+      "path": "frontend/src/application/stock-attention.ts",
+      "sha256": "4172e007e4237c22bce4eb6bdbee5fc9f5e594e76c5cd612a0a920cfc9054f36"
+    },
+    {
+      "path": "frontend/src/application/task-controller.ts",
+      "sha256": "27b266cadb1f5bccbf8e2b44bdc435e54c5abd6571cdb851e41e9fd08c3f870e"
+    },
+    {
+      "path": "frontend/src/application/task-material-planning.ts",
+      "sha256": "0d6297574ffd5e4b3ff212d27f72a1b1622a21f61f5b35d87588b45f55c32d3a"
+    },
+    {
+      "path": "frontend/src/application/task-overview.ts",
+      "sha256": "5596962f8ba7df12c4a70ef1499dc5b521bad3ec274785fd0330b498fac3e568"
+    },
+    {
+      "path": "frontend/src/application/task-ports.ts",
+      "sha256": "74cecb05b3ea31c838334d1f320ddd8d2e03c029cf499aab9b84345fd964b83b"
+    },
+    {
+      "path": "frontend/src/composition/entry-page.ts",
+      "sha256": "0d837d61b60e8eb10f6fcc7f00500519f2da85ded002f8475750fab32fab250d"
+    },
+    {
+      "path": "frontend/src/composition/entry-runtime.ts",
+      "sha256": "2aba19a92ec6dc73cf1c454b5c3dc513a33aead8e6bd1ffd66911cfd57e8ef6b"
+    },
+    {
+      "path": "frontend/src/composition/main.ts",
+      "sha256": "f92ce862e1acefb95896217588a0dea0f48625fed1f16c285dadbd9c015ae086"
+    },
+    {
+      "path": "frontend/src/domain/administration-authorization.ts",
+      "sha256": "74da54d07a05f401fe37635c66578e3d43e7c48d56797d050b40d76c0313a7b6"
+    },
+    {
+      "path": "frontend/src/domain/administration-commands.ts",
+      "sha256": "91156336f720b19d6f0b28e204112511edd1f6e19782c7861680b906324a362f"
+    },
+    {
+      "path": "frontend/src/domain/administration-journal.ts",
+      "sha256": "66e6cb92b45cf08b399f5939c12d086af490c177b836f3a153fa811230c04df5"
+    },
+    {
+      "path": "frontend/src/domain/administration-views.ts",
+      "sha256": "ab80a52202c6ff527a8500d4937111048dfb4f83dc3fcc7f3762b92f784c3a1d"
+    },
+    {
+      "path": "frontend/src/domain/administration.ts",
+      "sha256": "913ebcffc8bb97ea3f70913d2abd0eebb608bee6db12ec314345a2adf2fa21d4"
+    },
+    {
+      "path": "frontend/src/domain/calendar.ts",
+      "sha256": "59d325560e750aa4e5e8ddacd11b52443fe5b32dbc313c5f65ec02a4d1277a33"
+    },
+    {
+      "path": "frontend/src/domain/civil-date.ts",
+      "sha256": "5f1d08a171a715f791e333d68df4db191d1d26872f1b75644d052f017cf3e4f7"
+    },
+    {
+      "path": "frontend/src/domain/entry.ts",
+      "sha256": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e"
+    },
+    {
+      "path": "frontend/src/domain/inventory.ts",
+      "sha256": "f6b65de56fc6b3ccc410124e616f6c8daea8c19e34e63725922714eb69a66e5a"
+    },
+    {
+      "path": "frontend/src/domain/journal.ts",
+      "sha256": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354"
+    },
+    {
+      "path": "frontend/src/domain/point-allocation.ts",
+      "sha256": "86f3e7347cfe91c9e3b2fe8552358ff23e97819cce3ec5d13f6fb6384ff66411"
+    },
+    {
+      "path": "frontend/src/domain/recurrence-review.ts",
+      "sha256": "0c395a69b7585e5a094edd9332c13b8506ade964d0ffabe4b1aec638e14cd55c"
+    },
+    {
+      "path": "frontend/src/domain/rewards.ts",
+      "sha256": "90aee878b9e37a74e41071ef4f8c363bd4cd067db3e7ddcc27b536abadec094f"
+    },
+    {
+      "path": "frontend/src/domain/tasks.ts",
+      "sha256": "376221ea935c7692594ade2c76df06eeef2ac3bcde748ebf12b1631a29bce624"
+    },
+    {
+      "path": "frontend/src/presentation/administration-messages.ts",
+      "sha256": "220b49fd0b3a29ced715e54a78930946f5ca260ccbc6d26534f17c812713772b"
+    },
+    {
+      "path": "frontend/src/presentation/allocation-details.ts",
+      "sha256": "6a67a7c0d5700d8d60b04213c53f11928e687dc658f5150557f8fee7bde22dca"
+    },
+    {
+      "path": "frontend/src/presentation/calendar-messages.ts",
+      "sha256": "94e96e231f50525ebe45dd147ce5ee90056b0813bea9f1242028cd30220a8e19"
+    },
+    {
+      "path": "frontend/src/presentation/domus-administration.ts",
+      "sha256": "3e5a8ea2e63dd2a3905da3cbb71af9f66859a2e16badf5117a2df247907d4256"
+    },
+    {
+      "path": "frontend/src/presentation/domus-allocation-preview.ts",
+      "sha256": "36173303c0ae433f41390aaab860e0389ead38ddd43be436e2247ebb3bbd2865"
+    },
+    {
+      "path": "frontend/src/presentation/domus-allocation-settings.ts",
+      "sha256": "f9ea008043a3ed9774add81a87039fe57dde73edaade0a8816cf192d28008ef5"
+    },
+    {
+      "path": "frontend/src/presentation/domus-app.ts",
+      "sha256": "3ec6bdc99fcc8ea74eea317cffc50911de0d3da770db239bd3c7e3179dfd6fad"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-daily-history.ts",
+      "sha256": "6a70a44b97c9b516ef1f9dfa1d988969a84522f85ed2f400c1d14e1eb3953ec0"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-daily.ts",
+      "sha256": "a4cdbbc7f0cc8640c06aeb8798f438d5624a4863167dbf53a0e333fae09fcb89"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-drafts.ts",
+      "sha256": "51a013b8dc20954dd1f33ab3a2a0189ca2a3189a95534e9b6e7bbe792d0884db"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-execution.ts",
+      "sha256": "cfc1d61b5c25777f1351e7b7d26ab55907eec5e3c9d99583f5796c866070190d"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-preview.ts",
+      "sha256": "3567c9595452e8a4800fcf34ed1ce310b65aa89a0f90b750c326d836fe885cd3"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-run-history.ts",
+      "sha256": "6ad551941c17bbfd0a0cfa46597bb3bbb9ae116424b25c0268c209505afcacd0"
+    },
+    {
+      "path": "frontend/src/presentation/domus-automation-schedule-preview.ts",
+      "sha256": "f3d6793cc2fcf89708209f2da2656fa57ef1878b1492c5b6c2232c104bddc531"
+    },
+    {
+      "path": "frontend/src/presentation/domus-calendar.ts",
+      "sha256": "ff33bcf3bab8bbc900d446584a5b5d21c6052f6f3bfc27be684335d3c31ab2ab"
+    },
+    {
+      "path": "frontend/src/presentation/domus-family-overview.ts",
+      "sha256": "a7b19684753639d344c2e5ffa1128d4b6cdf9fc8d4bd7f01ffac04f5fb85cd2c"
+    },
+    {
+      "path": "frontend/src/presentation/domus-family.ts",
+      "sha256": "27ca6f63166b79338e5fc1dbeb7abc0f17254249c7b383086dc4dde7776d284c"
+    },
+    {
+      "path": "frontend/src/presentation/domus-inventory.ts",
+      "sha256": "c3dd9df65a46047e6599fa8fa9b682bb72048d7814bcadc73997f06ef9f013f1"
+    },
+    {
+      "path": "frontend/src/presentation/domus-recurrence-review.ts",
+      "sha256": "e085be5a9595ca82dc8dc023bc166954537d8fcc88dad07f609e341cd2aa5472"
+    },
+    {
+      "path": "frontend/src/presentation/domus-rewards.ts",
+      "sha256": "392fbf02ade22cff27281b2d1a8ff9229debe4510b0585e0cd3834e6b4dc99b1"
+    },
+    {
+      "path": "frontend/src/presentation/domus-shopping-attention.ts",
+      "sha256": "5310dd9d7eb9255124b5d12a4d5373b353152836abee4dba0ed986d44c0f8bb8"
+    },
+    {
+      "path": "frontend/src/presentation/domus-shopping-list.ts",
+      "sha256": "dead25ef053a0d17ed5041ae122ff8c76094230c9fdc60d5e953592d38525649"
+    },
+    {
+      "path": "frontend/src/presentation/domus-shopping.ts",
+      "sha256": "647b1bdc11e868278ac0be0d40daddc1dc6d9f2a9418fe3440b96c532a753f88"
+    },
+    {
+      "path": "frontend/src/presentation/domus-stock-attention.ts",
+      "sha256": "29907f421fe5b57ba99399c49c84909ccbfcc079981f29d20055f645f98f9de6"
+    },
+    {
+      "path": "frontend/src/presentation/domus-task-material-outcomes.ts",
+      "sha256": "bf38786b2d344f74635a232edea1bb5e423e927af75cca5689a1347d346b72ac"
+    },
+    {
+      "path": "frontend/src/presentation/domus-task-material-plan.ts",
+      "sha256": "fb0bda724c15f97e3da3cf78f114e8a4e3514fc36cb9f289465dc92063479e3d"
+    },
+    {
+      "path": "frontend/src/presentation/domus-task-overview.ts",
+      "sha256": "40ddc025f2c67b96855c017f08254a9508a0cda1dffbb3d921e4687b3b1aca4b"
+    },
+    {
+      "path": "frontend/src/presentation/domus-tasks.ts",
+      "sha256": "34d48da7b2efe5bb0c34b18230eb137c5400c5a710fe6c6e217597b6c4750fd4"
+    },
+    {
+      "path": "frontend/src/presentation/family-messages.ts",
+      "sha256": "0c478f42fc0e15ad5c3423c6be7fb2aa6498432b6d5854531f31911c2f048e09"
+    },
+    {
+      "path": "frontend/src/presentation/global.css",
+      "sha256": "3cde546e42eeb8f386985b39cf7f9b5cadd7695899051e9d59db40032c85b031"
+    },
+    {
+      "path": "frontend/src/presentation/inventory-messages.ts",
+      "sha256": "4f0cf14fb72b13faf0a6a2766c3c1912bd64fd1567721b2096fabe92709d9b61"
+    },
+    {
+      "path": "frontend/src/presentation/messages.ts",
+      "sha256": "cfcdc590509bcd8edc20a47ee3ca9d8c518a36dc1547e15412bd930888e1110c"
+    },
+    {
+      "path": "frontend/src/presentation/recurrence-messages.ts",
+      "sha256": "780dfa7460ca8acd06051185dc4a2b477f6e2de3b145f1d17d362552cca2be9a"
+    },
+    {
+      "path": "frontend/src/presentation/reward-messages.ts",
+      "sha256": "80f95af45a98d33a1f5dd78dc100d7f4ace38657d03db0bd9c8e7b22be3e8d96"
+    },
+    {
+      "path": "frontend/src/presentation/styles.ts",
+      "sha256": "5a0dcd40e2175f30f0a0e73ea8ed38f3b6a5929ed8157e75cc8784fd1b7ea7f6"
+    },
+    {
+      "path": "frontend/src/presentation/task-material-messages.ts",
+      "sha256": "e26a5b80d165cfff1f6fd3f838538a2490fa5d7505dbd2cb69c3422ad211b9df"
+    },
+    {
+      "path": "frontend/src/presentation/task-messages.ts",
+      "sha256": "09feef5b7e6fc048f3c20f7c1d063040fb6e343691373c73ea33e63a93238cb2"
+    }
+  ],
+  "generatedEntry": "export {InventorySessionJournal,INVENTORY_JOURNAL_KEY} from \"./src/adapters/inventory-journal.ts\";\nexport {InventoryController} from \"./src/application/inventory-controller.ts\";\n",
+  "purpose": "Actual Edge72 client inventory journal/controller for cold legacy pending replay, fail-closed annotated pending rollback and re-upgrade. This is not whole-application browser rollback.",
+  "generator": "Vite 8.3.5 library build; configFile:false; es2023; ES module; no minification; frozen archive source; diagnostics normalized only.",
+  "normalization": "Only diagnostic source-path comments: ../<owned temporary root>/frontend/ -> edge72/frontend/",
+  "bundleSHA256": "59ef84b20bd359a2ad615a6f2e6c33d5f03f4c35924cfb8a64336e49e3f36ea6",
+  "vite": "8.3.5"
+}

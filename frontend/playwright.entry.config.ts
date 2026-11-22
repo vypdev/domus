@@ -1,8 +1,8 @@
 import {defineConfig} from '@playwright/test';
 
 export default defineConfig({
-  testDir: 'tests/e2e', testMatch: ['entry.spec.ts','administration.spec.ts','tasks.spec.ts','workspace-navigation.spec.ts'], forbidOnly: true, retries: 0, workers: 1,
-  // The serial 125-case inventory exhausted 15 minutes on self-hosted CI. Keep each
+  testDir: 'tests/e2e', testMatch: ['entry.spec.ts','administration.spec.ts','tasks.spec.ts','workspace-navigation.spec.ts','shopping-annotations.spec.ts'], forbidOnly: true, retries: 0, workers: 1,
+  // The serial source inventory exhausted 15 minutes on self-hosted CI. Keep each
   // test/expectation deadline and zero retries; allow the whole inventory to finish.
   globalTimeout: 1_200_000, outputDir: 'test-results/entry-artifacts',
   reporter: [['list'], ['json', {outputFile: 'test-results/entry-results.json'}]],

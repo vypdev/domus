@@ -48,6 +48,11 @@ def previous_image(request):
             "259814f37495fddff03d47460a93735ca1db4e4d",
             "0.0.0-edge.70",
         ),
+        "schema36": (
+            "DOMUS_SCHEMA36_IMAGE",
+            "31553dda1f3782b916c16b13818154cdc66ec520",
+            "0.0.0-edge.72",
+        ),
     }[version]
     value = os.environ.get(variable)
     assert value, "Set " + variable + " to the reviewed immutable " + label + " image"
@@ -99,9 +104,9 @@ def refuse_old_image(image, previous, volume):
     assert inventory(image, volume) == before
 
 
-def protected_schema35_pair(previous_image, volume, *, capture):
+def protected_compatible_pair(previous_image, volume, schema, *, capture):
     """Keep the old application paired with its cold private data, not a downgraded database."""
-    path = "/data/snapshots/protected-schema35"
+    path = "/data/snapshots/protected-schema" + str(schema)
     if capture:
         result = docker(
             "run",
@@ -120,7 +125,7 @@ def protected_schema35_pair(previous_image, volume, *, capture):
         )
         assert result.returncode == 0, result.stderr
         return
-    name = "domus-schema35-protected-" + uuid.uuid4().hex
+    name = "domus-schema" + str(schema) + "-protected-" + uuid.uuid4().hex
     try:
         started = docker(
             "run",
@@ -166,7 +171,9 @@ def protected_schema35_pair(previous_image, volume, *, capture):
 
 
 @pytest.mark.parametrize("restore_runtime", ["native", "standalone"], indirect=True)
-@pytest.mark.parametrize("previous_image", ["edge2", "edge3", "edge5", "schema8"], indirect=True)
+@pytest.mark.parametrize(
+    "previous_image", ["edge2", "edge3", "edge5", "schema8", "schema36"], indirect=True
+)
 def test_actual_older_image_refuses_selected_generation_without_changing_any_file(
     image, previous_image, restore_runtime
 ):
@@ -194,11 +201,11 @@ def test_actual_older_image_refuses_selected_generation_without_changing_any_fil
 
 @pytest.mark.parametrize(
     "previous_image,old_schema",
-    [("edge2", 3), ("edge3", 4), ("edge5", 7), ("schema8", 8), ("schema35", 35)],
+    [("edge2", 3), ("edge3", 4), ("edge5", 7), ("schema8", 8), ("schema35", 35), ("schema36", 36)],
     indirect=["previous_image"],
 )
 def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot(
-    image, previous_image, data_volume, old_schema, expected_schema=36
+    image, previous_image, data_volume, old_schema, expected_schema=37
 ):
     old = "domus-upgrade-old-" + uuid.uuid4().hex
     new = "domus-upgrade-new-" + uuid.uuid4().hex
@@ -252,8 +259,8 @@ def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot
         assert checkpoint["snapshot"]["schema_version"] == old_schema
         instance_id = checkpoint["snapshot"]["instance_id"]
         stopped(old)
-        if old_schema == 35:
-            protected_schema35_pair(previous_image, data_volume, capture=True)
+        if old_schema in (35, 36):
+            protected_compatible_pair(previous_image, data_volume, old_schema, capture=True)
         result = docker(
             "run",
             "--detach",
@@ -309,8 +316,8 @@ def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot
         stopped(new)
         # Even without generation selection, the older image must refuse the future schema.
         refuse_old_image(image, previous_image, data_volume)
-        if old_schema == 35:
-            protected_schema35_pair(previous_image, data_volume, capture=False)
+        if old_schema in (35, 36):
+            protected_compatible_pair(previous_image, data_volume, old_schema, capture=False)
         successful(
             console(
                 image,

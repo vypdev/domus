@@ -3,6 +3,18 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.75 rejects unsupported control characters in a shopping note while preserving
+the accepted text for correction and retry.
+
+Edge.74 keeps the note and priority labels aligned with the household interface's
+typography, including when a named font is unavailable.
+
+Edge.73 lets each manual shopping request keep an optional plain-text note and
+a Low, Normal, High or Urgent priority. Notes accept up to 1,000 Unicode
+characters, including multiple lines. Source details retain each request's own
+note, priority and quantity. Correcting an error keeps the entered fields;
+recovering an earlier request preserves a later unrelated draft.
+
 Edge.72 enables saved daily task automations after reviewing the exact revision,
 conditions and timing. The narrow permission belongs to the household rule and
 continues without an open browser or its activating member. Daily history shows
@@ -78,7 +90,7 @@ After verifying access, recover an interrupted request explicitly; reopening the
 interface never repeats it automatically. Granular permission denials still offer
 the corresponding workspace's current recovery action.
 
-This candidate uses SQLite schema 36. Keep a
+This candidate uses SQLite schema 37. Keep a
 compatible image and cold data backup before upgrading a previous preview.
 See [installation and operation](https://github.com/vypdev/domus/blob/develop/addon-edge/DOCS.md) for the source pin and rollback
 instructions.

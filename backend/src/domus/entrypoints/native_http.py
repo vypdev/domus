@@ -28,7 +28,11 @@ from domus.entrypoints.family_http import create_family_router
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http import CSRFResponse, SessionResponse
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
-from domus.entrypoints.http_errors import CALENDAR_RANGE_GUIDANCE, classify
+from domus.entrypoints.http_errors import (
+    CALENDAR_RANGE_GUIDANCE,
+    SHOPPING_ANNOTATION_GUIDANCE,
+    classify,
+)
 from domus.entrypoints.ingress_boundary import require_ingress_source
 from domus.entrypoints.inventory_http import create_inventory_router
 from domus.entrypoints.openapi import DomusAPI
@@ -75,7 +79,8 @@ def _error(status: int, code: str, correlation: str) -> Response:
                 if uncertain
                 else "The request was not accepted. No household change was made."
             ),
-            "action_required": (
+            "action_required": SHOPPING_ANNOTATION_GUIDANCE.get(code)
+            or (
                 CALENDAR_RANGE_GUIDANCE
                 if code == "invalid_calendar_range"
                 else (

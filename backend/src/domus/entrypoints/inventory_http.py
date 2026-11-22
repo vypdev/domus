@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from domus.application.inventory import CatalogAction
 from domus.application.inventory_queries import (
@@ -18,6 +18,10 @@ from domus.application.inventory_queries import (
     PurchasesView,
     StockAttention,
 )
+from domus.application.shopping_annotations import (
+    AnnotatedShoppingListView,
+    AnnotatedShoppingSourcesView,
+)
 from domus.application.shopping_list import ShoppingAttention, ShoppingListView, ShoppingSourcesView
 from domus.domain.inventory import MAX_LOCATION_NAME, MAX_STOCK_REASON, BaseUnit
 from domus.domain.shopping import (
@@ -25,6 +29,13 @@ from domus.domain.shopping import (
     MAX_SESSION_ITEMS,
     MIN_SESSION_ITEMS,
     SessionSelection,
+)
+from domus.domain.shopping_annotations import (
+    MAX_SHOPPING_NOTE,
+    ShoppingAnnotation,
+    ShoppingPriority,
+    shopping_note,
+    shopping_priority,
 )
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
@@ -139,6 +150,35 @@ class AddExtraBody(StrictModel):
     product_id: Identifier | None
     name: Annotated[str, Field(min_length=1, max_length=160)] | None
     quantity: Quantity
+    note: Annotated[
+        str,
+        Field(
+            strict=True,
+            description=(
+                "Literal well-formed Unicode, at most 1,000 codepoints. Tabs, line feeds and "
+                "carriage returns are preserved; other C0 controls, DEL and C1 controls "
+                "and unpaired UTF-16 surrogates are rejected."
+            ),
+            json_schema_extra={
+                "maxLength": MAX_SHOPPING_NOTE,
+                "pattern": (
+                    r"^(?:[^\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f\ud800-\udfff]"
+                    r"|[\ud800-\udbff][\udc00-\udfff])*$"
+                ),
+            },
+        ),
+    ] = ""
+    priority: Literal["low", "normal", "high", "urgent"] = "normal"
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def validate_note(cls, value: object) -> str:
+        return shopping_note(value)
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def validate_priority(cls, value: object) -> str:
+        return shopping_priority(value).value
 
 
 class ClearExtraBody(StrictModel):
@@ -274,6 +314,16 @@ def create_inventory_router(
     def shopping_list(request: Request, query: Annotated[PageQuery, Query()]) -> ShoppingListView:
         return context(request).inventory().shopping_list(limit=query.limit, cursor=query.cursor)
 
+    @router.get("/shopping-list/annotated", response_model=AnnotatedShoppingListView)
+    def annotated_shopping_list(
+        request: Request, query: Annotated[PageQuery, Query()]
+    ) -> AnnotatedShoppingListView:
+        return (
+            context(request)
+            .inventory()
+            .annotated_shopping_list(limit=query.limit, cursor=query.cursor)
+        )
+
     @router.get("/shopping-attention", response_model=ShoppingAttention)
     def shopping_attention(
         request: Request, query: Annotated[_EmptyQuery, Query()]
@@ -288,6 +338,18 @@ def create_inventory_router(
             context(request)
             .inventory()
             .shopping_sources(product_id, limit=query.limit, cursor=query.cursor)
+        )
+
+    @router.get(
+        "/shopping-list/{product_id}/sources/annotated", response_model=AnnotatedShoppingSourcesView
+    )
+    def annotated_shopping_sources(
+        request: Request, product_id: Identifier, query: Annotated[PageQuery, Query()]
+    ) -> AnnotatedShoppingSourcesView:
+        return (
+            context(request)
+            .inventory()
+            .annotated_shopping_sources(product_id, limit=query.limit, cursor=query.cursor)
         )
 
     @router.post(
@@ -346,7 +408,13 @@ def create_inventory_router(
             )
         elif isinstance(body, AddExtraBody):
             receipt = inventory.add_extra(
-                key, body.product_id, body.name, MaterialQuantity(body.quantity)
+                key,
+                body.product_id,
+                body.name,
+                MaterialQuantity(body.quantity),
+                annotation=ShoppingAnnotation(body.note, ShoppingPriority(body.priority))
+                if body.model_fields_set & {"note", "priority"}
+                else None,
             )
         elif isinstance(body, ClearExtraBody):
             receipt = inventory.clear_extra(key, body.extra_id)

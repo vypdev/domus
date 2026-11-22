@@ -66,6 +66,9 @@ const MIN_INTEGER = -9_223_372_036_854_775_808n;
 const MAX_INTEGER = 9_223_372_036_854_775_807n;
 export const JSON_MAX_BYTES = 65_536;
 export const ROSTER_MAX_BYTES = 1_048_576;
+/** Twenty-five 1,000-codepoint shopping notes can exceed the standard JSON response budget. */
+export const SHOPPING_PAGE_MAX_BYTES = 262_144;
+export type JSONResponseLimit = typeof JSON_MAX_BYTES | typeof ROSTER_MAX_BYTES | typeof SHOPPING_PAGE_MAX_BYTES;
 
 function maskNumbers(raw: string): string {
   const parts: string[] = []; let index = 0;
@@ -89,9 +92,9 @@ function maskNumbers(raw: string): string {
   return parts.join('');
 }
 
-export function administrationJSON(raw: unknown, maximumBytes: 65536 | 1048576 = JSON_MAX_BYTES): unknown {
+export function administrationJSON(raw: unknown, maximumBytes: JSONResponseLimit = JSON_MAX_BYTES): unknown {
   try {
-    check(maximumBytes === JSON_MAX_BYTES || maximumBytes === ROSTER_MAX_BYTES);
+    check(maximumBytes === JSON_MAX_BYTES || maximumBytes === ROSTER_MAX_BYTES || maximumBytes === SHOPPING_PAGE_MAX_BYTES);
     check(typeof raw === 'string' && raw.length <= maximumBytes
       && new TextEncoder().encode(raw).byteLength <= maximumBytes);
     // Validate syntax, decoded-key uniqueness and nesting with the existing bounded reader.

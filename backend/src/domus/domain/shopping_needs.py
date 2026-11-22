@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from domus.domain.inventory import BaseUnit
+from domus.domain.shopping_annotations import ShoppingAnnotation
 from domus.domain.storage import JsonDocument
 
 
@@ -18,6 +19,7 @@ class ShoppingExtra:
     created_at: int
     cleared_by: str | None = None
     cleared_at: int | None = None
+    annotation: ShoppingAnnotation = ShoppingAnnotation()
 
 
 class NeedKind(StrEnum):

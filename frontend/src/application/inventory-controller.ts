@@ -14,6 +14,7 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'invalid_inventory_reason', 'inventory_insufficient_stock', 'inventory_movement_missing',
   'inventory_correction_requires_intake', 'inventory_intake_corrected', 'invalid_replenishment_bounds',
   'invalid_revision', 'revision_conflict', 'invalid_shopping_item', 'shopping_purchase_open',
+  'invalid_shopping_note', 'invalid_shopping_priority', 'invalid_shopping_annotation',
   'shopping_purchase_missing', 'shopping_receipt_missing', 'shopping_receipt_exceeds_purchase',
   'shopping_balance_closed', 'shopping_receipt_untracked', 'shopping_receipt_posted',
   'shopping_purchase_not_settled', 'shopping_receipt_returned', 'shopping_receipt_not_posted', 'shopping_receipt_requires_linked_correction',

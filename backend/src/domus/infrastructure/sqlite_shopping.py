@@ -15,6 +15,7 @@ from domus.domain.shopping import (
     PurchaseReceiptVoid,
     PurchaseSession,
 )
+from domus.domain.shopping_annotations import ShoppingAnnotation, ShoppingPriority
 from domus.domain.shopping_needs import ShoppingExtra
 from domus.domain.storage import validate_identifier
 from domus.domain.task_values import validate_task_text, validate_task_time
@@ -64,6 +65,13 @@ SHOPPING_EXTRA_STATEMENTS = (
     "FOREIGN KEY(household_id,cleared_by) REFERENCES members(household_id,member_id)) STRICT",
     "CREATE INDEX shopping_active_extras ON shopping_extras(household_id,product_id,position) "
     "WHERE cleared_at IS NULL",
+)
+
+SHOPPING_ANNOTATION_STATEMENTS = (
+    "ALTER TABLE shopping_extras ADD COLUMN note TEXT NOT NULL DEFAULT '' "
+    "CHECK(typeof(note)='text' AND length(note)<=1000)",
+    "ALTER TABLE shopping_extras ADD COLUMN priority TEXT NOT NULL DEFAULT 'normal' "
+    "CHECK(priority IN ('low','normal','high','urgent'))",
 )
 
 
@@ -148,7 +156,7 @@ def _session(row: sqlite3.Row, *, has_store: bool = True) -> PurchaseSession:
     )
 
 
-def _extra(row: sqlite3.Row) -> ShoppingExtra:
+def _extra(row: sqlite3.Row, *, has_annotations: bool = True) -> ShoppingExtra:
     return ShoppingExtra(
         row["extra_id"],
         row["product_id"],
@@ -159,6 +167,9 @@ def _extra(row: sqlite3.Row) -> ShoppingExtra:
         row["created_at"],
         row["cleared_by"],
         row["cleared_at"],
+        ShoppingAnnotation(row["note"], ShoppingPriority(row["priority"]))
+        if has_annotations
+        else ShoppingAnnotation(),
     )
 
 
@@ -395,8 +406,23 @@ class SQLiteShopping:
 
     def add_extra(self, home: str, extra: ShoppingExtra) -> None:
         self.connection.execute(
-            "INSERT INTO shopping_extras VALUES (NULL,?,?,?,?,?,?,?,?,?,?)",
-            (home, *astuple(extra)),
+            "INSERT INTO shopping_extras(household_id,extra_id,product_id,name,base_unit,quantity,"
+            "member_id,created_at,cleared_by,cleared_at,note,priority) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                home,
+                extra.extra_id,
+                extra.product_id,
+                extra.name,
+                extra.base_unit,
+                extra.quantity,
+                extra.member_id,
+                extra.created_at,
+                extra.cleared_by,
+                extra.cleared_at,
+                extra.annotation.note,
+                extra.annotation.priority.value,
+            ),
         )
 
     def clear_extra(self, home: str, extra_id: str, member: str, now: int) -> None:
@@ -447,10 +473,10 @@ def verify_shopping_sessions(connection: sqlite3.Connection, *, has_store: bool 
             raise StorageFailure("invalid_shopping_records")
 
 
-def verify_shopping_extras(connection: sqlite3.Connection) -> None:
+def verify_shopping_extras(connection: sqlite3.Connection, *, has_annotations: bool = True) -> None:
     stock = SQLiteInventory(connection)
     for row in connection.execute("SELECT * FROM shopping_extras"):
-        extra = _extra(row)
+        extra = _extra(row, has_annotations=has_annotations)
         validate_identifier(extra.extra_id)
         validate_task_text(extra.name, 160, required=True)
         validate_task_time(extra.created_at)

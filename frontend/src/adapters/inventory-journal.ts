@@ -7,7 +7,9 @@ import type {OwnedStorage} from './session-journal';
 export const INVENTORY_JOURNAL_KEY = 'domus.inventory.v1';
 
 function decode(raw: string): InventoryRequest {
-  check(raw.length <= 4096);
+  // Allow the bounded note plus the existing scope even when both require JSON escaping.
+  // The slot, canonical ordering and exact original legacy bytes remain unchanged.
+  check(raw.length <= 12288);
   const value = fields(JSON.parse(raw), ['key', 'scope', 'command'], []);
   const request = {key: identifier(value.key), scope: text(value.scope, 1024), command: inventoryCommand(value.command)};
   check(JSON.stringify(request) === raw);

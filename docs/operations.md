@@ -158,6 +158,38 @@ again in the restored list, a manager can clear it with a new request after
 reviewing that state. Replaying the historical clear returns its archived
 receipt.
 
+Schema 37 extends schema 36 manual extras with a literal note and a closed
+priority value. Existing active and cleared extras start with an empty note
+and normal priority; their identities, quantities, actors, receipts and
+downstream facts are retained. Both column additions migrate in one writer.
+Representative genuine schema 36 and schema 20 fixtures qualify migration,
+reopen and actual snapshot activation; schema headers are never relabelled.
+
+`shopping.add-extra` accepts optional `note` and `priority` fields. Omission
+keeps the original legacy command fingerprint; explicitly changing an
+annotation under the same key conflicts. Notes allow up to 1,000 Unicode
+codepoints, tab, LF and CR, and reject malformed Unicode, other C0 controls,
+DEL and every C1 control (`U+0080`–`U+009F`). Priorities are `low`, `normal`,
+`high` and `urgent`. The extra,
+original receipt, audit and outbox commit together with current request
+authority. Read access and task-detail redaction retain their existing rules.
+
+Legacy list and source response shapes remain unchanged. The annotated
+`shopping-list/annotated` and `shopping-list/{product_id}/sources/annotated`
+routes wrap each existing item/source with its own annotation or `null` for
+automatic/aggregate entries. Their cursors are distinct from legacy cursors.
+The browser gives only these bounded 25-item reads a 256 KiB response budget;
+ordinary reads retain their 64 KiB limit.
+
+The inventory journal keeps its original slot and exact canonical legacy
+packets. Its 12 KiB encoded-text bound accommodates the existing escaped scope
+plus a maximum note. An actual previous Edge.72 client refuses an annotated
+pending packet before sending or deleting it. Re-upgrade recovers the same
+original command and key. An incompatible old image must still refuse a
+schema-37 database before mutation: application rollback pairs the retained
+compatible image with its protected pre-upgrade checkpoint, and never edits
+the schema version to make an old reader accept new storage.
+
 ## Purchase sessions
 
 Schema 25 adds session headers and ordered links to existing purchase rows.

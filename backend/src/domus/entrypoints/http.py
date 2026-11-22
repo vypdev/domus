@@ -37,7 +37,11 @@ from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryContextResponse
 from domus.entrypoints.family_http import create_family_router
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
-from domus.entrypoints.http_errors import CALENDAR_RANGE_GUIDANCE, classify
+from domus.entrypoints.http_errors import (
+    CALENDAR_RANGE_GUIDANCE,
+    SHOPPING_ANNOTATION_GUIDANCE,
+    classify,
+)
 from domus.entrypoints.inventory_http import create_inventory_router
 from domus.entrypoints.openapi import DomusAPI
 from domus.entrypoints.point_allocation_http import create_point_allocation_router
@@ -101,7 +105,9 @@ _SECURITY_HEADERS = {
 
 def _error(status: int, code: str, correlation: str) -> JSONResponse:
     restart_login = code in ("invalid_login_attempt", "login_attempt_expired")
-    if code == "invalid_calendar_range":
+    if code in SHOPPING_ANNOTATION_GUIDANCE:
+        action = SHOPPING_ANNOTATION_GUIDANCE[code]
+    elif code == "invalid_calendar_range":
         action = CALENDAR_RANGE_GUIDANCE
     elif restart_login:
         action = (

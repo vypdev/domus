@@ -4,7 +4,8 @@ import type {EntryRead, ReadFault} from '../application/ports';
 import type {JournalContext} from '../domain/journal';
 import * as wire from './http-values';
 import type {EntryEndpoint} from './http-values';
-import {administrationJSON, ROSTER_MAX_BYTES} from './json-values';
+import {administrationJSON, ROSTER_MAX_BYTES, SHOPPING_PAGE_MAX_BYTES} from './json-values';
+import type {JSONResponseLimit} from './json-values';
 
 export const HTTP_TIMEOUT_MS = 15_000;
 export const HTTP_MAX_BYTES = 65_536;
@@ -26,7 +27,7 @@ export function readFailure(status: number, value: unknown): never {
   wire.failure(value); const code = reason(status);
   throw new EntryReadError(code === 'conflict' || code === 'invalid_input' ? 'invalid_response' : code);
 }
-async function consume(response: Response, expectedURL: string, signal: AbortSignal, maximumBytes: 65536 | 1048576): Promise<unknown> {
+async function consume(response: Response, expectedURL: string, signal: AbortSignal, maximumBytes: JSONResponseLimit): Promise<unknown> {
   wire.check(response.body !== null); const reader = response.body.getReader();
   const abort = () => {void reader.cancel().catch(() => {});};
   signal.addEventListener('abort', abort, {once: true});
@@ -72,10 +73,10 @@ export class BoundedHTTP {
     return {result, cancel};
   }
   async request(route: string, method: 'GET' | 'POST' | 'PUT', expected: JournalContext | null,
-    body: string | null, key: string | null, token: string | null, signal: AbortSignal, budget: 'standard' | 'roster' = 'standard') {
+    body: string | null, key: string | null, token: string | null, signal: AbortSignal, budget: 'standard' | 'roster' | 'shopping' = 'standard') {
     if (signal.aborted) throw new EntryReadError('unavailable');
-    wire.check(budget === 'standard' || budget === 'roster');
-    const maximumBytes = budget === 'roster' ? ROSTER_MAX_BYTES : HTTP_MAX_BYTES;
+    wire.check(budget === 'standard' || budget === 'roster' || budget === 'shopping');
+    const maximumBytes = budget === 'roster' ? ROSTER_MAX_BYTES : budget === 'shopping' ? SHOPPING_PAGE_MAX_BYTES : HTTP_MAX_BYTES;
     const path = this.target.applicationBase + 'api/v1/' + route;
     const headers = new Headers({'Accept': 'application/json'});
     if (expected !== null) headers.set('X-Domus-Context', wire.assertion(expected));
@@ -92,7 +93,7 @@ export class BoundedHTTP {
     }
     return {status: response.status, value};
   }
-  async get(route: string, expected: JournalContext | null, signal: AbortSignal, budget: 'standard' | 'roster' = 'standard') {
+  async get(route: string, expected: JournalContext | null, signal: AbortSignal, budget: 'standard' | 'roster' | 'shopping' = 'standard') {
     const reply = await this.request(route, 'GET', expected, null, null, null, signal, budget);
     if (reply.status !== 200) readFailure(reply.status, reply.value);
     return reply.value;
