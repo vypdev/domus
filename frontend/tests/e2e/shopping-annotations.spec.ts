@@ -36,10 +36,11 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
     await stock.getByRole('button',{name:'Register product',exact:true}).press('Enter');
     const product=stock.getByRole('article',{name:'QA annotation tea',exact:true});await expect(product).toBeVisible();
     if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
-    const shared=stock.locator('domus-shopping-list');
     const text=(en:string,es:string)=>locale==='es'?es:en;
-    const showList=()=>shared.getByRole('button',{name:text('Show shared shopping list','Mostrar lista compartida de compras'),exact:true});
-    await showList().tap();
+    const tabs=page.locator('vyp-ha-tabs');
+    await tabs.getByRole('link',{name:text('Shopping','Compras'),exact:true}).tap();
+    const workspace=page.locator('domus-shopping-workspace');
+    const shared=workspace.locator('domus-shopping-list');
     const item=shared.getByRole('combobox',{name:text('Item to add as an extra','Artículo para añadir como extra'),exact:true});
     const quantity=shared.getByRole('textbox',{name:new RegExp('^'+text('Extra quantity','Cantidad del extra'),'u')});
     const note=shared.getByRole('textbox',{name:text('Note (optional)','Nota (opcional)'),exact:true});
@@ -70,7 +71,7 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
       operation=(await upstream.json()).operation_id;await route.abort('connectionclosed');
     });
     await save.tap();
-    const recover=stock.getByRole('button',{name:text('Recover original request','Recuperar la solicitud original'),exact:true});
+    const recover=workspace.getByRole('button',{name:text('Check original operation','Consultar operación original'),exact:true});
     await expect(recover).toBeEnabled();await expect(note).toHaveValue(literal);
     await expect(priority).toContainText(text('Urgent','Urgente'));expect(posts).toHaveLength(1);
     await page.unroute(commands);
@@ -78,7 +79,7 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
     expect(JSON.parse(pending!).command).toEqual(submitted);
     await page.reload();
     // Bind the verified owner before selecting this window's temporary language.
-    await expect(stock.getByRole('button',{name:/^(Recover original request|Recuperar la solicitud original)$/u,exact:true})).toBeEnabled();
+    await expect(workspace.getByRole('button',{name:/^(Check original operation|Consultar operación original)$/u,exact:true})).toBeEnabled();
     await page.getByLabel(/^(Language|Idioma)$/u,{exact:true}).selectOption(locale);
     await expect(page.locator('html')).toHaveAttribute('lang',locale);
     await expect(recover).toBeEnabled();
@@ -91,17 +92,20 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
       await route.fulfill({response:upstream,body});
     });
     await recover.press('Enter');
-    await expect(stock.getByText(text('Manual extra added.','Extra manual añadido.'),{exact:true})).toBeVisible();
+    await expect(workspace.getByText(text('Manual extra added.','Extra manual añadido.'),{exact:true})).toBeVisible();
     expect(receipts).toEqual([expect.objectContaining({operation_id:operation})]);expect(posts).toHaveLength(1);
     expect(await page.evaluate(()=>sessionStorage.getItem('domus.inventory.v1'))).toBeNull();
-    await page.unroute(original);await showList().tap();
+    await page.unroute(original);
     const aggregate=shared.getByRole('listitem').filter({has:page.getByText('QA annotation tea',{exact:true})});
     await expect(aggregate.locator('.manual-annotation')).toHaveCount(0);
     await aggregate.getByRole('button',{name:text('Show shopping sources','Mostrar orígenes de compra'),exact:true}).tap();
     const sources=shared.getByRole('region',{name:text('Show shopping sources','Mostrar orígenes de compra')+' · QA annotation tea',exact:true});
     await expect(sources.locator('.manual-note')).toHaveText(literal);
     await expect(sources.getByText(text('Priority: Urgent','Prioridad: Urgente'),{exact:true})).toBeVisible();
-    await expect(sources.locator('b')).toHaveCount(0);await expect(product.locator('dd')).toHaveText(['0','0','0']);
+    await expect(sources.locator('b')).toHaveCount(0);
+    await tabs.getByRole('link',{name:text('Inventory','Inventario'),exact:true}).tap();
+    await expect(product).toBeVisible();await expect(product.locator('dd')).toHaveText(['0','0','0']);
+    await tabs.getByRole('link',{name:text('Shopping','Compras'),exact:true}).tap();
     // An independently submitted request retains its own annotation and quantity.
     await item.selectOption({label:'QA annotation tea'});await quantity.fill('1');await note.fill('Separate\nrequest');
     await priority.tap();await shared.getByRole('option',{name:text('Low','Baja'),exact:true}).tap();

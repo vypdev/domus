@@ -65,7 +65,7 @@ for (const example of ['default','reader','read-only','uncertain','rejected','lo
         if(example==='long-note')expect(Array.from(notes[0]).length).toBe(1000);
         else expect(notes[0]).toContain('<b>Tea</b>');
       }
-      if(example==='rejected')await expect(page.getByText(locale==='es'
+      if(example==='rejected')await expect(page.locator('domus-shopping-workspace').getByText(locale==='es'
         ?'Tus permisos actuales no permiten añadir solicitudes de compra. Pide a una persona administradora del hogar que revise tu acceso.'
         :'Your current permissions do not allow adding shopping requests. Ask a household administrator to review your access.',{exact:true})).toBeVisible();
     }

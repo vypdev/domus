@@ -62,7 +62,7 @@ const meta:Meta<Arguments>={title:'Domus/Manual shopping annotations',args:{exam
     return html`<p style="margin:0;padding:8px 20px;background:#fff3cd;color:#523e09;font:14px system-ui">
       Fictional shopping state. No server is connected; actions emit intents only.</p>
       <domus-app .view=${view} .tasks=${tasks} .inventory=${inventory(args)} .language=${args.language}
-        .deployment=${args.deployment} .workspaceDestination=${'inventory'}></domus-app>`;
+        .deployment=${args.deployment} .workspaceDestination=${'shopping'}></domus-app>`;
   }};
 export default meta;
 type Story=StoryObj<Arguments>;

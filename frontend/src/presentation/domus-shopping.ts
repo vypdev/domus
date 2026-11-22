@@ -297,11 +297,12 @@ export class DomusShopping extends LitElement {
   }
 
   protected render() {
-    const {report, purchases, purchaseReceipts, busy, pending, scope} = this.view;
+    const {report, purchases, purchaseReceipts, pending, scope} = this.view;
+    const busy = this.view.busy || this.view.retainedReport != null;
     const blocked = busy || pending || scope.readOnly;
     const mayShop = report!.mayShop && !scope.readOnly;
     const mayPost = report!.mayManage && !scope.readOnly;
-    return html`<vyp-ha-card .state=${cardState({title:this.text('shopping'), headingLevel:3})}>
+    return html`<vyp-ha-card .state=${cardState({title:this.text('shoppingWorkflow'), headingLevel:3})}>
       <div class="shopping">
       <domus-shopping-list .view=${this.view} .language=${this.language}></domus-shopping-list>
       ${this.sessionHistory(busy)}

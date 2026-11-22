@@ -33,6 +33,7 @@ import './domus-family';
 import './domus-family-overview';
 import './domus-rewards';
 import './domus-inventory';
+import './domus-shopping-workspace';
 import type {InventoryState} from '../application/inventory-controller';
 import type {RewardsView} from '../application/rewards-controller';
 import './domus-allocation-settings';
@@ -53,7 +54,7 @@ import {instant, language, message} from './messages';
 import type {Language, MessageKey} from './messages';
 import {styles} from './styles';
 
-export type WorkspaceDestination = 'overview' | 'tasks' | 'calendar' | 'family' | 'inventory' | 'household';
+export type WorkspaceDestination = 'overview' | 'tasks' | 'calendar' | 'family' | 'shopping' | 'inventory' | 'household';
 
 export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'logout' | 'sign_in' | 'reopen'}>
   | Readonly<{type: 'setup'; name: string; timeZone: string}>
@@ -147,7 +148,15 @@ export class DomusApp extends LitElement {
       this.view.notice !== 'context_changed' && (this.view.busy || this.administration !== null || this.tasks !== null);
   }
   private focusWorkspace(destination: WorkspaceDestination): void {
-    this.renderRoot.querySelector<HTMLElement>('#' + destination)!.focus();
+    const region = this.renderRoot.querySelector<HTMLElement>('#' + destination)!;
+    region.focus();
+    if (destination === 'shopping' || destination === 'inventory') region.scrollIntoView({block:'start'});
+  }
+  requestWorkspaceFocus(): void {
+    // Rapid history changes can deliver two hash events for the same final URL.
+    // Even then, return focus from the navigation to the current destination.
+    this.focusDestination = null;
+    this.requestUpdate();
   }
   private repeatWorkspaceSelection(event: NavigationSelectionEvent): void {
     const destination = this.workspaceDestination;
@@ -171,6 +180,8 @@ export class DomusApp extends LitElement {
           iconPath: 'M3 5h18v16H3zM3 10h18M7 2v5M17 2v5'},
         {id: 'family', href: '#family', label: this.text('navigationFamily'),
           iconPath: 'M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-2a6 6 0 0 1 12 0v2zM16 5a4 4 0 0 1 0 8M16 15a6 6 0 0 1 6 6'},
+        {id: 'shopping', href: '#shopping', label: this.text('navigationShopping'),
+          iconPath: 'M3 3h2l2 12h12l2-8H6M9 20h.01M18 20h.01'},
         {id: 'inventory', href: '#inventory', label: this.text('navigationInventory'),
           iconPath: 'M3 7h18v14H3zM3 7l2-4h14l2 4M9 11h6'},
         {id: 'household', href: '#household', label: this.text('workspaceHousehold'),
@@ -292,6 +303,12 @@ export class DomusApp extends LitElement {
           .language=${this.language}></domus-allocation-settings>
         <domus-rewards .view=${this.rewards} .language=${this.language}
           .zone=${view?.household?.timeZone ?? 'UTC'}></domus-rewards>
+      </section>
+      <section id="shopping" tabindex="-1" aria-label=${this.text('navigationShopping')}
+        ?hidden=${!workspace || this.workspaceDestination !== 'shopping'}>
+        ${workspace && this.workspaceDestination === 'shopping' && decision?.householdReadable === false
+          ? html`<p role="status">${this.text('notice_forbidden')}</p>` : nothing}
+        <domus-shopping-workspace .view=${this.inventory} .language=${this.language}></domus-shopping-workspace>
       </section>
       <section id="inventory" tabindex="-1" aria-label=${this.text('navigationInventory')}
         ?hidden=${!workspace || this.workspaceDestination !== 'inventory'}>

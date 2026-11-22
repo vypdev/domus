@@ -1,15 +1,38 @@
 # Installation and operation
 
-Edge 0.0.0-edge.76 packages the immutable runtime declared in
-[artifact.json](artifact.json). In Inventory, open the shared shopping list and
-add a manual extra for a product or a free-text item. Its optional note accepts
-up to 1,000 Unicode characters, multiple lines and tabs. Unsupported control
-characters are rejected while retaining the accepted text for correction. Choose
-Low, Normal, High or Urgent priority, with Normal as the default. Source details show each manual
-request's own note, priority and requested quantity. Validation keeps entered
-values for correction. After an interrupted response, **Recover original
-request** checks that same operation; checking an earlier request preserves a
-later unrelated draft.
+Edge 0.0.0-edge.85 packages the immutable runtime declared in
+[artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
+list, manual extras, store sessions, purchases and physical receipts. Open
+**Inventory / Inventario** for products, Pantry, locations, materials and stock.
+Overview item links and previously shared shopping fragments focus the same item
+in Shopping. Unknown fragments fall back to Overview without a command.
+
+Switching between Shopping and Inventory keeps same-participant drafts, literal
+notes, priorities, selected work and interrupted-operation identity. Use
+**Refresh Shopping / Actualizar Compras** after a read fails. The last loaded
+information and draft remain visible; Shopping changes wait for a fresh read.
+Denied access hides private facts. **Check original operation / Consultar operación
+original** checks the same original request and preserves unrelated work. Logout
+or a verified participant/household change retires protected state. Navigation
+itself never creates, posts, cancels or repeats a command.
+
+A pending operation belongs to the verified household and member even after reload. The same owner keeps the original request bytes and key. Browser packets from an older version that cannot establish that owner, or that belong to another owner, follow the existing incompatible-scope retirement without a lookup or resend. Previously committed server receipts remain unchanged; review current records before submitting another change.
+
+Returning from Shopping reveals the Inventory heading, even after working further down the page. Reopening either tab also brings its heading into view.
+
+Leaving Shopping while its product information is loading or refreshing keeps the section you open responsible for its current status. Return to Shopping to read its current list and selected work. Drafts and original operations remain with the verified participant.
+
+Stock refresh does not repeat a hidden Shopping read. Returning to Shopping revalidates its retained work with the current route. A rejected operation names the relevant Shopping, Inventory or combined access; purchase drafts remain available for explicit correction and retry.
+
+If general household details cannot load, **Refresh status** retries them. Inventory and Shopping can continue only after current household/member access is independently verified. Existing server permissions remain authoritative for each read and change.
+
+Manual extras retain optional notes of up to 1,000 Unicode characters, including
+line breaks and tabs, and Low, Normal, High or Urgent priority. Unsupported
+controls remain rejected. Current permissions still independently authorize
+shopping requests, shopping management and stock management. This presentation
+change retains schema 37, ledger and original receipts; it adds no migration.
+The [Shopping navigation qualification](../docs/evidence/shopping-workspace-navigation-qualification.md)
+separates executed source checks from actual images and installed acceptance.
 
 Schema 37 adds the two annotation columns while preserving existing manual
 extras, daily controls and original receipts. Edge.73 is a breaking-version

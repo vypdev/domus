@@ -295,6 +295,19 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
 function intent(app: DomusApp, detail: unknown) {app.dispatchEvent(new CustomEvent('domus-intent', {detail, bubbles: true, composed: true}));}
 function administrationIntent(app:DomusApp,detail:unknown){app.dispatchEvent(new CustomEvent('domus-administration-intent',{detail,bubbles:true,composed:true}));}
 
+function holdNavigationTimers(page: EntryPage) {
+  const schedule = page.setTimeout.bind(page), clear = page.clearTimeout.bind(page);
+  const ticks: {id:number; run:() => void}[] = [], cancelled: number[] = [];
+  let sequence = 0;
+  page.setTimeout = (run, delay) => {
+    if (delay !== 0) return schedule(run, delay);
+    const id = --sequence; ticks.push({id, run}); return id;
+  };
+  // Keep canceled callbacks available to exercise a late delivery by the host.
+  page.clearTimeout = id => {if (id < 0) cancelled.push(id); else clear(id);};
+  return {ticks, cancelled};
+}
+
 test.each(['native','standalone'] as const)('HADB-03: %s document mounts the actual administration widget with current independently verified facts',async mode=>{
   const f=fixture(mode);f.phase('active');const {app}=await f.open();
   expect(app.administration?.preferences?.memberId).toBe('identity-1');
@@ -603,6 +616,295 @@ test('an unexpected task delegation failure closes the runtime and shows the bou
     await vi.waitFor(() => expect(document.querySelector('#domus-entry-error')).not.toBeNull());
     expect(document.querySelector('#domus-entry-error')!.textContent).not.toContain('private delegation fault');
   } finally {spy.mockRestore();}
+});
+
+test.each(['native', 'standalone'] as const)('Shopping is a direct %s destination with one retained Inventory owner', async mode => {
+  const f = fixture(mode);
+  const base = f.page.location.href;
+  const navigate = (fragment: string) => {
+    f.page.location.href = base + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  f.phase('active');
+  navigate('#shopping');
+  const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.shoppingList?.cursor).toBe('more-list'));
+  await app.updateComplete;
+  expect(app.workspaceDestination).toBe('shopping');
+  expect(app.shadowRoot!.querySelector('vyp-ha-tabs')!.state.selected).toBe('shopping');
+  expect(app.shadowRoot!.activeElement?.id).toBe('shopping');
+  const owner = app.inventory!.scope;
+  const inventory = app.shadowRoot!.querySelector('domus-inventory');
+  const shopping = app.shadowRoot!.querySelector('domus-shopping-workspace');
+  expect(shopping).not.toBeNull();
+  const catalogReads = () => f.fetch.mock.calls.filter(([path]) => path.includes('/api/v1/inventory?')).length;
+  const initialReads = catalogReads();
+  navigate('#inventory');
+  await app.updateComplete;
+  expect(app.inventory!.scope).toBe(owner);
+  expect(app.inventory!.shoppingList?.cursor).toBe('more-list');
+  navigate('#shopping');
+  await app.updateComplete;
+  expect(app.inventory!.scope).toBe(owner);
+  expect(app.shadowRoot!.querySelector('domus-inventory')).toBe(inventory);
+  expect(app.shadowRoot!.querySelector('domus-shopping-workspace')).toBe(shopping);
+  expect(catalogReads()).toBe(initialReads);
+  f.shoppingItem(true);
+  navigate('#shopping/product:product');
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product', found:true}));
+  const shoppingList = shopping!.shadowRoot!.querySelector('domus-shopping')!.shadowRoot!.querySelector('domus-shopping-list')!;
+  await vi.waitFor(() => expect(shoppingList.shadowRoot!.activeElement?.getAttribute('data-shopping-item')).toBe('product:product'));
+  navigate('#inventory'); await app.updateComplete;
+  navigate('#shopping/product:product');
+  await vi.waitFor(() => expect(shoppingList.shadowRoot!.activeElement?.getAttribute('data-shopping-item')).toBe('product:product'));
+  // Browser history can return before the first hashchange is delivered. Both
+  // queued events then observe the final item URL while focus is still in tabs.
+  const inventoryTab = app.shadowRoot!.querySelector('vyp-ha-tabs')!.shadowRoot!.querySelector<HTMLAnchorElement>('a[href="#inventory"]')!;
+  inventoryTab.focus();
+  f.events.dispatchEvent(new Event('hashchange')); f.events.dispatchEvent(new Event('hashchange'));
+  await vi.waitFor(() => expect(shoppingList.shadowRoot!.activeElement?.getAttribute('data-shopping-item')).toBe('product:product'));
+  expect(app.inventory!.scope).toBe(owner);
+  expect(catalogReads()).toBe(initialReads);
+  expect(f.fetch.mock.calls.filter(([path, init]) => path.endsWith('/inventory/commands') && init.method === 'POST')).toHaveLength(0);
+  navigate('#shopping/product:../foreign');
+  await app.updateComplete;
+  expect(app.workspaceDestination).toBeNull();
+  expect(app.inventory).toBeNull();
+  expect(f.page.location.href).toBe(base + '#shopping/product:../foreign');
+});
+
+test.each([false, true])('a replacement member cannot recover the previous member\'s Shopping operation (cleanup failure: %s)', async cleanupFailure => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#shopping';
+  const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.report?.mayManage).toBe(true));
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (path.endsWith('/inventory/commands') && init.method === 'POST') throw new Error('lost reply');
+    return original(path, init);
+  });
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail:{type:'submit', command:{
+    action:'shopping.purchase', product_id:null, name:'Private first member purchase', quantity:'1',
+  }}, bubbles:true, composed:true}));
+  await vi.waitFor(() => expect(app.inventory).toMatchObject({pending:true, busy:false, notice:'uncertain'}));
+  expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(true);
+  if (cleanupFailure) vi.spyOn(f.page.sessionStorage, 'removeItem').mockImplementation(() => {throw new Error('blocked storage');});
+  f.member('replacement');
+  administrationIntent(app, {type:'refresh'});
+  if (cleanupFailure) {
+    await vi.waitFor(() => expect(document.querySelector('#domus-entry-error')).not.toBeNull());
+    expect(app.isConnected).toBe(false);
+    expect(app.inventory).toBeNull();
+    expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(true);
+  } else {
+    await vi.waitFor(() => expect(app.administration?.access?.member?.memberId).toBe('replacement'));
+    await vi.waitFor(() => expect(app.inventory?.report).toMatchObject({mayManage:true}));
+    expect(app.inventory?.pending).toBe(false);
+    expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(false);
+  }
+  const start = f.fetch.mock.calls.length;
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail:{type:'recover'}, bubbles:true, composed:true}));
+  await Promise.resolve();
+  expect(f.fetch.mock.calls.slice(start).some(([path]) => path.includes('/inventory/requests/'))).toBe(false);
+});
+
+test.each(['same owner', 'replacement', 'legacy ownerless scope', 'failed retirement'] as const)(
+  'a reloaded Shopping request validates its durable household/member owner: %s', async situation => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#shopping'; f.values.set('fixture.unrelated','keep');
+  const first = await f.open();
+  await vi.waitFor(() => expect(first.app.inventory?.report?.mayManage).toBe(true));
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (path.endsWith('/inventory/commands') && init.method === 'POST') throw new Error('lost reply');
+    if (path.includes('/inventory/requests/')) {
+      const reply = new Response(JSON.stringify({state:'blocked',code:'operation_missing',message:'No original effect.',
+        action_required:'Check current access.',correlation_id:'cor_owner'}),
+        {status:404,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:corpus.standalone.endpoint.origin + path}); return reply;
+    }
+    return original(path,init);
+  });
+  first.app.dispatchEvent(new CustomEvent('domus-inventory-intent',{detail:{type:'submit',command:{
+    action:'shopping.purchase',product_id:null,name:'Private original owner purchase',quantity:'1',
+  }},bubbles:true,composed:true}));
+  await vi.waitFor(() => expect(first.app.inventory).toMatchObject({pending:true,busy:false,notice:'uncertain'}));
+  let packet = f.values.get(INVENTORY_JOURNAL_KEY)!;
+  const request = JSON.parse(packet);
+  first.mounted.dispose(); first.app.remove();
+  if (situation === 'replacement' || situation === 'failed retirement') f.member('replacement');
+  if (situation === 'legacy ownerless scope') {
+    request.scope = JSON.stringify(JSON.parse(request.scope).slice(0,3));
+    packet = JSON.stringify(request); f.values.set(INVENTORY_JOURNAL_KEY,packet);
+  }
+  if (situation === 'failed retirement') vi.spyOn(f.page.sessionStorage,'removeItem').mockImplementation(() => {throw new Error('blocked retirement');});
+  const start = f.fetch.mock.calls.length, second = await f.open();
+  await vi.waitFor(() => expect(second.app.inventory?.report?.mayManage).toBe(true));
+  if (situation === 'same owner') {
+    expect(second.app.inventory?.pending).toBe(true);
+    expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(packet);
+  } else if (situation === 'failed retirement') {
+    expect(second.app.inventory).toMatchObject({pending:true,notice:'unavailable'});
+    expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(packet);
+  } else {
+    expect(second.app.inventory?.pending).toBe(false);
+    expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(false);
+  }
+  second.app.dispatchEvent(new CustomEvent('domus-inventory-intent',{detail:{type:'recover'},bubbles:true,composed:true}));
+  if (situation === 'same owner') {
+    await vi.waitFor(() => expect(f.fetch.mock.calls.slice(start).filter(([,init])=>init.method==='POST')).toHaveLength(1));
+    const recovery = f.fetch.mock.calls.slice(start).find(([path])=>path.includes('/inventory/requests/'))!;
+    expect(recovery[0]).toContain('/shopping.purchase/'+request.key);
+    const retry = f.fetch.mock.calls.slice(start).find(([,init])=>init.method==='POST')!;
+    expect(new Headers(retry[1].headers).get('Idempotency-Key')).toBe(request.key);
+    expect(JSON.parse(String(retry[1].body))).toEqual(request.command);
+    expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(packet);
+  } else {
+    await Promise.resolve();
+    expect(f.fetch.mock.calls.slice(start).some(([path,init])=>path.includes('/inventory/requests/')||init.method==='POST')).toBe(false);
+  }
+  expect(f.values.get('fixture.unrelated')).toBe('keep');
+});
+
+test('a canceled Shopping navigation tick cannot consume its replacement or reread an already loaded list', async () => {
+  const f = fixture(); f.phase('active');
+  const clock = holdNavigationTimers(f.page), base = f.page.location.href;
+  const navigate = (hash: string) => {f.page.location.href = base + hash; f.events.dispatchEvent(new Event('hashchange'));};
+  navigate('#inventory'); const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.report).toMatchObject({mayManage:true}));
+  const reads = () => f.fetch.mock.calls.filter(([path]) => path.includes('/inventory/shopping-list/annotated?')).length;
+  navigate('#shopping'); const first = clock.ticks.shift()!;
+  navigate('#inventory'); navigate('#shopping');
+  const replacement = clock.ticks.shift()!;
+  expect(clock.cancelled).toContain(first.id);
+  first.run();
+  expect(reads()).toBe(0);
+  replacement.run();
+  await vi.waitFor(() => expect(app.inventory?.shoppingList?.cursor).toBe('more-list'));
+  expect(reads()).toBe(1);
+  navigate('#inventory'); navigate('#shopping'); clock.ticks.shift()!.run();
+  expect(reads()).toBe(1);
+  replacement.run(); expect(reads()).toBe(1);
+});
+
+test.each(['busy', 'unavailable'] as const)('a queued Shopping item waits for an %s Inventory owner', async situation => {
+  const f = fixture(); f.phase('active'); f.shoppingItem(true);
+  const clock = holdNavigationTimers(f.page), base = f.page.location.href;
+  f.page.location.href = base + '#inventory'; const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.report).toMatchObject({mayManage:true}));
+  const original = f.fetch.getMockImplementation()!;
+  let release!: () => void; const gate = new Promise<void>(done => {release = done;});
+  f.fetch.mockImplementation(async (path, init) => {
+    if (situation === 'busy' && path.endsWith('/inventory/commands') && init.method === 'POST') await gate;
+    if (situation === 'unavailable' && path.includes('/api/v1/inventory?')) {await gate; throw new Error('catalog unavailable');}
+    return original(path, init);
+  });
+  f.page.location.href = base + '#shopping/product:product'; f.events.dispatchEvent(new Event('hashchange'));
+  const first = clock.ticks.shift()!;
+  const detail = situation === 'busy' ? {type:'submit', command:{action:'inventory.register-product',name:'Salt',base_unit:'gram'}} : {type:'refresh'};
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail, bubbles:true, composed:true}));
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(true));
+  if (situation === 'busy') first.run();
+  release();
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  if (situation === 'unavailable') {
+    await vi.waitFor(() => expect(app.inventory?.report).toBeNull());
+    first.run();
+    f.fetch.mockImplementation(original);
+    app.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail:{type:'refresh'}, bubbles:true, composed:true}));
+    await vi.waitFor(() => expect(app.inventory?.report).toMatchObject({mayManage:true}));
+    await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  }
+  expect(f.fetch.mock.calls.some(([path]) => path.includes('/inventory/shopping-list/annotated?'))).toBe(false);
+  expect(clock.ticks).toHaveLength(1); clock.ticks.shift()!.run();
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+  expect(f.fetch.mock.calls.filter(([path, init]) => path.endsWith('/inventory/commands') && init.method === 'POST')).toHaveLength(situation === 'busy' ? 1 : 0);
+});
+
+test.each(['busy catalog','queued tick'] as const)('leaving Shopping retires its %s before Inventory can consume it', async situation => {
+  const f = fixture(); f.phase('active'); f.shoppingItem(true);
+  const clock = holdNavigationTimers(f.page), base = f.page.location.href;
+  const navigate = (hash:string) => {f.page.location.href=base+hash;f.events.dispatchEvent(new Event('hashchange'));};
+  const gate = Promise.withResolvers<void>(), original = f.fetch.getMockImplementation()!;
+  let hiddenReads = 0, deny = true;
+  f.fetch.mockImplementation(async (path,init) => {
+    if (situation === 'busy catalog' && path.includes('/api/v1/inventory?')) await gate.promise;
+    if (deny && path.includes('/inventory/shopping-list/')) {
+      hiddenReads++;
+      const reply=new Response(JSON.stringify({state:'blocked',code:'unavailable',message:'Unavailable.',
+        action_required:'Refresh Shopping.',correlation_id:'cor_queued_shopping'}),
+      {status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:corpus.standalone.endpoint.origin+path});return reply;
+    }
+    return original(path,init);
+  });
+  navigate('#shopping/product:product');const {app}=await f.open();
+  if (situation === 'busy catalog') await vi.waitFor(()=>expect(app.inventory?.busy).toBe(true));
+  else await vi.waitFor(()=>expect(app.inventory?.report?.mayManage).toBe(true));
+  navigate('#inventory');gate.resolve();
+  await vi.waitFor(()=>expect(app.inventory?.busy).toBe(false));
+  for (const tick of clock.ticks.splice(0)) tick.run();
+  await vi.waitFor(()=>expect(app.inventory?.busy).toBe(false));
+  expect(hiddenReads).toBe(0);expect(app.inventory?.report?.mayManage).toBe(true);
+  expect(app.inventory?.notice).toBeNull();expect(f.postRequests()).toBe(0);
+  deny=false;navigate('#shopping/product:product');clock.ticks.shift()!.run();
+  await vi.waitFor(()=>expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+});
+
+test('Shopping obtains no catalog before the current household can be verified', async () => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#shopping';
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if ((path.endsWith('/api/v1/household') || path.endsWith('/api/v1/administration/capabilities')) && init.method === 'GET') {
+      const response = new Response(JSON.stringify({state:'blocked',code:'unavailable',message:'Unavailable.',action_required:'Retry.',correlation_id:'cor_home'}),
+        {status:503, headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(response, 'url', {value:new URL(path, f.page.location.href).href}); return response;
+    }
+    return original(path, init);
+  });
+  const {app} = await f.open();
+  expect(app.view?.household).toBeNull(); expect(app.inventory).toBeNull();
+  expect(app.administration?.capabilities).toBeNull();
+  expect(f.fetch.mock.calls.some(([path]) => path.includes('/api/v1/inventory?'))).toBe(false);
+});
+
+test.each(['inventory','shopping'] as const)('the verified %s workspace survives an unavailable household fact read', async destination => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#'+destination;
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (path.endsWith('/api/v1/household') && init.method === 'GET') {
+      const reply = new Response(JSON.stringify({state:'blocked',code:'unavailable',message:'Unavailable.',
+        action_required:'Retry current household facts.',correlation_id:'cor_partial_home'}),
+        {status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:new URL(path,f.page.location.href).href}); return reply;
+    }
+    return original(path,init);
+  });
+  const {app} = await f.open();
+  expect(app.view).toMatchObject({phase:'ready',household:null,decision:{householdReadable:true}});
+  expect(app.administration?.capabilities?.householdId).toBe('home');
+  await vi.waitFor(() => expect(app.inventory?.report).toMatchObject({mayManage:true}));
+  if (destination === 'shopping') await vi.waitFor(() => expect(app.inventory?.shoppingList?.cursor).toBe('more-list'));
+  expect(f.fetch.mock.calls.some(([path])=>path.includes('/api/v1/inventory?'))).toBe(true);
+  expect(f.fetch.mock.calls.some(([path,init])=>path.includes('/inventory/requests/')||init.method==='POST')).toBe(false);
+});
+
+test('a member replacement retires unsent Shopping text without changing unrelated browser state', async () => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#shopping'; f.values.set('fixture.unrelated', 'keep');
+  const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.shoppingList?.cursor).toBe('more-list'));
+  const workspace = app.shadowRoot!.querySelector('domus-shopping-workspace')!;
+  const oldShopping = workspace.shadowRoot!.querySelector('domus-shopping')!; await oldShopping.updateComplete;
+  const oldList = oldShopping.shadowRoot!.querySelector('domus-shopping-list')!; await oldList.updateComplete;
+  const field = oldList.shadowRoot!.querySelector('vyp-ha-textarea')!; await field.updateComplete;
+  const textarea = field.shadowRoot!.querySelector('textarea')!;
+  textarea.value = 'Private former member note'; textarea.dispatchEvent(new InputEvent('input', {bubbles:true, composed:true}));
+  await oldList.updateComplete;
+  f.member('replacement'); administrationIntent(app, {type:'refresh'});
+  await vi.waitFor(() => expect(app.administration?.access?.member?.memberId).toBe('replacement'));
+  await vi.waitFor(() => expect(app.inventory?.shoppingList?.cursor).toBe('more-list'));
+  const currentShopping = workspace.shadowRoot!.querySelector('domus-shopping')!; await currentShopping.updateComplete;
+  const currentList = currentShopping.shadowRoot!.querySelector('domus-shopping-list')!; await currentList.updateComplete;
+  expect(currentList.shadowRoot!.querySelector('vyp-ha-textarea')!.value).toBe('');
+  expect(f.values.get('fixture.unrelated')).toBe('keep'); expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(false);
 });
 
 test('workspace fragments preserve the mounted administration and stop after disposal', async () => {
@@ -1337,28 +1639,73 @@ test('Overview shopping retries and opens the current shared-list item beyond an
   await vi.waitFor(() => expect(app.shoppingAttention).toMatchObject({state:'ready',data:{total:1}}));
   await summary.updateComplete;
   const href = summary.shadowRoot!.querySelector('a')!.getAttribute('href')!;
+  expect(href).toBe('#shopping/product:product');
   navigate(href);
-  expect(app.workspaceDestination).toBe('inventory');
+  expect(app.workspaceDestination).toBe('shopping');
   expect(app.shoppingAttention).toBeNull();
   await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
-  const list = app.shadowRoot!.querySelector('domus-inventory')!.shadowRoot!
+  const list = app.shadowRoot!.querySelector('domus-shopping-workspace')!.shadowRoot!
     .querySelector('domus-shopping')!.shadowRoot!.querySelector('domus-shopping-list')!;
   await list.updateComplete;
   expect(list.shadowRoot!.activeElement?.textContent).toBe('Salt');
 
+  navigate('#shopping');
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toBeUndefined());
+  expect(app.inventory?.shoppingList?.items).toEqual([]);
+  navigate(href);
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+
   navigate('#inventory');
   await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
-  expect(app.inventory?.shoppingFocus).toBeUndefined();
+  expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true});
   f.shoppingItem(false);
-  navigate(href);
+  navigate('#inventory-shopping/product:product');
   await vi.waitFor(() => expect(app.inventory?.shoppingFocus?.found).toBe(false));
   await list.updateComplete;
-  const currentList = app.shadowRoot!.querySelector('domus-inventory')!.shadowRoot!
+  const currentList = app.shadowRoot!.querySelector('domus-shopping-workspace')!.shadowRoot!
     .querySelector('domus-shopping')!.shadowRoot!.querySelector('domus-shopping-list')!;
   await currentList.updateComplete;
   expect(currentList.shadowRoot!.activeElement?.id).toBe('shopping-list-title');
   expect(currentList.shadowRoot!.textContent).toContain('This item is no longer available to buy.');
   expect(f.postRequests()).toBe(0);
+});
+
+test.each(['refresh', 'save'] as const)('Inventory %s does not replay a hidden Shopping target and re-entry refreshes retained work', async action => {
+  const f = fixture(); f.phase('active'); f.shoppingItem(true);
+  const base = f.page.location.href;
+  const navigate = (hash:string) => {f.page.location.href = base + hash; f.events.dispatchEvent(new Event('hashchange'));};
+  navigate('#shopping/product:product'); const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+  const retained = app.inventory!.shoppingList;
+  navigate('#inventory');
+  const original = f.fetch.getMockImplementation()!;
+  let deny = true, hiddenReads = 0;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (deny && path.includes('/inventory/shopping-list/')) {
+      hiddenReads++;
+      const reply = new Response(JSON.stringify({state:'blocked',code:'permission_denied',message:'Denied.',
+        action_required:'Review Shopping access.',correlation_id:'cor_hidden_shopping'}),
+      {status:403,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:corpus.standalone.endpoint.origin + path}); return reply;
+    }
+    return original(path,init);
+  });
+  const reads = () => f.fetch.mock.calls.filter(([path]) => /\/inventory\?/.test(path)).length;
+  const before = reads();
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent',{detail:action === 'refresh' ? {type:'refresh'} : {
+    type:'submit',command:{action:'inventory.register-product',name:'New Stock product',base_unit:'piece'},
+  },bubbles:true,composed:true}));
+  await vi.waitFor(() => expect(reads()).toBeGreaterThan(before));
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  expect(hiddenReads).toBe(0);
+  expect(app.inventory?.report?.mayManage).toBe(true);
+  expect(app.inventory?.shoppingList).toBe(retained);
+  expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true});
+  deny = false; f.shoppingItem(false);
+  navigate('#shopping/product:product');
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:false}));
+  expect(f.fetch.mock.calls.filter(([,init]) => init.method === 'POST' && String(init.body).includes('inventory.register-product')))
+    .toHaveLength(action === 'save' ? 1 : 0);
 });
 
 test('the weekly Family summary retries its own read and retires on member and workspace changes', async () => {

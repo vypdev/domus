@@ -64,7 +64,7 @@ export class DomusShoppingAttention extends LitElement {
       ${view.state === 'ready' ? html`
         ${view.data.total === 0 ? html`<p>${copy.empty}</p>`
           : html`<ul>${view.data.items.map(item => html`<li>
-            <a href=${'#inventory-shopping/' + shoppingItemKey(item)}><span>${item.name}</span>
+            <a href=${'#shopping/' + shoppingItemKey(item)}><span>${item.name}</span>
               <span>${this.language === 'es' ? item.total.replace('.', ',') : item.total}
                 ${inventoryMessage(inventoryUnitMessage(item.unit, item.total), this.language)}</span></a>
           </li>`)}</ul>`}
