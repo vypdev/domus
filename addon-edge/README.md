@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.84 keeps Inventory available when you leave Shopping while it is refreshing. Returning opens the current Shopping work. Drafts and original operations stay intact.
+
 Edge.83 keeps Inventory available when you switch to it while Shopping is waiting for product information. Return to Shopping to read its current list. Drafts and original requests are preserved.
 
 Edge.82 refreshes retained Shopping work only after returning from Inventory. A Stock refresh does not repeat a hidden Shopping read. Denied operations explain the relevant Shopping, Inventory or combined access, while purchase drafts remain available for correction and retry. Saved notes, stock, selections and original receipts are preserved.

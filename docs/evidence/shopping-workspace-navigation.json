@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Current active-entry retirement source qualified: 2212 frontend tests/all four metrics100 and12 actual browser variants once without retries. Existing pin83 is historical; immutable84, native84 and final samehead CI/review are required.",
+  "status": "Edge84 packaging snapshot: immutable source/wheel/actualARM64sixchecksPASS17.61s; source2212/allfourcoverage100 and12 actualvariants29.1sPASS. Native84 and finalsamehead checks remain required in linkedPR.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -86,30 +86,39 @@
   },
   "requiredImageBrowserInventory": 86,
   "actualImages": {
-    "amd64": "PENDING",
-    "aarch64": "PENDING",
+    "amd64": "PENDING final current head",
+    "aarch64": "PENDING final current head",
     "localPinnedAarch64": {
-      "at": "2026-11-22T13:00:17.050309+00:00",
-      "image": "domus-162-edge83:pinned",
-      "imageId": "sha256:4684d044381aa7b9ccc2763b896d49892b21cd210d1b40d5a6f4cb0656f133a2",
+      "at": "2026-11-22T15:35:11.043530+00:00",
+      "image": "domus-162-edge84:pinned",
+      "imageId": "sha256:069d0718d703bbe97ffa77031fafaea932894846fbd0cbc6638dfbabcb821d21",
       "architecture": "arm64",
-      "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
-      "version": "0.0.0-edge.83",
+      "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
+      "version": "0.0.0-edge.84",
       "allPythonFiles": 250,
       "allUIFiles": 4,
       "allProductBytesMatchWheel": true,
       "selectedTests": 6,
-      "testSeconds": 18.44,
+      "testSeconds": 17.61,
       "genuineSourceSchemas": [
         20,
         36
       ],
       "restartAndSnapshotRestoration": true,
-      "nativeAndStandaloneListeners": true
+      "nativeAndStandaloneListeners": true,
+      "originalLog": "/private/tmp/domus-162-edge84-qualified-arm64-original.log",
+      "selection": [
+        "test_pinned_edge_runtime_and_bundle_match_every_reviewed_product_file",
+        "test_pinned_edge_native_launcher_authority_storage_and_restart",
+        "test_pinned_edge_standalone_listener_serves_the_exact_private_bundle",
+        "test_image_requires_supervisor_configuration_and_never_falls_back_to_an_admin",
+        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[20]",
+        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[36]"
+      ]
     }
   },
   "installedEdge": {
-    "statusAtPackaging": "Historical83 normal journey passed; a later deterministic finding requires new immutable84 acceptance. No84 installed claim yet.",
+    "statusAtPackaging": "No installed84 claim yet. Prior83 normal walkthrough and known active-entry race remain historical; final native84 acceptance belongs to linkedPR.",
     "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
     "appSlug": "abb0c2fd_domus_edge",
     "newRecordsPlanned": 0
@@ -117,31 +126,31 @@
   "finalSameHeadChecks": "Required after immutable84 packaging: current source141/catalog68, eachCPU62+86, all global/perfile coverage and substantive review. Historical B5/e48 results are not current runtime acceptance.",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
-    "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
-    ".vite/manifest.json": "8f3df26da87ff3597f996627efa3a579d31842e86a2f00f83d0ab6d500610cf9",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-MbFeI55R.js": "417df9de824d7bc791bdd343f914536b8987ab20fce03b187d8da28d92edf2bc"
+    "index.html": "49a2c4daa4b40e72ce87dfd54a514bb88e2109cd668f07184935b02214c36329",
+    ".vite/manifest.json": "c247d0b249d0ec3c4420a3cf59c2b6c738c064848372277da3e98e2301bdeba4",
+    "assets/index-CUfMikor.js": "e95d43c7b92dd9f839438751df04fc21d8dbf1963d6ac0c44760792c62e42b35",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
   },
   "currentPackage": {
-    "version": "0.0.0-edge.83",
-    "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
-    "sourceArchiveSHA256": "7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12",
-    "wheelSHA256": "641b66199213ce0e366f516911fb318ff35da7fb4f5e4632fde1434a19c5faf5",
+    "version": "0.0.0-edge.84",
+    "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
+    "sourceArchiveSHA256": "235e250dd79d53e1d671d109e7af176ca1d21cc4821add78f2818d98e1651057",
+    "wheelSHA256": "0325cc9c8cee709d3b661bd5b994791077ec63c74367f599b7a71eaeeddfbca7",
+    "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
-      ".vite/manifest.json": "8f3df26da87ff3597f996627efa3a579d31842e86a2f00f83d0ab6d500610cf9",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-MbFeI55R.js": "417df9de824d7bc791bdd343f914536b8987ab20fce03b187d8da28d92edf2bc"
+      "index.html": "49a2c4daa4b40e72ce87dfd54a514bb88e2109cd668f07184935b02214c36329",
+      ".vite/manifest.json": "c247d0b249d0ec3c4420a3cf59c2b6c738c064848372277da3e98e2301bdeba4",
+      "assets/index-CUfMikor.js": "e95d43c7b92dd9f839438751df04fc21d8dbf1963d6ac0c44760792c62e42b35",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     },
-    "storageSchema": 37,
-    "status": "Immutable source/wheel andactualARM64sixchecks qualified. Native83/currentheadCI+review stillrequired, final terminal record in linkedPR."
+    "status": "Immutable source/wheel and actual ARM64 six checks qualified. Native84 and final samehead CI/review remain required in linkedPR."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
     "allTrackedBlobsMatch": true,
-    "archiveBytes": 3100404,
-    "sha256": "7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12"
+    "all250WheelPythonBytesMatchArchive": true,
+    "archiveAndWheelHaUi": "0.1.0-next.5"
   },
   "previousCandidate78": {
     "package": {
@@ -583,7 +592,7 @@
     "sourceFrontendTests": 2190,
     "remainingFindings": "b7 review identified hidden Shopping refresh after Stock navigation and permission-denial guidance; current82 source fixes both. Native81 observations qualify only the previous runtime."
   },
-  "packagingSnapshotAt": "2026-11-22T12:56:29.462432+00:00",
+  "packagingSnapshotAt": "2026-11-22T15:35:11.043530+00:00",
   "previousCandidate82": {
     "package": {
       "version": "0.0.0-edge.82",

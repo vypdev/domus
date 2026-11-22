@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.84
+
+- Keep Inventory available when leaving Shopping during its own refresh or item lookup.
+- Open current Shopping work when returning, preserving drafts and the original operation.
+- Preserve schema-37 notes, priorities, stock and receipts.
+
 ## 0.0.0-edge.83
 
 - Retire Shopping navigation queued before a section change, including while the product catalog is loading.

@@ -11,12 +11,12 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The previous queue-retirement runtime is published as
-`fae1e6ae06993202260d765dbf27bea2144adc89` on the admitted managed ref. Edge.83
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The active-entry retirement runtime is published as
+`e53b928411e542ca8bdd849890df10bf19cf65a3` on the admitted managed ref. Edge.84
 pins that exact source and archive SHA-256
-`7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12`.
+`235e250dd79d53e1d671d109e7af176ca1d21cc4821add78f2818d98e1651057`.
 All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`641b66199213ce0e366f516911fb318ff35da7fb4f5e4632fde1434a19c5faf5`.
+`0325cc9c8cee709d3b661bd5b994791077ec63c74367f599b7a71eaeeddfbca7`.
 The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
 restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
 Its installed native Home Assistant walkthrough then exposed two mobile viewport
@@ -281,3 +281,5 @@ The installed Edge.83 normal walkthrough and earlier CI results remain historica
 They do not accept this newly reproduced race. Immutable Edge.84 packaging, actual
 image qualification, native installed acceptance and full same-head checks are
 required before merge. Final terminal observations belong to the linked PR.
+
+This Edge.84 packaging snapshot pins runtime `e53b928411e542ca8bdd849890df10bf19cf65a3`. Its actual local ARM64 image passes all six byte, authority, native/standalone listener, restart, genuine schema-20/schema-36 migration and snapshot-restoration checks in 17.61 seconds. Installed84 acceptance and the final current-head CPU/source CI and review remain required, with terminal observations recorded in [PR #163](https://github.com/vypdev/domus/pull/163).
