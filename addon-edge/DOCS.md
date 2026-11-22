@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.75 packages the immutable runtime declared in
+Edge 0.0.0-edge.76 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Inventory, open the shared shopping list and
 add a manual extra for a product or a free-text item. Its optional note accepts
 up to 1,000 Unicode characters, multiple lines and tabs. Unsupported control

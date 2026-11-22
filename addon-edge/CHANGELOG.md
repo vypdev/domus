@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.76
+
+- Publish the same shopping note character restrictions enforced by the command, including allowed tabs and line breaks.
+- Preserve existing note values, validation errors, priorities and schema-37 data.
+
 ## 0.0.0-edge.75
 
 - Reject unsupported C1 controls in shopping notes, retain accepted text and allow a corrected retry with the original request key.

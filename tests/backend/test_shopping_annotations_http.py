@@ -1,8 +1,11 @@
 """Annotations are opt-in reads; original Shopping clients keep their exact wire shape."""
 
+import json
+import re
 import sqlite3
 from contextlib import closing
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 from test_inventory_catalog_http import INVENTORY, OUTSIDER, get, post, register
@@ -12,8 +15,36 @@ from test_shared_shopping import REQUESTER
 from test_shopping_http import command, original
 from test_task_runtime import api as api
 
+from domus.domain.errors import InvalidInput
 from domus.domain.identity import Member, MemberStatus, Permission, PermissionRule, Role
 from domus.domain.member_profiles import MemberPresentation
+from domus.entrypoints.inventory_http import AddExtraBody
+
+
+def test_published_note_schema_admits_the_same_controls_as_the_command_validator():
+    note = AddExtraBody.model_json_schema()["properties"]["note"]
+    assert "pattern" in note
+    for name in ("household-api.openapi.json", "native-household-api.openapi.json"):
+        document = json.loads((Path(__file__).parents[2] / "docs/contracts" / name).read_text())
+        assert document["components"]["schemas"]["AddExtraBody"]["properties"]["note"] == note
+    pattern = re.compile(note["pattern"])
+    required = {
+        "action": "shopping.add-extra",
+        "product_id": None,
+        "name": "Schema qualification",
+        "quantity": "1",
+    }
+    for value in ("", "Line\nTab\tCarriage\rReturn", "😀" * 1000, "~\u00a0 text", "<b>literal</b>"):
+        assert pattern.fullmatch(value) and len(value) <= note["maxLength"]
+        assert AddExtraBody.model_validate({**required, "note": value}).note == value
+    for codepoint in (*range(0x20), *range(0x7F, 0xA0)):
+        if codepoint in (9, 10, 13):
+            continue
+        value = "Prefix" + chr(codepoint) + "suffix"
+        assert pattern.fullmatch(value) is None
+        with pytest.raises(InvalidInput) as invalid:
+            AddExtraBody.model_validate({**required, "note": value})
+        assert invalid.value.code == "invalid_shopping_note"
 
 
 def annotated(api, product=None, user=USER, **params):

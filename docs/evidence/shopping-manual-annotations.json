@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Immutable75 source/wheel/archive qualified; current full6019backend, image, finalCPU and native74to75 acceptance pending",
+  "status": "Schema declaration correction source-qualified; corrected76 immutable pin/image/native/finalCI still pending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
@@ -17,14 +17,10 @@
   },
   "sourceQualification": {
     "backend": {
-      "tests": 5919,
+      "expectedCurrentSourceTests": 6020,
+      "expectedFinalCITestsIncludingPackage": 6030,
       "runtimeFiles": 250,
-      "statements": 19235,
-      "branches": 5160,
-      "globalAndPerFileCoverage": 100,
-      "scope": "Complete backend source suite, with the ten immutable app-package contracts qualified separately after pinning the new candidate.",
-      "status": "Historical5919 green; currentfull6019 campaign running after required loopback permission was restored",
-      "expectedCurrentSourceTests": 6019
+      "status": "Current full source campaign running; the complete6019/6029 100%75 result is preserved separately."
     },
     "frontend": {
       "tests": 2164,
@@ -33,7 +29,8 @@
       "branches": 8558,
       "functions": 2010,
       "lines": 6829,
-      "allFourMetricsGlobalAndPerFile": 100
+      "allFourMetricsGlobalAndPerFile": 100,
+      "all120FrontendSourceGitBlobsUnchangedFrom75": true
     },
     "catalog": {
       "tests": 68,
@@ -99,15 +96,13 @@
     "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
   },
   "pendingGates": [
-    "Complete6019 backend source campaign with100% global/per-file statement and branch coverage",
-    "Actual local pinned75 image byte/migration/restart/restore/rollback/listener qualification",
-    "Complete129-case source entry campaign in final-head CI",
-    "All62 container and74 actual-image browser cases in each CPU architecture",
-    "Installed native74-to75 retention, control rejection, restart and specifically authorized cleanup",
-    "Final PR same-head CI, review and Branch Sync; normal merge, destination checks and native issue closure"
+    "Complete current6020 backend source campaign with100% global/per-file statement/branch coverage",
+    "Publish immutable76 runtime/archive/wheel pin and qualify actual current image bytes and schema declaration",
+    "Installed native76 acceptance and immediate owned test cleanup",
+    "All final-head6030backend/2164frontend/129source/62container+74browser perCPU; review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-22T00:06:11.342112+00:00",
+  "recordedAt": "2026-11-22T01:14:33.394951+00:00",
   "sourceCommit": "b4cfc95e014520a9fe1d891ea1a6b415641021d0",
   "currentPackage": {
     "version": "0.0.0-edge.75",
@@ -279,5 +274,116 @@
       "historicalRecipeBytesMatchRecordedSHA256": true,
       "limits": "Historical fixture was not regenerated; no new capture or free-space result claimed."
     }
+  },
+  "priorCandidate75": {
+    "sourceCommit": "b4cfc95e014520a9fe1d891ea1a6b415641021d0",
+    "package": {
+      "version": "0.0.0-edge.75",
+      "sourceArchiveSHA256": "5f5e44037001f01891e7ccd6f065c6017c72b828661d5fda2305765e582dad04",
+      "wheelSHA256": "6dd8b6ca949ed4aa1fd7e5cad00192f7abecbadb1bd3ba81b33aad31b79006e8",
+      "storageSchema": 37,
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+        "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+      }
+    },
+    "sourceArchiveQualification": {
+      "trackedFiles": 1018,
+      "allTrackedGitBlobsMatch": true,
+      "all250WheelRuntimeFilesMatchArchive": true,
+      "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/b4cfc95e014520a9fe1d891ea1a6b415641021d0"
+    },
+    "backend": {
+      "localSourceTests": 6019,
+      "finalCITestsIncludingPackage": 6029,
+      "all250ModulesGlobalPerFileStatementBranch": 100,
+      "run": 44965071837,
+      "job": 137032128834
+    },
+    "frontend": {
+      "tests": 2164,
+      "runtimeFiles": 119,
+      "statements": 9388,
+      "branches": 8558,
+      "functions": 2010,
+      "lines": 6829,
+      "allFourMetricsGlobalAndPerFile": 100
+    },
+    "actualCPUImages": {
+      "amd64": {
+        "containerCases": 62,
+        "browserCases": 74,
+        "job": 137032128790,
+        "result": "success; selfhostedAppleSilicon emulatedamd64 target"
+      },
+      "arm64": {
+        "containerCases": 62,
+        "browserCases": 74,
+        "job": 137032128780,
+        "result": "success; selfhostedAppleSilicon nativeARM64 target"
+      }
+    },
+    "installedAcceptance": {
+      "publicColdUpdate74to75": true,
+      "all32C1RejectedWithAcceptedTextAndFocusRetained": true,
+      "allFourIndependentRequestsRetainedAfterPublicRestart": true,
+      "real390pxSpanishLightHighPriorityTouchCommit": true,
+      "stockUnchanged": 0,
+      "scope": "Actual native UI and acknowledged Chrome text input; source/CI evidence remains separate."
+    },
+    "cleanup": {
+      "state": "Completed under explicit user cleanup instruction",
+      "nativeVersionsRemoved": [
+        68,
+        70,
+        75
+      ],
+      "backupsRemoved": [
+        69,
+        74
+      ],
+      "sourcesRemoved": 3,
+      "oldLocalImagesRemoved": [
+        68,
+        69,
+        70,
+        72,
+        73,
+        74
+      ],
+      "current75LocalCandidate": "Temporary current result; retire when corrected76 image is qualified"
+    },
+    "review": {
+      "head": "bb1778adcb2369f68b19c98903e4b5f4634d6c17",
+      "fixed": 2,
+      "open": 1,
+      "finding": "Published note schema omits control-character restriction; corrected in current source.",
+      "mergeAccepted": false
+    }
+  },
+  "schemaDeclarationCorrection": {
+    "finding": "https://github.com/vypdev/domus/pull/158#discussion_r4655836457",
+    "valid": true,
+    "change": "Only AddExtraBody.note JSON Schema metadata changes: explicit forbidden-control pattern and well-formed Unicode description. Existing strict type, default, domain validator and validation errors are unchanged.",
+    "standaloneAndNativeActualComposedSchemasMatchSnapshots": true,
+    "focusedHTTPAndSchemaTests": 81,
+    "newRegressionFailsBeforeCorrection": true,
+    "all62UnsupportedC0DELC1ValuesMatchRuntimeAndSchema": true,
+    "tabsLineFeedsCarriageReturnsAnd1000SupplementaryCharactersAccepted": true,
+    "ecmascriptQualification": {
+      "regexModes": [
+        "default",
+        "unicode"
+      ],
+      "assertions": 136
+    },
+    "immutableCandidateVersion": "0.0.0-edge.76",
+    "currentPinBeforePreparation": "0.0.0-edge.75",
+    "retainedOwningRequirements": 8,
+    "retainedOwningCases": 10,
+    "standardsReference": "https://json-schema.org/understanding-json-schema/reference/regular_expressions"
   }
 }

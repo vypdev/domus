@@ -33,7 +33,7 @@ a corrected request with the same key commits once. All four compiled HTTP
 journeys reject these controls without a POST and retain the accepted note.
 The complete frontend still passes 2,164 tests with all four coverage metrics
 at 100%; all 68 catalog cases and the four compiled journeys pass. A fresh full
-6,019-case backend campaign, actual Edge.75 image, both final CPU campaigns and
+6,020-case backend campaign, actual Edge.76 image, both final CPU campaigns and
 installed Edge.74-to-75 acceptance are still required.
 
 The public Edge.75 archive matches all 1,018 tracked Git blobs and all 250
@@ -46,6 +46,30 @@ is on another filesystem. The frozen schema-36 SQL is unchanged; it was not
 regenerated with schema 37. Its original recipe hash is explicitly bound to archived
 source `dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091` in the provenance. The original
 capture observations remain intact; the corrected producer affects future captures.
+
+The Edge.75 follow-up passes the complete local backend campaign (6,019 source
+tests at 100% across 250 modules), both actual final CI CPU inventories (62
+container and 74 image-browser cases each), and its installed acceptance. All
+32 actual C1 insertions retain accepted text and focus; a corrected High-priority
+request saves through a real 44 px touch target at 390 px in Spanish/light.
+Public restart retains all four independent requests and unchanged zero stock.
+The owner then authorized removal of all our old test versions: native Edge.68, Edge.70 and Edge.75,
+the Edge.69 and Edge.74 test backups, their three sources, six obsolete local image tags and
+twelve regenerable old archives/wheels were removed. Compact original evidence
+and authored compatibility fixtures remain.
+
+The next review correctly identified that the published request schema omitted
+those control constraints. The correction adds an explicit pattern and Unicode
+admission description to JSON Schema metadata, preserving the existing validator,
+defaults and HTTP errors. Both composed schemas match their updated snapshots;
+81 focused HTTP/schema tests pass. The new regression first failed on the missing
+pattern. It exercises all 62 prohibited C0/DEL/C1 controls and preserves tab, LF,
+CR, nonbreaking space and 1,000 supplementary characters. Both ordinary and Unicode
+ECMAScript regular-expression modes pass 136 independent checks. All 120 tracked
+frontend source files and four compiled UI files are byte-identical to Edge.75.
+The corrected immutable Edge.76, current 6,020-case source campaign, installed Edge.76
+acceptance and cleanup and final same-head CI/review remain pending. Existing native
+requirement and case identities are unchanged.
 
 One prior amd64 job completed its container checks but could not start a browser
 case because another image job still owned the fixture ports. The first job's
@@ -68,7 +92,7 @@ has not been established.
 | `shopping-manual-annotations-C07` | Independent writers race duplicate and changed requests. Failures after extra, receipt, audit and outbox writes roll back the entire operation; retry then commits once. Quantities, stock and purchase facts retain their original semantics. |
 | `shopping-manual-annotations-C08` | The [genuine schema-36 fixture](../../tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json) was captured through the actual previous runtime before the schema changed. Focused schema-36/schema-20 migration, failed second ALTER, reopen, actual snapshot activation and historical receipt tests pass. Final candidate/image compatible rollback remains pending. |
 | `shopping-manual-annotations-C09` | The companion retains its eight native requirement IDs, ten case IDs and reciprocal ownership. API snapshots describe the additive annotated wrappers; legacy response shapes remain unchanged. The retained catalog SDK regenerated and validated the actual view for all eleven capabilities. Final candidate-linked qualification remains pending. |
-| `shopping-manual-annotations-C10` | Frontend after the typography correction: 2,164 tests pass with 100% global/per-file coverage across all four metrics and all 119 runtime files; the 68 catalog cases pass. The previous backend passed 5,919 source tests with 100% statement/branch coverage globally and per file across all 250 runtime modules; the current full campaign adds complete C1 and neighboring valid-character coverage for 6,019 source tests. The 42 Node policy tests, 187 tooling tests and 51 Python architecture checks pass. The prior Edge.73 source passed all 129 protected compiled entry cases, with zero skipped, unexpected, flaky or retried cases, and all ten static package contracts plus its actual wheel bundle/license check. Its public archive matched all 1,018 Git blobs and all 250 wheel runtime files. Its local ARM64 image passed nine byte, migration, restart, restoration, rollback and listener cases. Current complete entry execution remains required in final-head CI; the local repeat stopped before any case because an active Actions image fixture owned its ports. Immutable Edge.75, both final CPU campaigns, corrected installed acceptance and scoped cleanup remain pending. Distribution and Stable are outside this increment. |
+| `shopping-manual-annotations-C10` | Frontend after the typography correction: 2,164 tests pass with 100% global/per-file coverage across all four metrics and all 119 runtime files; the 68 catalog cases pass. The previous backend passed 5,919 source tests with 100% statement/branch coverage globally and per file across all 250 runtime modules; the current full campaign adds the schema-admission regression for 6,020 source tests after the complete 6,019-case C1 campaign passed. The 42 Node policy tests, 187 tooling tests and 51 Python architecture checks pass. The prior Edge.73 source passed all 129 protected compiled entry cases, with zero skipped, unexpected, flaky or retried cases, and all ten static package contracts plus its actual wheel bundle/license check. Its public archive matched all 1,018 Git blobs and all 250 wheel runtime files. Its local ARM64 image passed nine byte, migration, restart, restoration, rollback and listener cases. Current complete entry execution remains required in final-head CI; the local repeat stopped before any case because an active Actions image fixture owned its ports. Immutable Edge.76, both final CPU campaigns and corrected installed acceptance/cleanup remain pending. Distribution and Stable are outside this increment. |
 
 The original failed draft regressions demonstrated that an earlier outcome
 could reset another form. The correction binds a submission to its scope,

@@ -150,9 +150,21 @@ class AddExtraBody(StrictModel):
     product_id: Identifier | None
     name: Annotated[str, Field(min_length=1, max_length=160)] | None
     quantity: Quantity
-    note: Annotated[str, Field(strict=True, json_schema_extra={"maxLength": MAX_SHOPPING_NOTE})] = (
-        ""
-    )
+    note: Annotated[
+        str,
+        Field(
+            strict=True,
+            description=(
+                "Literal well-formed Unicode, at most 1,000 codepoints. Tabs, line feeds and "
+                "carriage returns are preserved; other C0 controls, DEL and C1 controls "
+                "are rejected."
+            ),
+            json_schema_extra={
+                "maxLength": MAX_SHOPPING_NOTE,
+                "pattern": r"^[^\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]*$",
+            },
+        ),
+    ] = ""
     priority: Literal["low", "normal", "high", "urgent"] = "normal"
 
     @field_validator("note", mode="before")
