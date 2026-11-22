@@ -27,7 +27,10 @@ distinct in `previousCandidate78`. The previous Edge.79 and Edge.80 images pass
 the same six checks, including all 254 product file hashes. Their installed normal
 journeys, saved literal records and public restart are qualified separately.
 Review then found Edge.80's partial-household-read defect. The current Edge.81
-actual ARM64 image passes the same six checks; its installed correction remains pending.
+actual ARM64 image passes the same six checks. Its native in-place update, normal
+keyboard/touch journeys, saved literal records and public stop/start are qualified
+separately below. Partial-read fault injection remains an owned-fixture check,
+not a claim about faults introduced into native Home Assistant.
 The pre-existing specification prefix and published #162 unit are
 preserved. Backend, API, schema 37, canonical journal packet format and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
@@ -156,3 +159,33 @@ existing stale-read, denial and independent-grant assertion. All twelve variants
 pass once each without retries. Edge.81 qualifies that runtime; the historical
 Edge.80 normal native journeys, saved records and real stop/start are retained
 separately and do not establish acceptance of this partial-read correction.
+
+## Installed Edge.81 (current candidate)
+
+Supervisor reported installed Edge.80, then installed Edge.81 after the in-place
+update of the same independent app. The DOM-backed module basename is
+`index-BzSz5xDX.js`, matching the qualified wheel. No backup or new persisted
+records were created for this update. The English light-mode 1120-by-844 keyboard
+journey and Spanish dark-mode 390-by-844 actual touch journey preserve Stock and
+Shopping drafts in both directions. Shopping's focused heading is visible below
+fixed navigation (68.16–106.55 desktop; 67.77–106.16 mobile). Overview's focused
+Tea row remains within the 804-pixel mobile frame at 389–414.59, below navigation
+ending at 56. Temporary viewport, touch and media overrides were reset.
+
+An actual public Supervisor Stop reached **Detenido/Iniciar**, and Start reached
+**En ejecución/Open Web UI** at version Edge.81. Fresh app entry retained Tea
+quantity two/Urgent and Bags quantity one/Low, both original LF/HT/emoji notes
+and literal markup-looking text with zero HTML children. Recorded, reserved and
+available stock remain zero; movement history, purchases and purchase sessions
+are empty. The app is stopped again. The exact same synthetic app/data/source
+permanent-uninstall confirmation requested earlier remains pending; no deletion
+has been inferred from elapsed time or general cleanup authorization.
+
+These installed observations exercise the normal C01–C03 journeys and data
+compatibility. The corrected partial-household-read failure and cross-member
+pending-packet retirement are exercised by the current source/browser fixtures;
+no private Home Assistant APIs, hidden state, injected native failures or clock
+changes were used. At packaging head `5f0bb08`, Review, Verification, Commit and
+Branch Sync pass and all five historical findings are resolved. The final
+evidence head still requires its own applicable CI and review, followed by normal
+merge, destination CI/Branch Sync and native issue closure.

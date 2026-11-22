@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge81 source/wheel/actualARM64sixchecksPASS; native81andfinalsameheadCI/reviewpending",
+  "status": "Edge81 source/wheel/actualARM64/native installed acceptance PASS; final same-head CI and merge/destination pending",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -90,9 +90,92 @@
     }
   },
   "installedEdge": {
-    "status": "PENDING81. Sameindependent80appnative normalUX/data/realstop-start passed andisobservedstopped; existingproduct2extras retained;cleanupapprovalpending sameexactapp/data/source.",
+    "at": "2026-11-22T11:46:14.182841+00:00",
+    "versionObserved": "0.0.0-edge.81",
+    "previousObserved": "0.0.0-edge.80",
+    "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+    "packagingHead": "5f0bb08a340b24d854f0dc19ecf76c849499b74b",
     "appSlug": "abb0c2fd_domus_edge",
-    "newRecordsPlanned": 0
+    "household": "Domus QA 162 Edge78",
+    "method": "Official CUA Chrome UI, native Supervisor versions, DOM-backed bundle filename, public app pages. No private HA API/state/clock injection.",
+    "moduleBasenameObserved": "index-BzSz5xDX.js",
+    "inPlaceUpdate": true,
+    "backupCreated": false,
+    "savedExtras": [
+      {
+        "item": "QA 162 Edge78 Tea",
+        "quantity": "2",
+        "priority": "Urgent",
+        "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+      },
+      {
+        "item": "QA 162 Edge78 Bags",
+        "quantity": "1",
+        "priority": "Low",
+        "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+      }
+    ],
+    "exactLiteralNotesAfterUpdateAndRestart": true,
+    "literalHTMLChildren": [
+      0,
+      0
+    ],
+    "desktop": {
+      "viewport": [
+        1120,
+        844
+      ],
+      "locale": "en",
+      "theme": "light",
+      "keyboardTabEntry": true,
+      "headingTop": 68.15625,
+      "headingBottom": 106.5546875,
+      "regionFocused": true,
+      "activeTab": "page",
+      "sameOwnerStockAndShopDraftsRetained": true
+    },
+    "mobile": {
+      "viewport": [
+        390,
+        844
+      ],
+      "locale": "es",
+      "theme": "dark",
+      "actualTouchOverflow": true,
+      "actualTouchStockAndShoppingTabs": true,
+      "headingTop": 67.765625,
+      "headingBottom": 106.1640625,
+      "regionFocused": true,
+      "activeTab": "page",
+      "literalDraftRetained": "QA 162 Edge81\nRetain\t\ud83d\ude00",
+      "itemEntry": {
+        "top": 389,
+        "bottom": 414.59375,
+        "iframeViewport": 804,
+        "fixedNavigationBottom": 56,
+        "focused": true
+      }
+    },
+    "restart": "Supervisor Stop observed Detenido/Iniciar at81, Start observed En ejecuci\u00f3n/Open Web UI at81. Fresh public app entry reread exact two notes/quantities/priorities, zero stock/history and empty purchases/sessions.",
+    "stockAfterRestart": {
+      "recorded": "0",
+      "reserved": "0",
+      "available": "0"
+    },
+    "historyAfterRestart": "There are no movements for this product.",
+    "purchasesAfterRestart": "There are no purchases recorded.",
+    "sessionsAfterRestart": "There are no purchase sessions recorded.",
+    "temporaryEmulationRestored": true,
+    "finalState": "Observed version81 Detenido/Iniciar after qualification. Permanent uninstall dialog open; same exact app/data/source confirmation requested earlier remains pending.",
+    "screenshots": [
+      "native81-installed-version.jpg",
+      "native81-en-light-keyboard.jpg",
+      "native81-es-dark-touch.jpg",
+      "native81-es-dark-item-entry.jpg",
+      "native81-cleanup-confirmation.jpg"
+    ],
+    "limitation": "Native installed normal keyboard/touch journeys, saved records and public restart qualified. Partial household-fact503 and member-replacement cases are qualified through owned actual browser fixtures and unit regressions, not injected into native Home Assistant. Final same-head CI and destination checks remain required.",
+    "newPersistedRecordsFor81": 0
   },
   "finalSameHeadChecks": "PENDING",
   "mergeAndDestination": "PENDING",
@@ -115,7 +198,7 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     },
     "storageSchema": 37,
-    "status": "Immutable source/wheel andactualARM64imagequalified; native81andfinalsameheadCI/reviewpending."
+    "status": "Immutable source/wheel, actual local ARM64 image and native installed upgrade/restart qualified. Final same-head CI and merge/destination remain required."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
@@ -417,5 +500,12 @@
     },
     "sourceFrontendTests": 2188,
     "remainingFinding": "4657842084: requiring display household facts incorrectly hid Inventory/Shopping when independently verified current capabilities established their household."
+  },
+  "reviewObservedBeforeNativeEvidence": {
+    "head": "5f0bb08a340b24d854f0dc19ecf76c849499b74b",
+    "reviewRun": 45017150697,
+    "branchSyncRun": 45017144691,
+    "commitRun": 45017144716,
+    "result": "Review, Verification, Branch Sync and Commit PASS. All five historical findings resolved. Final evidence head still requires its own applicable checks."
   }
 }
