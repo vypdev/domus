@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.82
+
+- Keep Stock usable when a former Shopping item read is denied; refresh retained Shopping work only after returning to its current destination.
+- Explain the current Shopping, Inventory or combined permissions needed by each rejected operation, while preserving purchase drafts for correction and retry.
+- Preserve schema-37 notes, priorities, selections and original-operation identity.
+
 ## 0.0.0-edge.81
 
 - Keep Inventory and Shopping available when general household details cannot load but current household/member access remains independently verified.

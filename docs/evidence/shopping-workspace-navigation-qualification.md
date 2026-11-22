@@ -11,12 +11,12 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The previously qualified runtime is published as
-`acf8587d1809e061a17a29c29e9e15782e514829` on the admitted managed ref. Edge.81
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
+`8ecbf6c145a7a415998766b7b299544487d823fe` on the admitted managed ref. Edge.82
 pins that exact source and archive SHA-256
-`c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d`.
+`cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0`.
 All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`b8f96d19e77ed10aa027dad7786426eb93456406d5142d03ac75b8dfe4110ce8`.
+`58b285dce84b7d160cbc0b131f0658c5c56eb9c5d04686b4211dc1ad63ec9dd6`.
 The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
 restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
 Its installed native Home Assistant walkthrough then exposed two mobile viewport
@@ -26,7 +26,7 @@ Edge.78 is not accepted. Its original source, wheel, image and findings remain
 distinct in `previousCandidate78`. The previous Edge.79 and Edge.80 images pass
 the same six checks, including all 254 product file hashes. Their installed normal
 journeys, saved literal records and public restart are qualified separately.
-Review then found Edge.80's partial-household-read defect. The current Edge.81
+Review then found Edge.80's partial-household-read defect. The previous Edge.81
 actual ARM64 image passes the same six checks. Its native in-place update, normal
 keyboard/touch journeys, saved literal records and public stop/start are qualified
 separately below. Partial-read fault injection remains an owned-fixture check,
@@ -161,7 +161,7 @@ pass once each without retries. Edge.81 qualifies that runtime; the historical
 Edge.80 normal native journeys, saved records and real stop/start are retained
 separately and do not establish acceptance of this partial-read correction.
 
-## Installed Edge.81 (current candidate)
+## Installed Edge.81 (previous partial-read candidate)
 
 Supervisor reported installed Edge.80, then installed Edge.81 after the in-place
 update of the same independent app. The DOM-backed module basename is
@@ -212,8 +212,12 @@ all 2,196 frontend tests preserve global/per-file 100% on all four metrics. The
 independent source coverage audit, types, SDK catalog and package/docs checks pass.
 
 Edge.81's installed acceptance above is historical and does not include these
-last two runtime corrections. Their next immutable Edge package, current actual
-CPU images, installed walkthrough and final same-head checks remain required.
+last two runtime corrections. The immutable Edge.82 actual local ARM64 image passes all six byte, authority,
+standalone, restart, genuine schema-20/schema-36 migration and snapshot-restore
+checks in 18.28 seconds. Current full CPU images, installed Edge.82 walkthrough
+and final same-head checks remain required.
 The two stale source-assessment paragraphs in the Action-published unit now name
 the immutable base explicitly. The preceding owner prefix and every published
 requirement/case row remain byte-identical; no acceptance identity was changed.
+
+This is the Edge.82 packaging snapshot. The linked [PR #163](https://github.com/vypdev/domus/pull/163) retains final current-head CI, review and installed acceptance. Earlier installed candidates above remain historical; their observations do not establish acceptance of a later source.

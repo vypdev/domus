@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Current source review corrections qualified2196/100 and12realbrowservariants; next immutable Edge82 and latest-head CI/review pending. Edge81 installed observations remain historical.",
+  "status": "Edge82 packaging snapshot: immutable source/wheel, actualARM64sixchecksPASS18.28s, source2196all4metrics100 and12actualbrowservariantsPASS. Native82 and finalsameheadchecks recorded next in linkedPR.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -75,16 +75,17 @@
     "amd64": "PENDING",
     "aarch64": "PENDING",
     "localPinnedAarch64": {
-      "at": "2026-11-22T11:24:01.187216+00:00",
-      "image": "domus-162-edge81:pinned",
-      "imageId": "sha256:40e9354b17f6c6208fbaeb6c2df7766e112f9f56748616f68b9290e5b274e0fe",
+      "at": "2026-11-22T12:18:38.906886+00:00",
+      "image": "domus-162-edge82:pinned",
+      "imageId": "sha256:226273ac0465cb9f43493f8dfba2bee595e97857a144244abefd54582f26dbe2",
       "architecture": "arm64",
-      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
-      "version": "0.0.0-edge.81",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "version": "0.0.0-edge.82",
       "allPythonFiles": 250,
       "allUIFiles": 4,
       "allProductBytesMatchWheel": true,
       "selectedTests": 6,
+      "testSeconds": 18.275,
       "genuineSourceSchemas": [
         20,
         36
@@ -94,121 +95,39 @@
     }
   },
   "installedEdge": {
-    "at": "2026-11-22T11:46:14.182841+00:00",
-    "versionObserved": "0.0.0-edge.81",
-    "previousObserved": "0.0.0-edge.80",
-    "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
-    "packagingHead": "5f0bb08a340b24d854f0dc19ecf76c849499b74b",
+    "statusAtPackaging": "No installed82 claim yet. See final native acceptance record in linked PR. Prior81 observations remain explicitly historical.",
+    "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
     "appSlug": "abb0c2fd_domus_edge",
-    "household": "Domus QA 162 Edge78",
-    "method": "Official CUA Chrome UI, native Supervisor versions, DOM-backed bundle filename, public app pages. No private HA API/state/clock injection.",
-    "moduleBasenameObserved": "index-BzSz5xDX.js",
-    "inPlaceUpdate": true,
-    "backupCreated": false,
-    "savedExtras": [
-      {
-        "item": "QA 162 Edge78 Tea",
-        "quantity": "2",
-        "priority": "Urgent",
-        "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
-      },
-      {
-        "item": "QA 162 Edge78 Bags",
-        "quantity": "1",
-        "priority": "Low",
-        "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
-      }
-    ],
-    "exactLiteralNotesAfterUpdateAndRestart": true,
-    "literalHTMLChildren": [
-      0,
-      0
-    ],
-    "desktop": {
-      "viewport": [
-        1120,
-        844
-      ],
-      "locale": "en",
-      "theme": "light",
-      "keyboardTabEntry": true,
-      "headingTop": 68.15625,
-      "headingBottom": 106.5546875,
-      "regionFocused": true,
-      "activeTab": "page",
-      "sameOwnerStockAndShopDraftsRetained": true
-    },
-    "mobile": {
-      "viewport": [
-        390,
-        844
-      ],
-      "locale": "es",
-      "theme": "dark",
-      "actualTouchOverflow": true,
-      "actualTouchStockAndShoppingTabs": true,
-      "headingTop": 67.765625,
-      "headingBottom": 106.1640625,
-      "regionFocused": true,
-      "activeTab": "page",
-      "literalDraftRetained": "QA 162 Edge81\nRetain\t\ud83d\ude00",
-      "itemEntry": {
-        "top": 389,
-        "bottom": 414.59375,
-        "iframeViewport": 804,
-        "fixedNavigationBottom": 56,
-        "focused": true
-      }
-    },
-    "restart": "Supervisor Stop observed Detenido/Iniciar at81, Start observed En ejecuci\u00f3n/Open Web UI at81. Fresh public app entry reread exact two notes/quantities/priorities, zero stock/history and empty purchases/sessions.",
-    "stockAfterRestart": {
-      "recorded": "0",
-      "reserved": "0",
-      "available": "0"
-    },
-    "historyAfterRestart": "There are no movements for this product.",
-    "purchasesAfterRestart": "There are no purchases recorded.",
-    "sessionsAfterRestart": "There are no purchase sessions recorded.",
-    "temporaryEmulationRestored": true,
-    "finalState": "Observed version81 Detenido/Iniciar after qualification. Permanent uninstall dialog open; same exact app/data/source confirmation requested earlier remains pending.",
-    "screenshots": [
-      "native81-installed-version.jpg",
-      "native81-en-light-keyboard.jpg",
-      "native81-es-dark-touch.jpg",
-      "native81-es-dark-item-entry.jpg",
-      "native81-cleanup-confirmation.jpg"
-    ],
-    "limitation": "Native installed normal keyboard/touch journeys, saved records and public restart qualified. Partial household-fact503 and member-replacement cases are qualified through owned actual browser fixtures and unit regressions, not injected into native Home Assistant. Final same-head CI and destination checks remain required.",
-    "newPersistedRecordsFor81": 0
+    "newRecordsPlanned": 0
   },
-  "finalSameHeadChecks": "PENDING",
+  "finalSameHeadChecks": "Required current-head checks and terminal original artifacts are recorded in PR163; no terminal acceptance inferred at packaging.",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
-    "index.html": "05146fd7dbeec5654d996289e0abf26b6bbd321dbe1a09737f5f6260d91101a9",
-    ".vite/manifest.json": "56ad5688285421eb8857a69666069eb03ab1344e1fbaa842913ae3c96e6ab7e1",
-    "assets/index-BzSz5xDX.js": "4849181649b810e7ed98f24e554bef490b4087eede92f672b3cddcb29a903b34",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+    "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
+    ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
   },
   "currentPackage": {
-    "version": "0.0.0-edge.81",
-    "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
-    "sourceArchiveSHA256": "c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d",
-    "wheelSHA256": "b8f96d19e77ed10aa027dad7786426eb93456406d5142d03ac75b8dfe4110ce8",
+    "version": "0.0.0-edge.82",
+    "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+    "sourceArchiveSHA256": "cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0",
+    "wheelSHA256": "58b285dce84b7d160cbc0b131f0658c5c56eb9c5d04686b4211dc1ad63ec9dd6",
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "05146fd7dbeec5654d996289e0abf26b6bbd321dbe1a09737f5f6260d91101a9",
-      ".vite/manifest.json": "56ad5688285421eb8857a69666069eb03ab1344e1fbaa842913ae3c96e6ab7e1",
-      "assets/index-BzSz5xDX.js": "4849181649b810e7ed98f24e554bef490b4087eede92f672b3cddcb29a903b34",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
+      ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
     },
     "storageSchema": 37,
-    "status": "Historical native-qualified Edge81; does not include current hidden-read/guidance corrections. Immutable Edge82 qualification and final latest-head checks remain pending."
+    "status": "Immutable source/wheel and actuallocalARM64sixchecks qualified. Native82 and final required current-head CI/review remain required, with final acceptance retained in linkedPR."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
     "allTrackedBlobsMatch": true,
-    "archiveBytes": 3091585,
-    "sha256": "c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d"
+    "archiveBytes": 3098908,
+    "sha256": "cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0"
   },
   "previousCandidate78": {
     "package": {
@@ -522,5 +441,131 @@
     "uniqueRequirements": 11,
     "distinctCases": 6,
     "onlyBaselineObservationParagraphsClarified": 2
-  }
+  },
+  "previousCandidate81": {
+    "package": {
+      "version": "0.0.0-edge.81",
+      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+      "sourceArchiveSHA256": "c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d",
+      "wheelSHA256": "b8f96d19e77ed10aa027dad7786426eb93456406d5142d03ac75b8dfe4110ce8",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "05146fd7dbeec5654d996289e0abf26b6bbd321dbe1a09737f5f6260d91101a9",
+        ".vite/manifest.json": "56ad5688285421eb8857a69666069eb03ab1344e1fbaa842913ae3c96e6ab7e1",
+        "assets/index-BzSz5xDX.js": "4849181649b810e7ed98f24e554bef490b4087eede92f672b3cddcb29a903b34",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      "storageSchema": 37,
+      "status": "Historical native-qualified Edge81; does not include current hidden-read/guidance corrections. Immutable Edge82 qualification and final latest-head checks remain pending."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T11:24:01.187216+00:00",
+      "image": "domus-162-edge81:pinned",
+      "imageId": "sha256:40e9354b17f6c6208fbaeb6c2df7766e112f9f56748616f68b9290e5b274e0fe",
+      "architecture": "arm64",
+      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+      "version": "0.0.0-edge.81",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "at": "2026-11-22T11:46:14.182841+00:00",
+      "versionObserved": "0.0.0-edge.81",
+      "previousObserved": "0.0.0-edge.80",
+      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+      "packagingHead": "5f0bb08a340b24d854f0dc19ecf76c849499b74b",
+      "appSlug": "abb0c2fd_domus_edge",
+      "household": "Domus QA 162 Edge78",
+      "method": "Official CUA Chrome UI, native Supervisor versions, DOM-backed bundle filename, public app pages. No private HA API/state/clock injection.",
+      "moduleBasenameObserved": "index-BzSz5xDX.js",
+      "inPlaceUpdate": true,
+      "backupCreated": false,
+      "savedExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent",
+          "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low",
+          "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+        }
+      ],
+      "exactLiteralNotesAfterUpdateAndRestart": true,
+      "literalHTMLChildren": [
+        0,
+        0
+      ],
+      "desktop": {
+        "viewport": [
+          1120,
+          844
+        ],
+        "locale": "en",
+        "theme": "light",
+        "keyboardTabEntry": true,
+        "headingTop": 68.15625,
+        "headingBottom": 106.5546875,
+        "regionFocused": true,
+        "activeTab": "page",
+        "sameOwnerStockAndShopDraftsRetained": true
+      },
+      "mobile": {
+        "viewport": [
+          390,
+          844
+        ],
+        "locale": "es",
+        "theme": "dark",
+        "actualTouchOverflow": true,
+        "actualTouchStockAndShoppingTabs": true,
+        "headingTop": 67.765625,
+        "headingBottom": 106.1640625,
+        "regionFocused": true,
+        "activeTab": "page",
+        "literalDraftRetained": "QA 162 Edge81\nRetain\t\ud83d\ude00",
+        "itemEntry": {
+          "top": 389,
+          "bottom": 414.59375,
+          "iframeViewport": 804,
+          "fixedNavigationBottom": 56,
+          "focused": true
+        }
+      },
+      "restart": "Supervisor Stop observed Detenido/Iniciar at81, Start observed En ejecuci\u00f3n/Open Web UI at81. Fresh public app entry reread exact two notes/quantities/priorities, zero stock/history and empty purchases/sessions.",
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "historyAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "sessionsAfterRestart": "There are no purchase sessions recorded.",
+      "temporaryEmulationRestored": true,
+      "finalState": "Observed version81 Detenido/Iniciar after qualification. Permanent uninstall dialog open; same exact app/data/source confirmation requested earlier remains pending.",
+      "screenshots": [
+        "native81-installed-version.jpg",
+        "native81-en-light-keyboard.jpg",
+        "native81-es-dark-touch.jpg",
+        "native81-es-dark-item-entry.jpg",
+        "native81-cleanup-confirmation.jpg"
+      ],
+      "limitation": "Native installed normal keyboard/touch journeys, saved records and public restart qualified. Partial household-fact503 and member-replacement cases are qualified through owned actual browser fixtures and unit regressions, not injected into native Home Assistant. Final same-head CI and destination checks remain required.",
+      "newPersistedRecordsFor81": 0
+    },
+    "sourceFrontendTests": 2190,
+    "remainingFindings": "b7 review identified hidden Shopping refresh after Stock navigation and permission-denial guidance; current82 source fixes both. Native81 observations qualify only the previous runtime."
+  },
+  "packagingSnapshotAt": "2026-11-22T12:16:23.002703+00:00"
 }
