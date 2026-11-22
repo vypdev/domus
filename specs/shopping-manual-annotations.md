@@ -1,6 +1,6 @@
 # Add notes and priority to manual shopping requests
 
-- Status: Implementation in progress; image and installed acceptance pending
+- Status: Implemented and qualified for the bounded Edge increment (2026-11-22)
 - Catalog capability: shopping-management
 
 ## 1. Executive summary
@@ -9,7 +9,7 @@ This bounded increment lets a household member add a plain-text note and priorit
 
 Member selects a product or enters a free-text item -> enters optional note and priority -> submits the existing manual-extra command -> sees the annotation with that request’s source details.
 
-Implementation checkpoint (2026-11-21): schema-37 storage, protected annotated reads, client recovery and the complete note/priority form are source-tested. The exact public ha-ui `0.1.0-next.5` cohort is published, pinned and byte-verified in Domus. The current paths, executed evidence and outstanding package/image/installed gates are recorded in `docs/evidence/shopping-manual-annotations-qualification.md`. The selected-source limitations below describe native admission before these changes; they are not a current implementation inventory.
+Implementation checkpoint (2026-11-22): the bounded increment is qualified at reviewed head `31ee66eb86804523d10ebf0d68d8ca5658a54f97`, merged as `7770b1e560800fa4bb78d36b0583b2c1beb784d7`. Source checks, both actual CPU images, installed Edge.77 acceptance and owned QA cleanup are complete. Destination CI and Branch Sync pass and native #157 is closed. The exact public ha-ui `0.1.0-next.5` cohort is pinned and byte-verified in the consumer. The [qualification map](../docs/evidence/shopping-manual-annotations-qualification.md) records the final evidence, one external destination-job retry and the distinct earlier observations. The selected-source limitations and admission checklist below retain their original context; their historical unchecked state is not the current execution status. Broader Shopping capability, distribution and Stable acceptance remain separate.
 
 ## 2. Problem, current behavior, and evidence
 

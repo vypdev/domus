@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Immutable77archive/wheel,6022backend100+ASTaudit,83HTTP/2240540ECMA/59static/actualARM64sixcases+installedschemaqualified;native77/finalsameheadCIpending",
+  "status": "Accepted bounded Edge increment: reviewed source, installed Edge.77 and cleanup, normal merge, destination CI/Branch Sync and native issue closure qualified.",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
@@ -100,10 +100,7 @@
     "journalFixture": "frontend/tests/fixtures/edge72-inventory-journal.provenance.json",
     "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
   },
-  "pendingGates": [
-    "Installednative77acceptanceandimmediateownedQAcleanup",
-    "Finalsamehead6032backend/2164frontend/129source/68catalog/62container+74browserperCPUandstableartifacts;review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
-  ],
+  "pendingGates": [],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
   "recordedAt": "2026-11-22T02:37:22.045426+00:00",
   "sourceCommit": "ecdf2c6007247b1df891c52f938bd1bb28ffeed3",
@@ -179,7 +176,7 @@
       "product": "QA 157 Edge73 Tea",
       "manualExtras": 1,
       "quantity": "2",
-      "note": "First line\nSecond\t\ud83d\ude00 <b>literal</b>",
+      "note": "First line\nSecond\t😀 <b>literal</b>",
       "priority": "urgent",
       "stock": 0,
       "nativeInvalid1001RetainsValueAndFocus": true,
@@ -511,5 +508,121 @@
       "https://json-schema.org/understanding-json-schema/reference/regular_expressions",
       "https://www.rfc-editor.org/info/rfc8259/"
     ]
+  },
+  "sourceCapturePendingGates": [
+    "Installednative77acceptanceandimmediateownedQAcleanup",
+    "Finalsamehead6032backend/2164frontend/129source/68catalog/62container+74browserperCPUandstableartifacts;review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
+  ],
+  "updatedAt": "2026-11-22T06:39:12.204982+00:00",
+  "finalAcceptance": {
+    "verifiedAt": "2026-11-22T06:15:11.858957Z",
+    "scope": "Only #157 manual Shopping annotations; broader capability and Stable delivery remain open.",
+    "nativeRequirements": 8,
+    "nativeCases": 10,
+    "reviewedHead": "31ee66eb86804523d10ebf0d68d8ca5658a54f97",
+    "sourceCI": 44981189967,
+    "sourceApplicableGates": 15,
+    "sourceApplicableGatesResult": "SUCCESS",
+    "completeReview": {
+      "fixed": 4,
+      "active": 0,
+      "reopened": 0,
+      "dismissed": 0,
+      "verificationNeeded": 0,
+      "unknown": 0
+    },
+    "runtimeArtifactSource": "ecdf2c6007247b1df891c52f938bd1bb28ffeed3",
+    "runtimePythonAndCompiledUIEquality": true,
+    "finalBackend": {
+      "tests": 6032,
+      "runtimeModules": 250,
+      "globalAndPerFileStatementBranchCoverage": 100,
+      "exactSourceInventoryAndASTAudit": true
+    },
+    "finalFrontend": {
+      "tests": 2164,
+      "runtimeModules": 119,
+      "allFourCoverageMetricsGlobalAndPerFile": 100,
+      "sourceEntryCases": 129,
+      "catalogCases": 68,
+      "skips": 0,
+      "flakes": 0,
+      "testRetries": 0
+    },
+    "actualImages": {
+      "eachCpuContainerCases": 62,
+      "eachCpuBrowserCases": 74,
+      "skips": 0,
+      "flakes": 0,
+      "testRetries": 0,
+      "genuine20And36MigrationRestartRestoreAndCompatibleRollback": true,
+      "destinationAmd64Artifact": 14741893328,
+      "destinationArm64Artifact": 14741462088
+    },
+    "nativeHomeAssistantCoverage": {
+      "actualCoreCpuTargets": [
+        "amd64",
+        "arm64"
+      ],
+      "modules": 10,
+      "statements": 581,
+      "branches": 136,
+      "globalAndPerFileStatementBranchCoverage": 100,
+      "excludedLines": 0,
+      "omittedModules": 0
+    },
+    "installedEdge77": {
+      "result": "PASS",
+      "englishDesktopKeyboard": true,
+      "spanish390pxTouch": true,
+      "C1InsertionsRejectedWithTextAndFocusRetained": 32,
+      "complete1001EmojiErrorThen1000EmojiCorrection": true,
+      "independentSources": 2,
+      "exactNotesPrioritiesQuantitiesAfterPublicRestart": true,
+      "stockUnchangedAtZero": true,
+      "bothMobileThemesFitViewport": true,
+      "ownedApplicationDataAndSourceRemoved": true,
+      "originalHASourcesPreserved": 8,
+      "backupCreated": false,
+      "publicObservationRecord": "https://github.com/vypdev/domus/pull/158#issuecomment-7070395974"
+    },
+    "merge": {
+      "sha": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
+      "entireTreeEqualsReviewedHead": true,
+      "normalMerge": true
+    },
+    "destination": {
+      "ci": 44986600993,
+      "attempt": 2,
+      "result": "SUCCESS",
+      "successfulFinalJobs": 10,
+      "branchSync": 44986600990,
+      "branchSyncResult": "SUCCESS"
+    },
+    "nativeClosure": {
+      "issue": 157,
+      "state": "CLOSED",
+      "reason": "COMPLETED",
+      "closedBy": "vypbot",
+      "closedAt": "2026-11-22T04:56:37Z",
+      "workflow": 44986601478,
+      "workflowResult": "SUCCESS"
+    },
+    "externalJobRetry": {
+      "count": 1,
+      "originalJob": 137098423946,
+      "successfulJob": 137110657919,
+      "originalBrowserPassed": 67,
+      "originalBrowserFailed": 7,
+      "firstStylesheetBridgeFailureMilliseconds": 30014.962,
+      "sixLaterSessionFailuresMillisecondsLessThan": 2,
+      "allSevenOriginalFailureTracesPreserved": true,
+      "underlyingWorkerStallCause": "Unobserved; did not recur in the single fresh-job retry.",
+      "successfulContainerSeconds": 988.34,
+      "successfulBrowserMilliseconds": 476682.023,
+      "sourceTestsDeadlinesAndAssertionsUnchanged": true,
+      "otherJobsReusedWithOriginalExecutionTimes": true
+    },
+    "publicQualification": "https://github.com/vypdev/domus/pull/158#issuecomment-7070395974"
   }
 }
