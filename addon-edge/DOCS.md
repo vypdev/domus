@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.80 packages the immutable runtime declared in
+Edge 0.0.0-edge.81 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
@@ -17,6 +17,8 @@ or a verified participant/household change retires protected state. Navigation
 itself never creates, posts, cancels or repeats a command.
 
 A pending operation belongs to the verified household and member even after reload. The same owner keeps the original request bytes and key. Browser packets from an older version that cannot establish that owner, or that belong to another owner, follow the existing incompatible-scope retirement without a lookup or resend. Previously committed server receipts remain unchanged; review current records before submitting another change.
+
+If general household details cannot load, **Refresh status** retries them. Inventory and Shopping can continue only after current household/member access is independently verified. Existing server permissions remain authoritative for each read and change.
 
 Manual extras retain optional notes of up to 1,000 Unicode characters, including
 line breaks and tabs, and Low, Normal, High or Urgent priority. Unsupported

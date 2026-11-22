@@ -12,28 +12,29 @@ executed source checks, compiled images, installed Edge and final CI.
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
 `7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
-`a5f74c2829a7a273adef7a459978bbc43474716a` on the admitted managed ref. Edge.80
+`acf8587d1809e061a17a29c29e9e15782e514829` on the admitted managed ref. Edge.81
 pins that exact source and archive SHA-256
-`3f2e5327e2cbd621fbfa8ce1d4f1424c75e5f05e70ea5257db3a434d78e5544c`.
+`c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d`.
 All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`38a00bb5b354e1f72be22922a3ae5acd47c180b1ba6a4ad9fd68cc3a7c3bf56e`.
+`b8f96d19e77ed10aa027dad7786426eb93456406d5142d03ac75b8dfe4110ce8`.
 The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
 restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
 Its installed native Home Assistant walkthrough then exposed two mobile viewport
 defects: repeated Shopping entry left its heading above the screen, and focusing
 an Overview item before nested control layout left the row below the screen.
 Edge.78 is not accepted. Its original source, wheel, image and findings remain
-distinct in `previousCandidate78`; the new Edge.79 image passes the same six checks, including all 254 product
-file hashes. Its installed upgrade also passes the native acceptance below.
-The new Edge.80 actual ARM64 image also passes all six checks, including every
-Python and UI file hash. Its installed durable-owner correction remains pending.
+distinct in `previousCandidate78`. The previous Edge.79 and Edge.80 images pass
+the same six checks, including all 254 product file hashes. Their installed normal
+journeys, saved literal records and public restart are qualified separately.
+Review then found Edge.80's partial-household-read defect. The current Edge.81
+actual ARM64 image passes the same six checks; its installed correction remains pending.
 The pre-existing specification prefix and published #162 unit are
-preserved. Backend, API, schema 37, journal serialization and exact published
+preserved. Backend, API, schema 37, canonical journal packet format and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
-The complete current frontend campaign passes 2,188 tests across 50 files, with
+The complete current frontend campaign passes 2,190 tests across 50 files, with
 all four metrics at 100% globally and per authored runtime file (121 files):
-9,504 statements, 8,719 branches, 2,025 functions and 6,914 lines. Its independent
+9,504 statements, 8,721 branches, 2,025 functions and 6,914 lines. Its independent
 source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
 product Vite build and the actual wheel package test pass. All 250 Python module
 bytes equal accepted Edge.77; the four compiled UI resources match the new wheel.
@@ -138,3 +139,20 @@ frontend run preserves all four coverage metrics at 100% with the same runtime
 inventory. Catalog readiness now points to the owning executed record rather
 than duplicating a test count that can drift. Edge.80 qualifies this corrected
 runtime separately from the historical Edge.79 acceptance above.
+
+## Independently verified household identity during partial reads
+
+Review 4657842084 found that requiring display household facts unnecessarily
+emptied Inventory/Shopping after a non-authentication household-read failure.
+The existing HouseholdController deliberately supports this verified partial
+view. Two workspace regressions reproduced the failure; the negative case keeps
+both workspaces unbound when no household identity can be verified. The binding
+now uses current matched administration capabilities when entry facts are
+unavailable, and the same resolved household for authority revisions. All three
+cases pass within the 2,190-test, 100%-on-four-metrics campaign. The actual C04
+browser journey returns household-facts 503s and reloads both deployments, verifies
+Shopping remains usable and navigation issues no writes, then retains every
+existing stale-read, denial and independent-grant assertion. All twelve variants
+pass once each without retries. Edge.81 qualifies that runtime; the historical
+Edge.80 normal native journeys, saved records and real stop/start are retained
+separately and do not establish acceptance of this partial-read correction.

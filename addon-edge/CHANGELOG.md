@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.81
+
+- Keep Inventory and Shopping available when general household details cannot load but current household/member access remains independently verified.
+- Keep the same verified household identity for pending requests and current permission revisions.
+- Preserve schema-37 data, literal notes, original receipts and current server permissions.
+
 ## 0.0.0-edge.80
 
 - Keep an interrupted Shopping or stock request bound to the verified household and member after reload.
