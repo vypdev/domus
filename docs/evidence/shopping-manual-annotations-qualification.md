@@ -33,8 +33,12 @@ a corrected request with the same key commits once. All four compiled HTTP
 journeys reject these controls without a POST and retain the accepted note.
 The complete frontend still passes 2,164 tests with all four coverage metrics
 at 100%; all 68 catalog cases and the four compiled journeys pass. A fresh full
-6,019-case backend campaign, immutable Edge.75, both final CPU campaigns and
+6,019-case backend campaign, actual Edge.75 image, both final CPU campaigns and
 installed Edge.74-to-75 acceptance are still required.
+
+The public Edge.75 archive matches all 1,018 tracked Git blobs and all 250
+wheel runtime files. Its exact source, archive, wheel and UI digests are recorded
+in the JSON record and app artifact.
 
 The second finding concerned a fixture producer's retirement metric. Both free
 space samples now use the producer filesystem, including when the output directory

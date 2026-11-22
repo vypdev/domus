@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Shopping C1 and producer-metric review fixes source-qualified; full6019 backend, immutable75, finalCPU and installed74to75 gates pending",
+  "status": "Immutable75 source/wheel/archive qualified; current full6019backend, image, finalCPU and native74to75 acceptance pending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
-      ".vite/manifest.json": "248c607d7318af6d9de2d3a73d2e6d0491ec6c688baa6c9c19684b55c5207e54",
-      "assets/index-BCQLqeBf.js": "aed08b45049fce52b1c8524acb9291393dd530d9bab4aad7d9dbef5c2ffd40e3",
+      ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "index.html": "61074d02ad26af270347817f5f02b36e3d3fc535dfcdaa56806ddfc5b4657aff"
+      "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+      "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
     },
     "haUi": "0.1.0-next.5",
     "publicCoreTarSHA256": "2d591dcc2fbfcb9222632a03befba6b3de604115e760eda2dfbcdbc1d91d8f41",
@@ -100,33 +100,33 @@
   },
   "pendingGates": [
     "Complete6019 backend source campaign with100% global/per-file statement and branch coverage",
-    "Immutable Edge75 archive/wheel/bundle pin and actual local image qualification",
+    "Actual local pinned75 image byte/migration/restart/restore/rollback/listener qualification",
     "Complete129-case source entry campaign in final-head CI",
     "All62 container and74 actual-image browser cases in each CPU architecture",
     "Installed native74-to75 retention, control rejection, restart and specifically authorized cleanup",
     "Final PR same-head CI, review and Branch Sync; normal merge, destination checks and native issue closure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-22T00:04:03.819532+00:00",
-  "sourceCommit": "39790e871a7ee53e502e6ac891f5ada42ee6aa8e",
+  "recordedAt": "2026-11-22T00:06:11.342112+00:00",
+  "sourceCommit": "b4cfc95e014520a9fe1d891ea1a6b415641021d0",
   "currentPackage": {
-    "version": "0.0.0-edge.74",
-    "sourceArchiveSHA256": "d7d998681d659dd761581297d8280936ef990442e77138e14718b3bdcefc02a7",
-    "wheelSHA256": "dbc7c2f5520ac97d5c6e21c81aa62cd51ca1b4304644c0cbbc748fbaed5961e8",
+    "version": "0.0.0-edge.75",
+    "sourceArchiveSHA256": "5f5e44037001f01891e7ccd6f065c6017c72b828661d5fda2305765e582dad04",
+    "wheelSHA256": "6dd8b6ca949ed4aa1fd7e5cad00192f7abecbadb1bd3ba81b33aad31b79006e8",
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "61074d02ad26af270347817f5f02b36e3d3fc535dfcdaa56806ddfc5b4657aff",
-      ".vite/manifest.json": "248c607d7318af6d9de2d3a73d2e6d0491ec6c688baa6c9c19684b55c5207e54",
-      "assets/index-BCQLqeBf.js": "aed08b45049fce52b1c8524acb9291393dd530d9bab4aad7d9dbef5c2ffd40e3",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+      "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
     }
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1018,
     "allTrackedGitBlobsMatch": true,
     "all250WheelRuntimeFilesMatchArchive": true,
-    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/39790e871a7ee53e502e6ac891f5ada42ee6aa8e"
+    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/b4cfc95e014520a9fe1d891ea1a6b415641021d0"
   },
   "priorCandidate73": {
     "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
