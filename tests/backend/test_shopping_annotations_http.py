@@ -21,7 +21,7 @@ from domus.domain.member_profiles import MemberPresentation
 from domus.entrypoints.inventory_http import AddExtraBody
 
 
-def test_published_note_schema_admits_the_same_controls_as_the_command_validator():
+def test_published_note_schema_admits_the_same_unicode_as_the_command_validator():
     note = AddExtraBody.model_json_schema()["properties"]["note"]
     assert "pattern" in note
     for name in ("household-api.openapi.json", "native-household-api.openapi.json"):
@@ -34,10 +34,17 @@ def test_published_note_schema_admits_the_same_controls_as_the_command_validator
         "name": "Schema qualification",
         "quantity": "1",
     }
-    for value in ("", "Line\nTab\tCarriage\rReturn", "😀" * 1000, "~\u00a0 text", "<b>literal</b>"):
+    for value in (
+        "",
+        "Line\nTab\tCarriage\rReturn",
+        "😀" * 1000,
+        "~\u00a0 text",
+        "<b>literal</b>",
+        "\ud7ff\ue000\uffff\U00010000\U0010ffff",
+    ):
         assert pattern.fullmatch(value) and len(value) <= note["maxLength"]
         assert AddExtraBody.model_validate({**required, "note": value}).note == value
-    for codepoint in (*range(0x20), *range(0x7F, 0xA0)):
+    for codepoint in (*range(0x20), *range(0x7F, 0xA0), *range(0xD800, 0xE000)):
         if codepoint in (9, 10, 13):
             continue
         value = "Prefix" + chr(codepoint) + "suffix"
@@ -45,6 +52,61 @@ def test_published_note_schema_admits_the_same_controls_as_the_command_validator
         with pytest.raises(InvalidInput) as invalid:
             AddExtraBody.model_validate({**required, "note": value})
         assert invalid.value.code == "invalid_shopping_note"
+
+
+def test_escaped_json_rejects_lone_surrogates_and_recovers_with_supplementary_notes(api):
+    api.user(USER, True)
+    tables = ("shopping_extras", "receipts", "audit", "outbox", "inventory_movements")
+    with closing(sqlite3.connect(api.store.path)) as db:
+        before = {
+            table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0] for table in tables
+        }
+    for index, invalid_note in enumerate(("\ud800", "\udfff", "\udc00\ud800", "\ud83dx\ude00")):
+        key = f"escaped-unicode-{index}"
+        payload = {
+            "action": "shopping.add-extra",
+            "product_id": None,
+            "name": "Escaped Unicode",
+            "quantity": "1",
+            "note": invalid_note,
+        }
+        # Exercise real JSON decoding, not an HTTP client's UTF-8 encoder failure.
+        headers = api.headers(key) | member_context(USER) | {"Content-Type": "application/json"}
+        response = api.client.post(
+            INVENTORY + "/commands", content=json.dumps(payload, ensure_ascii=True), headers=headers
+        )
+        assert response.status_code == 422, response.text
+        # The existing HTTP boundary rejects malformed Unicode before the named
+        # command validator; preserve its public error and the unused key.
+        assert response.json()["code"] == "invalid_request"
+        assert response.json()["action_required"]
+        with closing(sqlite3.connect(api.store.path)) as db:
+            assert {
+                table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+                for table in tables
+            } == {
+                table: count + (index if table != "inventory_movements" else 0)
+                for table, count in before.items()
+            }
+        # The same key remains available. Escaped UTF-16 pairs decode to Unicode
+        # scalars, including both supplementary boundaries and 1,000 emoji.
+        corrected = ("😀" * 1000, "\U00010000", "\U0010ffff", "Literal\nTab\tReturn\r😀")[index]
+        body = json.dumps(payload | {"note": corrected}, ensure_ascii=True)
+        assert json.loads(body)["note"] == corrected
+        saved = api.client.post(INVENTORY + "/commands", content=body, headers=headers)
+        assert saved.status_code == 200, saved.text
+        assert (
+            api.client.post(INVENTORY + "/commands", content=body, headers=headers).json()
+            == saved.json()
+        )
+        assert original(api, key, "add-extra").json() == saved.json()
+    with closing(sqlite3.connect(api.store.path)) as db:
+        assert {
+            table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0] for table in tables
+        } == {
+            table: count + (4 if table != "inventory_movements" else 0)
+            for table, count in before.items()
+        }
 
 
 def annotated(api, product=None, user=USER, **params):

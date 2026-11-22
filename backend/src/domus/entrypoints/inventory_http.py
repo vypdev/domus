@@ -157,11 +157,14 @@ class AddExtraBody(StrictModel):
             description=(
                 "Literal well-formed Unicode, at most 1,000 codepoints. Tabs, line feeds and "
                 "carriage returns are preserved; other C0 controls, DEL and C1 controls "
-                "are rejected."
+                "and unpaired UTF-16 surrogates are rejected."
             ),
             json_schema_extra={
                 "maxLength": MAX_SHOPPING_NOTE,
-                "pattern": r"^[^\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]*$",
+                "pattern": (
+                    r"^(?:[^\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f\ud800-\udfff]"
+                    r"|[\ud800-\udbff][\udc00-\udfff])*$"
+                ),
             },
         ),
     ] = ""
