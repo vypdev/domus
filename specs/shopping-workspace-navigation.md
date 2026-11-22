@@ -52,6 +52,15 @@ household/member/principal retires the prior protected view and owned pending
 request; unconfirmed retirement closes the view. Logout uses the existing
 protected-state cleanup. Unrelated browser storage remains untouched.
 
+The persisted scope includes the verified household and member as well as the
+installation, channel and HA subject, so owner validation also applies after a
+reload. The packet slot, keys, canonical format and original request key remain
+unchanged. A matching owner's pending packet is reopened byte-for-byte; an old
+scope that cannot establish household/member ownership follows the existing
+incompatible-scope retirement without a lookup, resend or replacement request.
+Previously committed server receipts are unaffected. Failed retirement keeps
+recovery and writes blocked rather than adopting the old request.
+
 ## Compatibility, configuration and limits
 
 There is no backend, API, SQLite schema, ledger or receipt-format change.

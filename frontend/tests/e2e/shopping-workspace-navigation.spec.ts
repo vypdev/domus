@@ -285,7 +285,16 @@ for (const mode of ['native','standalone'] as const) {
     await page.route(commands,route => route.abort('connectionclosed'));
     await shop.getByRole('button',{name:'Add manual extra',exact:true}).click();
     await expect(shop.getByRole('button',{name:'Check original operation',exact:true})).toBeEnabled();
-    expect(await page.evaluate(() => sessionStorage.getItem('domus.inventory.v1'))).not.toBeNull();
+    const packet = await page.evaluate(() => sessionStorage.getItem('domus.inventory.v1'));
+    expect(packet).not.toBeNull();
+    await expect(shop.getByRole('textbox',{name:'Note (optional)',exact:true})).toHaveValue('Private note');
+    // A fresh composition must keep this same verified owner's original bytes
+    // without a lookup or resend merely because the browser was reloaded.
+    await page.reload();
+    await expect(shop.getByRole('button',{name:'Check original operation',exact:true})).toBeEnabled();
+    expect(await page.evaluate(() => sessionStorage.getItem('domus.inventory.v1'))).toBe(packet);
+    expect(posts).toBe(1); expect(lookups).toEqual([]);
+    await expect(shop.getByRole('textbox',{name:'Note (optional)',exact:true})).toBeDisabled();
     await page.getByRole('button',{name:mode === 'native' ? 'Close this view' : 'Sign out of Domus',exact:true}).click();
     await expect(page.getByRole('button',{name:mode === 'native' ? 'Reopen Domus' : 'Sign in with Home Assistant',exact:true})).toBeVisible();
     await expect(shop.getByRole('textbox',{name:'Note (optional)',exact:true})).toHaveCount(0);

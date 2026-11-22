@@ -490,14 +490,17 @@ export function mountEntry(page: EntryPage): PageMount {
       if ((element.workspaceDestination === 'inventory' || element.workspaceDestination === 'shopping') && entry?.phase === 'ready'
           && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session) {
         const context = entry.session.context;
-        const key = JSON.stringify([context.installationId, context.channel, context.subject]);
         const authority = element.administration?.access;
         const home = entry.household?.householdId, member = authority?.member;
         if (!home || !member || authority?.state !== 'active') {
           clearShoppingNavigation(); shoppingNavigationScope = null; shoppingNavigationRoute = null;
           inventoryController.bind(null); return;
         }
-        const identity = JSON.stringify([key, home, member.memberId]);
+        // The verified owner must survive a reload, not only an in-page rebind.
+        // Existing packets without household/member ownership follow the journal's
+        // normal incompatible-scope retirement; their request is never reassigned.
+        const key = JSON.stringify([context.installationId, context.channel, context.subject, home, member.memberId]);
+        const identity = key;
         if (inventoryOwner !== null && inventoryOwner.identity !== identity) {
           try {
             const previous = inventoryJournal.open(inventoryOwner.key);

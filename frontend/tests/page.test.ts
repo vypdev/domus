@@ -707,6 +707,63 @@ test.each([false, true])('a replacement member cannot recover the previous membe
   expect(f.fetch.mock.calls.slice(start).some(([path]) => path.includes('/inventory/requests/'))).toBe(false);
 });
 
+test.each(['same owner', 'replacement', 'legacy ownerless scope', 'failed retirement'] as const)(
+  'a reloaded Shopping request validates its durable household/member owner: %s', async situation => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#shopping'; f.values.set('fixture.unrelated','keep');
+  const first = await f.open();
+  await vi.waitFor(() => expect(first.app.inventory?.report?.mayManage).toBe(true));
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (path.endsWith('/inventory/commands') && init.method === 'POST') throw new Error('lost reply');
+    if (path.includes('/inventory/requests/')) {
+      const reply = new Response(JSON.stringify({state:'blocked',code:'operation_missing',message:'No original effect.',
+        action_required:'Check current access.',correlation_id:'cor_owner'}),
+        {status:404,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:corpus.standalone.endpoint.origin + path}); return reply;
+    }
+    return original(path,init);
+  });
+  first.app.dispatchEvent(new CustomEvent('domus-inventory-intent',{detail:{type:'submit',command:{
+    action:'shopping.purchase',product_id:null,name:'Private original owner purchase',quantity:'1',
+  }},bubbles:true,composed:true}));
+  await vi.waitFor(() => expect(first.app.inventory).toMatchObject({pending:true,busy:false,notice:'uncertain'}));
+  let packet = f.values.get(INVENTORY_JOURNAL_KEY)!;
+  const request = JSON.parse(packet);
+  first.mounted.dispose(); first.app.remove();
+  if (situation === 'replacement' || situation === 'failed retirement') f.member('replacement');
+  if (situation === 'legacy ownerless scope') {
+    request.scope = JSON.stringify(JSON.parse(request.scope).slice(0,3));
+    packet = JSON.stringify(request); f.values.set(INVENTORY_JOURNAL_KEY,packet);
+  }
+  if (situation === 'failed retirement') vi.spyOn(f.page.sessionStorage,'removeItem').mockImplementation(() => {throw new Error('blocked retirement');});
+  const start = f.fetch.mock.calls.length, second = await f.open();
+  await vi.waitFor(() => expect(second.app.inventory?.report?.mayManage).toBe(true));
+  if (situation === 'same owner') {
+    expect(second.app.inventory?.pending).toBe(true);
+    expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(packet);
+  } else if (situation === 'failed retirement') {
+    expect(second.app.inventory).toMatchObject({pending:true,notice:'unavailable'});
+    expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(packet);
+  } else {
+    expect(second.app.inventory?.pending).toBe(false);
+    expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(false);
+  }
+  second.app.dispatchEvent(new CustomEvent('domus-inventory-intent',{detail:{type:'recover'},bubbles:true,composed:true}));
+  if (situation === 'same owner') {
+    await vi.waitFor(() => expect(f.fetch.mock.calls.slice(start).filter(([,init])=>init.method==='POST')).toHaveLength(1));
+    const recovery = f.fetch.mock.calls.slice(start).find(([path])=>path.includes('/inventory/requests/'))!;
+    expect(recovery[0]).toContain('/shopping.purchase/'+request.key);
+    const retry = f.fetch.mock.calls.slice(start).find(([,init])=>init.method==='POST')!;
+    expect(new Headers(retry[1].headers).get('Idempotency-Key')).toBe(request.key);
+    expect(JSON.parse(String(retry[1].body))).toEqual(request.command);
+    expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(packet);
+  } else {
+    await Promise.resolve();
+    expect(f.fetch.mock.calls.slice(start).some(([path,init])=>path.includes('/inventory/requests/')||init.method==='POST')).toBe(false);
+  }
+  expect(f.values.get('fixture.unrelated')).toBe('keep');
+});
+
 test('a canceled Shopping navigation tick cannot consume its replacement or reread an already loaded list', async () => {
   const f = fixture(); f.phase('active');
   const clock = holdNavigationTimers(f.page), base = f.page.location.href;
