@@ -48,7 +48,9 @@ distinguishes completed source checks from the remaining installed and merge gat
   purchases, partial physical receipts and Pantry
   posting](evidence/shopping-receipts-qualification.md). The [shared shopping
   list](evidence/shared-shopping-list-qualification.md) combines Pantry, uncovered Task materials
-  and manual extras with source details. A [purchase
+  and manual extras with source details. Members can add [literal notes and priorities
+  to manual requests](evidence/shopping-manual-annotations-qualification.md), retaining each source
+  and its exact quantity. A [purchase
   session](evidence/purchase-session-qualification.md) records a trip from the shared list and
   groups receipt progress by item. Shoppers can [record the store for a trip](evidence/purchase-session-store-qualification.md).
   Shopping managers can [cancel the undelivered
