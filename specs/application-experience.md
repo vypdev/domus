@@ -491,3 +491,193 @@ introduced. Case counts stay unchanged. The reported last-selectable-month
 finding is contradicted by existing production predicates; existing domain and
 component boundary cases now explicitly assert the 9998-12-01 anchor and
 9999-01-01 exclusive end, plus every calendar mode and both week starts.
+
+## Proposed change: Open Shopping as a direct household workspace
+
+- Status: Draft
+- Catalog capability: application-experience
+
+### 1. Executive summary
+
+This delta adds a distinct, localized Shopping destination to the existing application-experience contract. It exposes the current shared list, manual extras, purchases, store sessions, and receipt workflow while preserving Inventory for catalog, stock, locations, material consumption, and replenishment. The retained owner remains the contract for shared navigation, presentation boundaries, and general accessibility and localization requirements; this delta specifies the Shopping and Inventory transition and its acceptance.
+
+### 2. Problem, current behavior, and evidence
+
+At the selected immutable base `7770b1e560800fa4bb78d36b0583b2c1beb784d7`, the shared navigation in `frontend/src/presentation/domus-app.ts` includes Inventory but not a Shopping destination, and Shopping renders within Inventory. The Shopping view is implemented in `frontend/src/presentation/domus-shopping.ts`; the entry composition is in `frontend/src/composition/entry-page.ts`, and shared inventory and shopping state is managed through `frontend/src/application/inventory-controller.ts`. The roadmap describes Shopping and Inventory as separate purposes in `docs/roadmap.md`. These source observations establish the current presentation arrangement, not installed-browser acceptance. The change must preserve the existing Shopping workflow and ownership while making its entry direct and understandable.
+
+### 3. Actors, surfaces, and terminology
+
+The actors are household members with current server-owned permissions, including readers, request-only members, and Shopping or Inventory managers. Shopping is the destination for the shared list, manual extras, purchases, store sessions, and receipt workflow. Inventory remains the destination for catalog, stock, locations, material consumption, and replenishment. Overview item links and existing inventory-shopping item fragments are contextual links: they must select the same product or manual extra in the Shopping workflow. The active destination must be clear through the localized tab, page heading, and deliberate content focus.
+
+### 4. Goals, non-goals, and fixed invariants
+
+The delta goals are direct Shopping entry through localized shared navigation and overflow; stable direct entry, reload, back/forward, and repeated-tab behavior; and preservation of contextual item links. Switching between Shopping and Inventory for the same household and member preserves unfinished forms, literal notes and priorities, selected work, and the identity of an interrupted write. On return, retained drafts and pending recovery are understandable; receipt lookup cannot replace a newer unrelated draft. Logout or a membership, household, or principal change retires protected state through the existing lifecycle. Navigation alone never posts stock, creates a purchase, cancels an effect, or resubmits a command; both destinations reuse the same application command and recovery owner. Existing grants and protected read/write contracts remain authoritative, and an already permitted Shopping action does not require a general Inventory mutation grant. The interface distinguishes unavailable data, denied access, read-only state, stale content, and pending or committed operations; unknown or malformed fragments use a safe existing fallback without executing a command. Qualify normal, loading, empty, denied, unavailable, read-only, stale, pending, committed, and conflict states, including revocation during retained drafts or interrupted operations. Verify English and Spanish, narrow touch and wide keyboard layouts, both themes, current source, actual amd64 and ARM64 images, standalone and Ingress base paths, and the immutable installed Edge candidate in Home Assistant; preserve complete global and per-file coverage and existing Shopping and Inventory acceptance assertions. Keep the domain schema, stock ledger, original receipts, and package cohort compatible without requiring a schema change solely for this presentation move. The registered publication outcome must state that the specification satisfies the required format, internal and cross-document consistency is checked, and reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation and prerequisites for these checks, and execution of product acceptance, remain unverified in this source review; planned assertions or structural counts do not establish execution or semantic completeness.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I162-U1-R1 | Provide a localized Shopping destination that opens the existing shared list, manual extras, purchases, store sessions, and receipt workflow; keep catalog, stock, locations, material consumption, and replenishment in Inventory. |
+| SDD-I162-U1-R2 | Support direct entry, reload, back and forward navigation, repeated-tab activation, shared overflow navigation, deliberate content focus, and contextual Overview and inventory-shopping item links that select the same product or manual extra. |
+| SDD-I162-U1-R3 | Preserve unfinished forms, literal notes and priorities, selected work, and interrupted-write identity when switching between Shopping and Inventory for the same household and member; make retained drafts and pending recovery understandable when returning. |
+| SDD-I162-U1-R4 | Ensure receipt lookup does not overwrite a newer unrelated draft; retire protected state on logout, membership, household, or principal change using the existing lifecycle. |
+| SDD-I162-U1-R5 | Ensure navigation does not post stock, create a purchase, cancel an effect, or resubmit a command; reuse the same application command and recovery owner across both destinations. |
+| SDD-I162-U1-R6 | Preserve current server-owned grants and protected read/write contracts for readers, request-only members, and Shopping/Inventory managers; do not require a general Inventory mutation grant to reach an already permitted Shopping action. |
+| SDD-I162-U1-R7 | Distinguish unavailable data, denied access, read-only state, stale content, and pending or committed operations; provide a safe existing fallback for unknown or malformed fragments without executing a command. |
+| SDD-I162-U1-R8 | Make the active tab, page heading, and focus identify the destination in English and Spanish, on narrow touch screens and wide keyboard layouts, in both themes. |
+| SDD-I162-U1-R9 | Qualify normal, loading, empty, denied, unavailable, pending, and conflict states, including revocation during a retained draft or interrupted operation. |
+| SDD-I162-U1-R10 | Verify current source and actual amd64 and ARM64 images, standalone and Ingress base paths, and the immutable installed Edge candidate in Home Assistant; preserve complete global and per-file coverage and existing Shopping and Inventory acceptance assertions. |
+| SDD-I162-U1-R11 | Keep the domain schema, stock ledger, original receipts, and package cohort compatible; do not require a new schema solely to move the presentation. |
+
+### 5. Current versus proposed product journey
+
+The retained application-experience owner describes a proposed first release; this delta adds Shopping as a distinct household destination within that journey. Members can open Shopping from the shared localized navigation or enter it directly, then use the existing shared list, manual extras, purchases, store sessions, and receipt workflow. Inventory remains responsible for catalog, stock, locations, material consumption, and replenishment. Contextual Overview links and previously shared inventory-shopping item fragments continue to select the same product or manual extra. After switching between destinations, members can return to their work with drafts and pending recovery understandable. Navigation changes presentation only: it does not post stock, create a purchase, cancel an effect, or resubmit a command.
+
+The current presentation registers Overview, Tasks, Calendar, Family, Inventory, and Household in `frontend/src/presentation/domus-app.ts`; `frontend/src/composition/entry-page.ts` maps inventory-shopping fragments to Inventory. The application-experience owner is the immutable retained contract at revision 7770b1e560800fa4bb78d36b0583b2c1beb784d7. This delta does not claim installed-browser acceptance or completion of the owner's wider integrated-acceptance scope.
+
+### 6. Functional behavior and state model
+
+Shopping becomes a first-class destination with direct entry, reload, back and forward navigation, shared overflow access, and repeated activation that keeps the destination and its content focus clear. Overview item links and existing inventory-shopping fragments select the same target in Shopping. Unknown or malformed fragments use the existing safe fallback and never execute a command. Preserve standalone and Ingress base paths.
+
+For the same household and member, switching between Shopping and Inventory retains unfinished forms, literal notes and priorities, selected work, and the original identity of an interrupted write. On return, show the retained draft and pending recovery state clearly. Receipt lookup must not replace a newer unrelated draft. Logout and membership, household, or principal changes retire protected state through the existing lifecycle.
+
+Both destinations use the same application command and recovery owner. Navigation must not post stock, create a purchase, cancel an effect, or resubmit a command. Preserve server-owned grants and protected read/write contracts for readers, request-only members, and Shopping/Inventory managers; reaching an already permitted Shopping action must not require a general Inventory mutation grant. Present unavailable data, denied access, read-only state, stale content, and pending or committed operations distinctly. Qualify normal, loading, empty, denied, unavailable, pending, and conflict states, including revocation during a retained draft or interrupted operation. These additions refine the existing navigation, recovery, and permission invariants; they do not replace the retained owner cases.
+
+### 7. User-facing configuration
+
+Use the existing English and Spanish localization and shared navigation behavior. Shopping is labeled Shopping in English and Compras in Spanish. The active tab, page heading, and focused content identify the destination on narrow touch screens and wide keyboard layouts, in both themes. Preserve visible keyboard focus and accessible names. Keep the existing locale and theme preferences and fallback rules; this change adds no user-facing configuration.
+
+### 8. Clean Architecture design
+
+Add a Shopping presentation destination while keeping domain behavior and command ownership in the existing application layer. Reuse the installed public `@vypdev/ha-ui` cohort 0.1.0-next.5 and shared navigation controls. Keep Shopping and Inventory as presentation destinations over the existing workflows, not separate command or recovery owners. Do not add a second Shopping ledger, alternate permission evaluator, or schema requirement solely for this presentation change.
+
+The current composition wires `InventoryController` and `InventorySessionJournal` in `frontend/src/composition/entry-page.ts`; the inventory destination renders in `frontend/src/presentation/domus-app.ts`. The new Shopping presentation and its composition must preserve draft scope, pending-command identity, permission lifecycle, contextual item selection, and protected-state retirement across both destinations. Keep validation and authorization at the existing application/server boundaries; presentation state and URL fragments confer no authority.
+
+Qualification covers current source and actual amd64 and ARM64 images, standalone and Ingress base paths, and the immutable installed Edge candidate in Home Assistant. Preserve complete global and per-file coverage and existing Shopping and Inventory acceptance assertions. Confirm compatibility of the domain schema, stock ledger, original receipts, and package cohort. These are required product and compatibility outcomes; a concrete invocation or prerequisite for each qualification remains unverified in this prose.
+
+### 9. UI/UX and content contract
+
+Add Shopping as a distinct, localized household destination that presents the existing shared list, manual extras, purchases, store sessions, and receipt workflow. Keep catalog, stock, locations, material consumption, and replenishment in Inventory. The change exposes existing workflows; it does not claim completion of all integrated acceptance scope. The retained owner already specifies routes, shared navigation, accessible focus, localization, responsive layouts, and operation states in `specs/application-experience.md` §§6, 8–9; this delta narrows those contracts to the Shopping–Inventory boundary.
+
+Shopping must be reachable by direct entry and the shared navigation, including its overflow behavior. Reload, back and forward, and repeated activation of the selected tab must leave the member at the intended destination. Overview links and previously shared inventory-shopping item fragments must select the same product or manual extra in Shopping. Preserve standalone and Ingress base paths. Unknown or malformed fragments use a safe existing fallback and never execute a command. Give Shopping deliberate content focus; the active tab, page heading, and focus must identify the destination. Use the established English and Spanish support, narrow touch and wide keyboard layouts, visible focus, accessible names, both themes, and non-color status cues.
+
+Describe unavailable data, denied access, read-only state, stale content, and pending or committed operations distinctly. Retained drafts and pending recovery must be understandable when returning to either destination. Use the existing public shared presentation package and application command/recovery owner; do not add a second Shopping ledger or permission evaluator, consistent with the retained architecture in `specs/application-experience.md` §8.
+
+### 10. Failure, recovery, and cleanup
+
+Switching between Shopping and Inventory for the same household and member preserves unfinished forms, literal notes and priorities, selected work, and the original identity of an interrupted write. On return, show which draft is retained and whether an operation is pending, committed, or needs deliberate recovery. A receipt lookup must not replace a newer unrelated draft. Recovery checks the original operation through its existing owner; navigation, reload, or tab activation never creates a new command key or silently rebases a draft.
+
+A failed or unavailable read must leave draft and committed facts distinguishable and offer a safe retry where supported. A conflict keeps entered values available for review; a denial does not imply that an operation failed before its effect was known. Unknown or malformed navigation falls back without side effects. Navigation must not post stock, create a purchase, cancel an effect, or resubmit a command. Logout, membership change, household change, or principal change retires protected state through the existing lifecycle. Preserve the lifecycle and recovery rules in `specs/household-entry-interface.md` §§10–11; qualify this destination split against them rather than defining a new journal or retention policy.
+
+### 11. Security, permissions, and privacy
+
+Keep the current server-owned grants and protected read/write contracts for readers, request-only members, and Shopping and Inventory managers. Reaching an already permitted Shopping action must not require a general Inventory mutation grant. Presentation state, URL fragments, item links, and retained drafts do not grant authority; the server continues to authorize every protected operation. Both destinations use the same application command and recovery owner, with no alternate permission evaluator or command path.
+
+On revocation during a retained draft or interrupted operation, stop protected access, explain the safe next step, and do not replay or disclose incompatible state. Retire protected state on logout or household, membership, or principal change using the existing lifecycle. Keep the existing owner’s privacy and security constraints in `specs/application-experience.md` §11 and `specs/household-entry-interface.md` §11; this delta adds no new credential, storage, or host-context mechanism.
+
+### 12. Observability and operational UX
+
+Qualify user-visible normal, loading, empty, denied, unavailable, read-only, stale, pending, committed, and conflict states across Shopping and Inventory, including revocation during a retained draft or interrupted operation. Show which destination is active and preserve understandable operation status after switching. Verify direct entry, reload, history navigation, repeated-tab activation, overflow navigation, contextual item links, and safe fallback behavior without command side effects.
+
+Record source and runtime evidence separately from browser and installed-product acceptance. Qualification must cover current source, actual amd64 and ARM64 images, standalone and Ingress base paths, and the immutable installed Edge candidate in Home Assistant. Preserve complete global and per-file coverage and all existing Shopping and Inventory acceptance assertions. Define the evidence and acceptance record in the declared qualification artifacts; their create status is prospective, not evidence that qualification has occurred. The issue’s stated baseline observations are not installed-browser acceptance evidence.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Keep the domain schema, stock ledger, original receipts, and package cohort compatible; moving the presentation does not require a new schema. Preserve existing Shopping and Inventory workflows, server grants, operation identity, recovery ownership, and previously shared item links. Use the already installed exact public `@vypdev/ha-ui` cohort `0.1.0-next.5`. Verify standalone and Ingress base paths and qualify actual amd64 and ARM64 images plus the immutable installed Edge candidate in Home Assistant before claiming deployment acceptance.
+
+Treat this as a bounded presentation change to the immutable retained owner at `specs/application-experience.md`, not completion of that owner’s wider scope. Keep rollout Edge-only and use self-hosted runners. No data migration is required solely for the destination split. If rollout must be reversed, remove or disable the new entry while preserving existing Inventory access, item-link handling, in-flight operation identity, and committed records; do not cancel or replay effects. Publication acceptance must establish that the specification satisfies the required format, internal and cross-document consistency is checked, and reciprocal catalog ownership, paths, and evidence agree with the generated view. These are publication outcomes, not product goals or proof of executed runtime qualification.
+
+### 14. Testing strategy and numeric budget
+
+This update adds a floor of 6 distinct Shopping-workspace acceptance cases; each inventory case counts once. The retained application-experience owner’s 26-case floor and existing case identities remain unchanged. This increment does not claim semantic completeness, executed acceptance, or coverage results.
+
+Qualify navigation and localization; direct, history, reload, and contextual item entry; retained drafts and interrupted-command recovery; lifecycle retirement; access and operation states; and deployment and compatibility. Use observable state and side-effect assertions. Repeated runs, viewport variations, deployment targets, and language variants do not create additional case identities. Exercise both standalone and Ingress bases, narrow touch and wide keyboard layouts, English and Spanish, and both themes where applicable.
+
+Inspect current source and declarations without treating them as runtime acceptance: `frontend/src/presentation/domus-app.ts` defines the shared navigation and destination focus behavior, while `frontend/src/composition/entry-page.ts` currently binds the inventory controller only for the Inventory destination and maps existing shopping fragments to Inventory. Existing relevant browser coverage is in `frontend/tests/e2e/workspace-navigation.spec.ts`; it does not establish the proposed Shopping destination or the requested installed-image qualification.
+
+The selected frontend package declares `check`, `test`, `build`, `browser:catalog`, and `browser:entry` scripts in `frontend/package.json`. Their declarations do not establish that they cover this increment’s specifications, execute successfully, or prove deployed acceptance. The concrete invocation and prerequisite for SDK specification/catalog validation remain unverified in this selected project view. Require the stated acceptance outcomes and evidence rather than an unverified invocation or a script name.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Navigation and localization | 1 | Observable scenarios in the case inventory. |
+| Navigation and item links | 1 | Observable scenarios in the case inventory. |
+| Retained state and recovery | 1 | Observable scenarios in the case inventory. |
+| Permissions and operation states | 1 | Observable scenarios in the case inventory. |
+| Lifecycle retirement | 1 | Observable scenarios in the case inventory. |
+| Deployment and compatibility qualification | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| inventory1-C01 | Navigation and localization | SDD-I162-U1-R1, SDD-I162-U1-R2, SDD-I162-U1-R8 | Open Shopping directly and through the shared localized tab, including overflow navigation; verify its workflow content, distinct Inventory responsibilities, active tab, heading, and focus in English and Spanish across narrow touch and wide keyboard layouts in both themes. |
+| inventory1-C02 | Navigation and item links | SDD-I162-U1-R2, SDD-I162-U1-R7 | Exercise direct entry, reload, back and forward, repeated-tab activation, Overview item links, and previously shared inventory-shopping item fragments; verify the same product or manual extra is selected and unknown or malformed fragments use a safe existing fallback without executing a command. |
+| inventory1-C03 | Retained state and recovery | SDD-I162-U1-R3, SDD-I162-U1-R4, SDD-I162-U1-R5 | Switch between Shopping and Inventory with unfinished forms, literal notes and priorities, selected work, and an interrupted write; return and inspect retained drafts and pending recovery, perform receipt lookup after a newer unrelated draft exists, and verify navigation does not post stock, create a purchase, cancel an effect, or resubmit a command. |
+| inventory1-C04 | Permissions and operation states | SDD-I162-U1-R6, SDD-I162-U1-R7, SDD-I162-U1-R9 | Exercise reader, request-only member, and Shopping/Inventory manager access, including an already permitted Shopping action without a general Inventory mutation grant; observe normal, loading, empty, denied, unavailable, read-only, stale, pending, committed, and conflict states, plus revocation during a retained draft or interrupted operation. |
+| inventory1-C05 | Lifecycle retirement | SDD-I162-U1-R4, SDD-I162-U1-R9 | With retained draft and interrupted-operation state, change membership, household, or principal and log out; verify protected state is retired using the existing lifecycle and revocation is presented safely. |
+| inventory1-C06 | Deployment and compatibility qualification | SDD-I162-U1-R10, SDD-I162-U1-R11 | Qualify current source, actual amd64 and ARM64 images, standalone and Ingress base paths, and the immutable installed Edge candidate in Home Assistant; confirm complete global and per-file coverage, existing Shopping and Inventory acceptance assertions, and compatibility of schema, stock ledger, original receipts, and package cohort. |
+
+### 15. Documentation and discoverability
+
+Keep the existing application-experience specification as the owning contract and reconcile this delta with the retained shared navigation and Shopping requirements. The host’s declared change inventory contains five prospective creates: `specs/shopping-workspace-navigation.md`, `frontend/src/presentation/domus-shopping-workspace.ts`, `frontend/tests/e2e/shopping-workspace-navigation.spec.ts`, `docs/evidence/shopping-workspace-navigation-qualification.md`, and `docs/evidence/shopping-workspace-navigation.json`; it also updates `specs/application-experience.md`. These are proposed operations, not evidence that the files already exist. Current source references include `frontend/src/presentation/domus-app.ts`, `frontend/src/composition/entry-page.ts`, `frontend/src/presentation/domus-inventory.ts`, `frontend/src/presentation/domus-shopping.ts`, `frontend/src/presentation/messages.ts`, `frontend/src/presentation/inventory-messages.ts`, `frontend/src/application/inventory-controller.ts`, and `frontend/tests/e2e/workspace-navigation.spec.ts`.
+
+Member-facing guidance must explain Shopping versus Inventory, direct and contextual entry, preserved selection and recovery states, permission-dependent actions, and safe fallback for unknown fragments. Keep navigation labels localized and distinguish unavailable, denied, read-only, stale, pending, committed, and conflict states. The qualification evidence must identify the exact source and image/deployment candidates observed, report global and per-file coverage and existing Shopping/Inventory assertions, and record limits without implying acceptance from source inspection alone.
+
+Publication requires observable outcomes: the specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation and prerequisites for specification/catalog validation remain unverified. A declared command or generated view is not proof that validation ran or passed.
+
+| Path | Change |
+| --- | --- |
+| specs/shopping-workspace-navigation.md | create |
+| frontend/src/presentation/domus-shopping-workspace.ts | create |
+| frontend/tests/e2e/shopping-workspace-navigation.spec.ts | create |
+| docs/evidence/shopping-workspace-navigation-qualification.md | create |
+| docs/evidence/shopping-workspace-navigation.json | create |
+| specs/application-experience.md | update |
+
+[specs/shopping-workspace-navigation.md](shopping-workspace-navigation.md) · [frontend/src/presentation/domus-shopping-workspace.ts](../frontend/src/presentation/domus-shopping-workspace.ts) · [frontend/tests/e2e/shopping-workspace-navigation.spec.ts](../frontend/tests/e2e/shopping-workspace-navigation.spec.ts) · [docs/evidence/shopping-workspace-navigation-qualification.md](../docs/evidence/shopping-workspace-navigation-qualification.md) · [docs/evidence/shopping-workspace-navigation.json](../docs/evidence/shopping-workspace-navigation.json) · [specs/application-experience.md](application-experience.md)
+
+### 16. Acceptance scenarios
+
+The new acceptance inventory is the six declared cases, retaining their exact identities and concrete assertions. `inventory1-C01` checks the localized Shopping destination, its workflow content and Inventory’s distinct responsibilities, active navigation, heading, and focus across languages, themes, and responsive keyboard/touch layouts. `inventory1-C02` checks direct entry, reload, back/forward, repeated activation, Overview links, and previously shared item fragments selecting the same product or manual extra; unknown or malformed fragments must use a safe existing fallback without a command. `inventory1-C03` checks preservation of unfinished forms, literal notes and priorities, selected work, and interrupted-write identity between destinations; it also checks understandable recovery, receipt lookup against a newer unrelated draft, and no navigation-triggered stock post, purchase, cancellation, or resubmission.
+
+`inventory1-C04` checks reader, request-only, and manager access; an already permitted Shopping action without a general Inventory mutation grant; and normal, loading, empty, denied, unavailable, read-only, stale, pending, committed, and conflict states, including revocation during retained work. `inventory1-C05` checks retirement of protected state after logout or membership, household, or principal change, and safe revocation presentation. `inventory1-C06` checks current source, actual amd64 and ARM64 images, standalone and Ingress bases, and the immutable installed Edge candidate in Home Assistant; it also checks global and per-file coverage, existing Shopping and Inventory assertions, and compatibility of schema, stock ledger, original receipts, and package cohort.
+
+These are prospective acceptance criteria, not completed tests or installed-browser evidence. Existing owner cases remain owned by and referenced from the retained specification; this delta does not copy or recount them.
+
+### 17. Requirements traceability
+
+The declared requirement-to-case mapping is reciprocal: SDD-I162-U1-R1 is exercised by inventory1-C01; SDD-I162-U1-R2 by inventory1-C01 and inventory1-C02; SDD-I162-U1-R3 by inventory1-C03; SDD-I162-U1-R4 by inventory1-C03 and inventory1-C05; SDD-I162-U1-R5 by inventory1-C03; SDD-I162-U1-R6 by inventory1-C04; SDD-I162-U1-R7 by inventory1-C02 and inventory1-C04; SDD-I162-U1-R8 by inventory1-C01; SDD-I162-U1-R9 by inventory1-C04 and inventory1-C05; SDD-I162-U1-R10 by inventory1-C06; and SDD-I162-U1-R11 by inventory1-C06.
+
+Each case exercises only the requirements named for it in the supplied inventory. Preserve the existing application-experience and household-entry-interface requirement and case identities as owner references; the derived mappings establish structural reciprocity only, not semantic completeness or executed acceptance. Publication consistency must also confirm reciprocal catalog ownership, paths, and evidence against the generated catalog view.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I162-U1-R1 | inventory1-C01 |
+| SDD-I162-U1-R2 | inventory1-C01, inventory1-C02 |
+| SDD-I162-U1-R3 | inventory1-C03 |
+| SDD-I162-U1-R4 | inventory1-C03, inventory1-C05 |
+| SDD-I162-U1-R5 | inventory1-C03 |
+| SDD-I162-U1-R6 | inventory1-C04 |
+| SDD-I162-U1-R7 | inventory1-C02, inventory1-C04 |
+| SDD-I162-U1-R8 | inventory1-C01 |
+| SDD-I162-U1-R9 | inventory1-C04, inventory1-C05 |
+| SDD-I162-U1-R10 | inventory1-C06 |
+| SDD-I162-U1-R11 | inventory1-C06 |
+
+### 18. Implementation sequence
+
+Implement this delta within the retained `application-experience` owner at immutable base `7770b1e560800fa4bb78d36b0583b2c1beb784d7`; preserve its existing requirements and cases. First reconcile the Shopping destination, shared-navigation, fragment, state-retention, permission, and lifecycle contracts with the retained owner and the shared navigation contract in `specs/household-entry-interface.md`. Keep the existing application command and recovery owner, server-owned grants, public shared presentation package, and deployment base-path behavior. Then implement the localized Shopping destination and contextual item selection, adding focused tests alongside the presentation and browser journeys. Qualify draft and interrupted-write retention, receipt lookup, lifecycle retirement, access revocation, and operation states before assessing the actual amd64 and ARM64 images, standalone and Ingress paths, and immutable installed Edge candidate in Home Assistant. Preserve the existing Shopping and Inventory acceptance assertions, complete global and per-file coverage, and documentation as implementation progresses. The declared prospective inventory contains five create operations and one update operation; its literal paths remain in the host-owned inventory.
+
+### 19. Definition of Done
+
+- [ ] Each new normative behavior has observable acceptance and reciprocal requirement-to-case mappings; every declared requirement has a concrete case, and each case maps only to requirements it exercises. Retain the six supplied case identities and their specific assertions, alongside the existing owner cases, without counting owner references as new cases.
+- [ ] Direct entry, reload, back/forward, repeated-tab activation, shared overflow navigation, Overview links, and previously shared item fragments select the intended destination and product or manual extra. Unknown or malformed fragments use the safe existing fallback without executing a command.
+- [ ] Switching destinations preserves same-household/member drafts, literal notes and priorities, selected work, and interrupted-write identity. Receipt lookup cannot overwrite a newer unrelated draft. Logout or membership, household, or principal changes retire protected state through the existing lifecycle; navigation does not post stock, create purchases, cancel effects, or resubmit commands.
+- [ ] Readers, request-only members, and Shopping/Inventory managers retain current server-owned authority, including already permitted Shopping actions without a general Inventory mutation grant. Normal, loading, empty, denied, unavailable, read-only, stale, pending, committed, and conflict states are distinguishable; revocation during retained work is safe.
+- [ ] Active tab, heading, and deliberate content focus identify Shopping in English and Spanish on narrow touch and wide keyboard layouts in both themes. The domain schema, stock ledger, original receipts, and package cohort remain compatible; no schema is required solely for this presentation change.
+- [ ] Current source, actual amd64 and ARM64 images, standalone and Ingress base paths, and the immutable installed Edge candidate in Home Assistant are qualified. Preserve complete global and per-file coverage and existing Shopping and Inventory acceptance assertions. These are required outcomes; the concrete invocations and prerequisites for each qualification remain unverified here.
+- [ ] The specification satisfies the repository's required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. The standard documents `pnpm run validate:specifications`, but that invocation is not declared in the selected root or frontend package scripts, so its concrete invocation/prerequisite remains unverified. Do not treat declaration as execution, a pass, or acceptance.
+- [ ] The prospective file inventory and evidence are reviewed against the selected source; no implementation or publication is inferred from this draft.
+
+### 20. References and decisions
+
+Primary source: [issue #162](https://github.com/vypdev/domus/issues/162). This is a bounded update to the immutable retained owner `specs/application-experience.md`; preserve its existing contract and cases. The shared navigation contract remains in `specs/household-entry-interface.md`. Repository guidance is in `specs/README.md` and `specs/_template.md`; the registered ownership and evidence view is `specs/catalog.json` and `specs/CATALOG.md`. Relevant selected-source context includes `docs/roadmap.md`, `frontend/src/presentation/domus-app.ts`, `frontend/src/presentation/domus-inventory.ts`, `frontend/src/presentation/domus-shopping.ts`, `frontend/src/composition/entry-page.ts`, and `frontend/package.json`. The selected package declares `@vypdev/ha-ui` version `0.1.0-next.5`; this declaration does not establish new-destination acceptance.
+
+Decision: expose the existing Shopping workflow as a direct localized household destination while keeping catalog, stock, locations, material consumption, and replenishment in Inventory. Reuse existing commands, recovery ownership, permission contracts, and shared navigation. Do not add a second ledger, alternate permission evaluator, or schema solely for the presentation move. Deployment, coverage, and installed Edge qualification remain required evidence outcomes; no concrete invocation or completed acceptance is established by this draft.
