@@ -11,7 +11,7 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The previous queue-retirement runtime is published as
 `fae1e6ae06993202260d765dbf27bea2144adc89` on the admitted managed ref. Edge.83
 pins that exact source and archive SHA-256
 `7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12`.
@@ -36,9 +36,9 @@ identities are preserved. Two non-normative source-assessment paragraphs now
 explicitly identify the immutable base instead of describing it as current source. Backend, API, schema 37, canonical journal packet format and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
-The complete current frontend campaign passes 2,198 tests across 50 files, with
+The complete current frontend campaign passes 2,212 tests across 50 files, with
 all four metrics at 100% globally and per authored runtime file (121 files):
-9,524 statements, 8,748 branches, 2,027 functions and 6,931 lines. Its independent
+9,540 statements, 8,766 branches, 2,030 functions and 6,943 lines. Its independent
 source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
 product Vite build and the actual wheel package test pass. All 250 Python module
 bytes equal accepted Edge.77; the four compiled UI resources match the new wheel.
@@ -255,3 +255,29 @@ race: the next immutable Edge.83 and final current-head acceptance remain requir
 This Edge.83 packaging snapshot pins the queue-retirement runtime. The linked PR retains final current-head CI/review and installed acceptance; the previous Edge.82 normal walkthrough does not establish this correction's acceptance.
 
 The current Edge.83 actual local ARM64 image passes all six exact-byte, authority, native/standalone listener, restart, genuine schema-20/schema-36 migration and snapshot-restore checks in 18.44 seconds. Its native installed walkthrough and complete current-head CPU/source CI remain required.
+
+## Retiring an entry that has already begun refreshing
+
+Review [4658614224](https://github.com/vypdev/domus/pull/163#discussion_r4658614224)
+identified a continuation beyond the former queued tick. After Stock refresh, a
+Shopping entry could begin its own catalog refresh, leave for Stock, and then
+start a hidden Shopping read. A Shopping-only 403 could disable Stock. Four
+controller cases and both actual compiled Edge.83 C02 variants fail before the
+correction; the original reports, traces and screenshots are retained.
+
+A destination identity now retires when activity changes, on every hash change
+and at widget teardown. Entry refresh, retained projection chains and paged item
+reads check that identity before starting another Shopping read. Leaving and
+returning cannot adopt the retired continuation. An admitted read and the original
+command are allowed to finish; no command, pending packet or recovery owner is
+cancelled or resent. Fourteen controller regressions cover entry, hidden admission,
+all six retained projection stages and paged-item continuation. The whole 2,212-test
+frontend campaign passes with all four coverage metrics at 100% globally and per
+file, and the independent authored-file audit passes. Types and product build pass.
+All twelve actual browser variants pass once in 29.1 seconds with zero retries
+and unchanged prior assertions and deadlines. The six native case IDs are unchanged.
+
+The installed Edge.83 normal walkthrough and earlier CI results remain historical.
+They do not accept this newly reproduced race. Immutable Edge.84 packaging, actual
+image qualification, native installed acceptance and full same-head checks are
+required before merge. Final terminal observations belong to the linked PR.

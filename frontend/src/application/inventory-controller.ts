@@ -114,6 +114,7 @@ export class InventoryController {
   private shoppingTarget: string | null = null;
   private shoppingActive = true;
   private shoppingRefreshNeeded = false;
+  private shoppingNavigation = {};
 
   constructor(private readonly server: InventoryServer, private readonly journal: InventoryJournal,
     private readonly entropy: EntryEntropy, private readonly publish: (state: InventoryState | null) => void) {}
@@ -138,44 +139,54 @@ export class InventoryController {
   }
 
   async refresh(): Promise<void> {
+    const navigation = this.shoppingNavigation;
+    const currentShopping = () => this.shoppingActive && this.shoppingNavigation === navigation;
     const previous = this.view;
     const state = previous?.retainedShopping ? {...previous, ...shoppingReadSnapshot(previous)} : previous;
     await this.load(null);
     if (state?.history && this.view?.scope === state.scope && this.view.history)
       await this.showHistory(state.history.productId);
-    if (this.shoppingActive) {
+    if (currentShopping()) {
       this.shoppingRefreshNeeded = false;
       if (state?.purchases && this.view?.scope === state.scope && this.view.purchases)
         await this.showPurchases();
-      if (state?.purchaseSessions && this.view?.scope === state.scope && this.view.purchaseSessions)
+      if (state?.purchaseSessions && this.view?.scope === state.scope && this.view.purchaseSessions && currentShopping())
         await this.showPurchaseSessions();
-      if (state?.purchaseSession && this.view?.scope === state.scope && this.view.purchaseSession)
+      if (state?.purchaseSession && this.view?.scope === state.scope && this.view.purchaseSession && currentShopping())
         await this.showPurchaseSession(state.purchaseSession.session.id);
-      if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts)
+      if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts && currentShopping())
         await this.showPurchaseReceipts(state.purchaseReceipts.purchase.id);
-      if (state && this.view?.scope === state.scope && this.view.report) {
+      if (state && this.view?.scope === state.scope && this.view.report && currentShopping()) {
         if (this.shoppingTarget) await this.openShoppingItem(state.scope, this.shoppingTarget);
         else if (state.shoppingList) await this.showShoppingList();
       }
-      if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
+      if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources && currentShopping())
         await this.showShoppingSources(state.shoppingSources.item.productId!);
-    } else this.shoppingRefreshNeeded = true;
+    }
+    if (!currentShopping()) this.shoppingRefreshNeeded = true;
     if (state?.barcode && this.view?.scope === state.scope && this.view.report)
       await this.showBarcode(state.barcode.code);
   }
 
   /** Presentation changes never replace the scope, draft or original command. */
-  setShoppingActive(active: boolean): void {this.shoppingActive = active;}
+  setShoppingActive(active: boolean): void {
+    if (this.shoppingActive !== active) this.retireShoppingNavigation();
+    this.shoppingActive = active;
+  }
+
+  /** Retire future route reads without canceling an admitted read or original command. */
+  retireShoppingNavigation(): void {this.shoppingNavigation = {};}
 
   async openShoppingDestination(target: string | null): Promise<void> {
     const state = this.view;
-    if (state === null || state.report === null || this.owned !== null) return;
+    if (state === null || state.report === null || this.owned !== null || !this.shoppingActive) return;
+    const navigation = this.shoppingNavigation;
     this.shoppingTarget = target;
     const refresh = this.shoppingRefreshNeeded;
     // Stock refreshed while Shopping was hidden. Revalidate its retained reads
     // only on entry, using the current route rather than the former item target.
     if (refresh) await this.refresh();
-    if (this.view?.scope !== state.scope || this.view.report === null) return;
+    if (!this.shoppingActive || this.shoppingNavigation !== navigation || this.view?.scope !== state.scope || this.view.report === null) return;
     if (target !== null) {
       if (!refresh || this.view.shoppingFocus?.key !== target) await this.showShoppingItem(target);
     } else if (this.view.shoppingList == null || this.view.shoppingFocus != null) await this.showShoppingList();
@@ -271,6 +282,7 @@ export class InventoryController {
   private async openShoppingItem(scope: InventoryScope, key: string): Promise<void> {
     const state = this.view;
     if (state === null || state.scope !== scope || this.owned !== null) return;
+    const navigation = this.shoppingNavigation;
     const retained = state.retainedShopping ?? null;
     this.set({retainedShopping:shoppingReadSnapshot(state), shoppingList:null, shoppingSources:null, shoppingFocus:undefined});
     const items: ShoppingList['items'][number][] = [];
@@ -287,6 +299,10 @@ export class InventoryController {
       }, 'unavailable');
       if (!loaded || this.view?.scope !== scope) {
         if (this.view?.scope === scope) this.set(this.retainShopping(state));
+        return;
+      }
+      if (!this.shoppingActive || this.shoppingNavigation !== navigation) {
+        this.shoppingRefreshNeeded = true;
         return;
       }
       if (found) {

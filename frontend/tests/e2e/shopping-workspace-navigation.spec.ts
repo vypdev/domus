@@ -159,6 +159,23 @@ for (const mode of ['native','standalone'] as const) {
       await expect(stock.getByRole('button',{name:'Register product',exact:true})).toBeEnabled();
       await expect(stock.getByRole('heading',{name:'Navigation tea',exact:true})).toBeVisible();
       expect(hiddenReads).toBe(0);
+      const entering = Promise.withResolvers<void>(), finishEntry = Promise.withResolvers<void>();
+      await page.route(url=>url.pathname===catalogPath,async route=>{
+        entering.resolve();await finishEntry.promise;await route.continue();
+      },{times:1});
+      const entryRefresh = page.waitForResponse(response=>new URL(response.url()).pathname===catalogPath);
+      try {
+        await tabs.getByRole('link',{name:'Shopping',exact:true}).click();
+        // This entry has begun its own retained-work refresh, beyond the queued tick.
+        await entering.promise;
+        await tabs.getByRole('link',{name:'Inventory',exact:true}).click();
+        await expect(tabs.getByRole('link',{name:'Inventory',exact:true})).toHaveAttribute('aria-current','page');
+      } finally {finishEntry.resolve();}
+      expect((await entryRefresh).ok()).toBe(true);
+      await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+      await expect(stock.getByRole('button',{name:'Register product',exact:true})).toBeEnabled();
+      await expect(stock.getByRole('heading',{name:'Navigation tea',exact:true})).toBeVisible();
+      expect(hiddenReads).toBe(0);
       await page.unroute(hiddenShopping);
       await tabs.getByRole('link',{name:'Overview',exact:true}).press('Enter');
       await page.locator('domus-shopping-attention').getByRole('link',{name:new RegExp('^'+name+' ')}).press('Enter');

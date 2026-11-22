@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge83 packaging snapshot: source/wheel/actualARM64sixchecksPASS18.44s; source2198all4metrics100 and12actualvariants30.2sPASS. Native83/finalsameheadacceptance remains required, with terminal records retained in linkedPR.",
+  "status": "Current active-entry retirement source qualified: 2212 frontend tests/all four metrics100 and12 actual browser variants once without retries. Existing pin83 is historical; immutable84, native84 and final samehead CI/review are required.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -19,15 +19,15 @@
     "legacyPendingPacketHandling": "Existing incompatible-scope retirement for ownerless or unmatched packets; no lookup/resend/reassignment and no change to committed server receipts."
   },
   "executedSource": {
-    "frontendTests": 2198,
+    "frontendTests": 2212,
     "frontendTestFiles": 50,
     "authoredRuntimeFiles": 121,
     "coverage": {
       "globalAndPerFileAllFourMetrics": 100,
-      "statements": 9524,
-      "branches": 8748,
-      "functions": 2027,
-      "lines": 6931,
+      "statements": 9540,
+      "branches": 8766,
+      "functions": 2030,
+      "lines": 6943,
       "authoredFileAudit": "PASS"
     },
     "runtimeAndCatalogTypes": "PASS",
@@ -37,7 +37,7 @@
     "retainedAnnotationBrowserVariants": 4,
     "retainedFullWorkspaceBrowserVariants": 2,
     "newBrowserVariants": 12,
-    "newBrowserResult": "12PASS30.2s, each once zero retries. C02 holds the actual catalog response while navigating Shopping->Inventory, then releases it and asserts zero hiddenShopping reads/Stock usable. Both compiled82 variants reproduced the failure before one-line queue retirement. Every prior assertion retained.",
+    "newBrowserResult": "12PASS29.1s, each once zero retries. C02 also holds the catalog refresh already admitted by Shopping entry, leaves for Stock and releases it: no hidden Shopping read and Stock remains usable. All prior assertions/deadlines retained.",
     "catalogBrowserTests": 68,
     "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
     "nodePolicyTests": 42,
@@ -53,7 +53,7 @@
         "cause": "Barcode403assertions expected old generic unavailable copy; current explicitdenial was observed. All quantities, authority, history and recovery assertions remain."
       },
       "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
-      "finalFullSameHeadCI": "PENDING"
+      "finalFullSameHeadCI": "PENDING for active-entry retirement runtime; prior B5 local141PASS is historical."
     },
     "localPrivatePortQualification": "Canonical ports56174/56175 belong to active selfhostedCI. Private copy differs only by56184/56185, byte-equivalence verified; same actual backend/product and unchanged assertions/deadlines/retry policy.",
     "durableOwnerRegression": {
@@ -74,6 +74,13 @@
       "unitRed": "Both busycatalog andalreadyqueuedtick fail with one hiddenShopping read",
       "actualRed": "Both actual compiled82 C02 deployment variants fail: hiddenShopping403 disables Stock registration",
       "green": "Both controlled composition cases and all12actualbrowservariantsPASS;2198 frontend/all4metrics100",
+      "newNormativeCaseIdentities": 0
+    },
+    "activeEntryRetirementRegression": {
+      "finding": 4658614224,
+      "unitRed": "Four failures: base/item route crossed with leave/leave-and-return before catalog completion.",
+      "actualRed": "Both compiled83 Ingress/standalone C02 variants fail with a hidden403 that disables Stock. Original reports/traces/screenshots retained.",
+      "green": "All14 new controller regressions and full2212 tests PASS; all12 actual browser variants PASS once29.1s. Covers hidden admission, leave/return, all six retained projection stages and paged item continuations. Original pending packet unchanged; no original lookup, resend or read/command cancellation.",
       "newNormativeCaseIdentities": 0
     }
   },
@@ -102,12 +109,12 @@
     }
   },
   "installedEdge": {
-    "statusAtPackaging": "No installed83 claim yet. See final native acceptance in linkedPR. Prior82normal observations and its known race remain historical.",
+    "statusAtPackaging": "Historical83 normal journey passed; a later deterministic finding requires new immutable84 acceptance. No84 installed claim yet.",
     "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
     "appSlug": "abb0c2fd_domus_edge",
     "newRecordsPlanned": 0
   },
-  "finalSameHeadChecks": "Required current-head checks and terminal original artifacts are recorded in PR163; no terminal acceptance inferred at packaging.",
+  "finalSameHeadChecks": "Required after immutable84 packaging: current source141/catalog68, eachCPU62+86, all global/perfile coverage and substantive review. Historical B5/e48 results are not current runtime acceptance.",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
     "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
@@ -191,7 +198,8 @@
     "hiddenShoppingRefresh": "Stock refresh and post-command refresh do not resume hidden Shopping reads. Retained selected projections/drafts remain; Shopping reentry refreshes them using the current route. Scope retirement/failure stops the continuation.",
     "shoppingDeniedGuidance": "Requesters, Shopping managers, Inventory receipt posting and combined Shopping/Inventory correction/return receive distinct current-grant guidance in EN/ES; purchase draft survives deniedresponse and succeeds on explicitretry.",
     "baselineSourceAssessment": "Two non-normative source-assessment paragraphs now explicitly name immutable base7770. Preexisting ownerprefix and every original requirement/case row remain byte-identical; no native inventory changes.",
-    "queuedNavigationRetirement": "Every hashchange retires the pending Shopping object/timer before resetting route tracking. Leaving Shopping during an initial busycatalog or alreadyqueuedtick cannot schedule a hiddenread. Later legitimate entry still reads currentShopping; no commands/recovery are cancelled."
+    "queuedNavigationRetirement": "Every hashchange retires the pending Shopping object/timer before resetting route tracking. Leaving Shopping during an initial busycatalog or alreadyqueuedtick cannot schedule a hiddenread. Later legitimate entry still reads currentShopping; no commands/recovery are cancelled.",
+    "activeEntryRetirement": "A destination identity retires on activity changes, every hashchange and widget teardown. Entry refresh, retained projection chains and item pagination check that identity before starting another Shopping read. Finishing an already admitted read or the original command is not cancelled."
   },
   "previousCandidate79": {
     "package": {
@@ -697,5 +705,43 @@
     },
     "sourceFrontendTests": 2196,
     "remainingFinding": "4658107744: a busy-catalog/alreadyqueued Shopping read survived leaving the destination. Both actual compiled82 C02 variants and both composition cases reproduced it. Currentfae runtime retires the old queue before tracker reset."
+  },
+  "previousCandidate83": {
+    "package": {
+      "version": "0.0.0-edge.83",
+      "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
+      "sourceArchiveSHA256": "7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12",
+      "wheelSHA256": "641b66199213ce0e366f516911fb318ff35da7fb4f5e4632fde1434a19c5faf5",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
+        ".vite/manifest.json": "8f3df26da87ff3597f996627efa3a579d31842e86a2f00f83d0ab6d500610cf9",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-MbFeI55R.js": "417df9de824d7bc791bdd343f914536b8987ab20fce03b187d8da28d92edf2bc"
+      },
+      "storageSchema": 37,
+      "status": "Immutable source/wheel andactualARM64sixchecks qualified. Native83/currentheadCI+review stillrequired, final terminal record in linkedPR."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T13:00:17.050309+00:00",
+      "image": "domus-162-edge83:pinned",
+      "imageId": "sha256:4684d044381aa7b9ccc2763b896d49892b21cd210d1b40d5a6f4cb0656f133a2",
+      "architecture": "arm64",
+      "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
+      "version": "0.0.0-edge.83",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 18.44,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "normalNativeAcceptance": "https://github.com/vypdev/domus/pull/163#issuecomment-7079835319",
+    "remainingFinding": "4658614224: after Shopping entry had begun its own catalog refresh, leaving it allowed a later Shopping read. Four unit and both actual compiled83 C02 variants reproduce it. Edge84 must qualify the correction."
   }
 }

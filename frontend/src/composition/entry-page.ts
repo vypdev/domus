@@ -483,7 +483,9 @@ export function mountEntry(page: EntryPage): PageMount {
     const inventoryController = new InventoryController(inventoryServer, inventoryJournal,
       new BrowserEntropy(browser.random), view => {element.inventory = view; scheduleShoppingNavigation();});
     inventory = inventoryController;
-    widget.signal.addEventListener('abort', clearShoppingNavigation, {once:true});
+    widget.signal.addEventListener('abort', () => {
+      clearShoppingNavigation(); inventoryController.retireShoppingNavigation();
+    }, {once:true});
     const syncInventory = () => {
       const entry = element.view;
       if ((element.workspaceDestination === 'inventory' || element.workspaceDestination === 'shopping') && entry?.phase === 'ready'
@@ -734,6 +736,7 @@ export function mountEntry(page: EntryPage): PageMount {
       if (event?.type === 'hashchange') {
         element.requestWorkspaceFocus();
         clearShoppingNavigation();
+        inventoryController.retireShoppingNavigation();
         shoppingNavigationRoute = null;
       }
       const fragment = new URL(page.location.href).hash;
