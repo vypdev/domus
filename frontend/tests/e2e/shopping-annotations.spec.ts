@@ -1,4 +1,5 @@
 import {expect,test} from '@playwright/test';
+import {createHash} from 'node:crypto';
 
 const ingress='/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 test.use({hasTouch:true,viewport:{width:390,height:844}});
@@ -146,6 +147,15 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
       };
       const checkLayout=async()=>expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(locale==='es'?390:1120);
       const errors:string[]=[],external:string[]=[],posts:Record<string,unknown>[]=[];
+      const observedAssets=new Set<string>();
+      const assetBodies:Promise<{path:string;sha256:string;status:number}>[]=[];
+      page.on('response',response=>{
+        const url=response.url();
+        if(!url.startsWith(base+'assets/')||!/[.](?:js|css)$/u.test(url)||observedAssets.has(url))return;
+        observedAssets.add(url);
+        assetBodies.push(response.body().then(bytes=>({path:url.slice(base.length),
+          sha256:createHash('sha256').update(bytes).digest('hex'),status:response.status()})));
+      });
       page.on('pageerror',error=>errors.push(error.message));
       page.on('request',item=>{if([commands,rewardCommands].includes(item.url())&&item.method()==='POST')posts.push(item.postDataJSON());});
       await context.route('**/*',route=>{
@@ -246,6 +256,11 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
       const family=await page.request.get(base+'api/v1/family/rewards',{headers});expect(family.status()).toBe(200);
       expect((await family.json()).catalog).toEqual([expect.objectContaining({offer:expect.objectContaining({title:full})})]);
       await info.attach('unicode-text-commands',{body:JSON.stringify(posts,null,2),contentType:'application/json'});
+      const assets=await Promise.all(assetBodies);
+      expect(assets.some(asset=>asset.path.endsWith('.js'))).toBe(true);
+      expect(assets.some(asset=>asset.path.endsWith('.css'))).toBe(true);
+      expect(assets.every(asset=>asset.status===200)).toBe(true);
+      await info.attach('unicode-text-observed-assets',{body:JSON.stringify(assets),contentType:'application/json'});
       await expect(offer).toBeEnabled();
       const colors=await offer.evaluate(element=>{
         // The public surface paints the background inside the transparent hit target.

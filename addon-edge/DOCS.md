@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.85 packages the immutable runtime declared in
+Edge 0.0.0-edge.86 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
@@ -25,6 +25,8 @@ Leaving Shopping while its product information is loading or refreshing keeps th
 Stock refresh does not repeat a hidden Shopping read. Returning to Shopping revalidates its retained work with the current route. A rejected operation names the relevant Shopping, Inventory or combined access; purchase drafts remain available for explicit correction and retry.
 
 If general household details cannot load, **Refresh status** retries them. Inventory and Shopping can continue only after current household/member access is independently verified. Existing server permissions remain authoritative for each read and change.
+
+Product, Shopping and reward names retain up to 160 Unicode characters, including emojis. Location names keep their 80-character limit, stock and Shopping reasons 240, and reward-cancellation and schedule-change reasons 1,000. Correct an overlong value without losing the draft. A completed registration clears its validation and retains the chosen base unit for the next product. Long reward lists remain readable. The [Unicode qualification](../docs/evidence/unicode-text-limits-qualification.md) separates source, actual-image and installed acceptance.
 
 Manual extras retain optional notes of up to 1,000 Unicode characters, including
 line breaks and tabs, and Low, Normal, High or Urgent priority. Unsupported

@@ -55,6 +55,25 @@ and [Recurrence](../../specs/recurrence-lifecycle-calendar.md). Their exact rele
 identities are listed in the JSON record. No native requirement/case ledger is
 replaced or renumbered, and this bug does not complete those broader capabilities.
 
+## Immutable Edge.86 candidate
+
+The public runtime is `8b2660d282f7e58dedfccd6b11ba53eabe54b2e6`. Its archive SHA-256 is
+`a80f2f1201f2028c053a15f71f3b8b2d2c7896e38ea86cc17fa13c0c83d6e0ce`; every one of its 1027 tracked Git blobs matches.
+Wheel SHA-256 is `45672f4c0b1ec1e683e9a4bd34369bff8d5223ec97b609122d10e4e150779867`. All 250 Python modules remain
+byte-identical to accepted Edge.85. The actual ARM64 image `sha256:829e29de1e7a5e5b9b4dce6a8d34457408e44b07942c512a805c629030733bb9`
+installs all 250 Python modules and all 4 UI files byte-for-byte from that wheel.
+Six real-image checks pass in 22.74 seconds, including both listeners, authority,
+restart and genuine schema 20/36 upgrade/snapshot restoration. This is not full
+current-head CI or installed Home Assistant acceptance.
+
+An initial verifier inventoried a nonexistent `frontend/dist` and recorded an
+empty asset map; its original closed record is retained. Vite actually writes
+`backend/src/domus/ui`. The corrected filesystem comparison matches the wheel.
+Four fresh actual-browser journeys now also capture every received JS/CSS body:
+all observed response hashes match the frozen wheel, rather than merely matching
+a build directory. The actual module is `assets/index-DTeCBXBi.js`, SHA-256
+`3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40`.
+
 ## Executed source checks and remaining gates
 
 The complete frontend passes 2,229 tests across 50 files. All four metrics are 100%
@@ -84,5 +103,15 @@ and 62 container plus 90 browser cases on each real image architecture. Native H
 modules must retain full coverage. Qualify the new immutable Edge archive/wheel,
 actual image and installed English desktop/light/keyboard and Spanish
 mobile/dark/touch journeys, including exact persistence and public restart.
-This record currently makes none of those pending acceptance claims. No Stable
+This record does not claim the remaining full-suite, installed or same-head acceptance gates. No Stable
 release or deployment is authorized by this increment.
+
+## Initial source CI diagnostics
+
+The first source CI confirms 2,229 frontend unit tests and a successful complete
+backend job. Wheel acceptance and amd64 UI delivery still compared the changed
+bundle with the historical Edge.85 record. The amd64 container campaign passed
+its other 61 cases. Current package tests now use this increment's frozen UI
+manifest; historical Edge.85 evidence and all byte comparisons remain intact.
+All 17 local package/documentation contracts pass. A final same-head CI is still
+required after publishing the candidate metadata and corrected proof pointers.

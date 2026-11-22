@@ -21,9 +21,9 @@ def test_built_wheel_contains_exact_product_bundle_and_no_browser_fixture(tmp_pa
         if path.is_file()
     }
     assert len(expected) >= 4
-    candidate = json.loads((ROOT / "docs/evidence/task-navigation-integration.json").read_text())[
-        "actualProductFiles"
-    ]
+    candidate = json.loads((ROOT / "docs/evidence/unicode-text-limits.json").read_text())[
+        "immutableCandidate"
+    ]["actualProductFiles"]
     assert candidate == {
         name.removeprefix("domus/ui/"): hashlib.sha256(data).hexdigest()
         for name, data in expected.items()
