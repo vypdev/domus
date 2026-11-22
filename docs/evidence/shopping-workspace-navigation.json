@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Current queued-navigation retirement source qualified2198/all4metrics100 and12actualvariantsPASS; immutable83/latest-head acceptance next. Normal native82 acceptance is historical and has the known queued-read finding.",
+  "status": "Edge83 packaging snapshot: source/wheel/actualARM64sixchecksPASS18.44s; source2198all4metrics100 and12actualvariants30.2sPASS. Native83/finalsameheadacceptance remains required, with terminal records retained in linkedPR.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -82,17 +82,17 @@
     "amd64": "PENDING",
     "aarch64": "PENDING",
     "localPinnedAarch64": {
-      "at": "2026-11-22T12:18:38.906886+00:00",
-      "image": "domus-162-edge82:pinned",
-      "imageId": "sha256:226273ac0465cb9f43493f8dfba2bee595e97857a144244abefd54582f26dbe2",
+      "at": "2026-11-22T13:00:17.050309+00:00",
+      "image": "domus-162-edge83:pinned",
+      "imageId": "sha256:4684d044381aa7b9ccc2763b896d49892b21cd210d1b40d5a6f4cb0656f133a2",
       "architecture": "arm64",
-      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
-      "version": "0.0.0-edge.82",
+      "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
+      "version": "0.0.0-edge.83",
       "allPythonFiles": 250,
       "allUIFiles": 4,
       "allProductBytesMatchWheel": true,
       "selectedTests": 6,
-      "testSeconds": 18.275,
+      "testSeconds": 18.44,
       "genuineSourceSchemas": [
         20,
         36
@@ -102,7 +102,7 @@
     }
   },
   "installedEdge": {
-    "statusAtPackaging": "No installed82 claim yet. See final native acceptance record in linked PR. Prior81 observations remain explicitly historical.",
+    "statusAtPackaging": "No installed83 claim yet. See final native acceptance in linkedPR. Prior82normal observations and its known race remain historical.",
     "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
     "appSlug": "abb0c2fd_domus_edge",
     "newRecordsPlanned": 0
@@ -110,31 +110,31 @@
   "finalSameHeadChecks": "Required current-head checks and terminal original artifacts are recorded in PR163; no terminal acceptance inferred at packaging.",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
-    "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
-    ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+    "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
+    ".vite/manifest.json": "8f3df26da87ff3597f996627efa3a579d31842e86a2f00f83d0ab6d500610cf9",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
+    "assets/index-MbFeI55R.js": "417df9de824d7bc791bdd343f914536b8987ab20fce03b187d8da28d92edf2bc"
   },
   "currentPackage": {
-    "version": "0.0.0-edge.82",
-    "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
-    "sourceArchiveSHA256": "cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0",
-    "wheelSHA256": "58b285dce84b7d160cbc0b131f0658c5c56eb9c5d04686b4211dc1ad63ec9dd6",
+    "version": "0.0.0-edge.83",
+    "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
+    "sourceArchiveSHA256": "7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12",
+    "wheelSHA256": "641b66199213ce0e366f516911fb318ff35da7fb4f5e4632fde1434a19c5faf5",
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
-      ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+      "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
+      ".vite/manifest.json": "8f3df26da87ff3597f996627efa3a579d31842e86a2f00f83d0ab6d500610cf9",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
+      "assets/index-MbFeI55R.js": "417df9de824d7bc791bdd343f914536b8987ab20fce03b187d8da28d92edf2bc"
     },
     "storageSchema": 37,
-    "status": "Historical native-normal-qualified82, with known queuedreadfinding4658107744. Sourcefix qualified separately; newimmutable83 stillrequired beforemerge."
+    "status": "Immutable source/wheel andactualARM64sixchecks qualified. Native83/currentheadCI+review stillrequired, final terminal record in linkedPR."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
     "allTrackedBlobsMatch": true,
-    "archiveBytes": 3098908,
-    "sha256": "cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0"
+    "archiveBytes": 3100404,
+    "sha256": "7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12"
   },
   "previousCandidate78": {
     "package": {
@@ -575,5 +575,127 @@
     "sourceFrontendTests": 2190,
     "remainingFindings": "b7 review identified hidden Shopping refresh after Stock navigation and permission-denial guidance; current82 source fixes both. Native81 observations qualify only the previous runtime."
   },
-  "packagingSnapshotAt": "2026-11-22T12:16:23.002703+00:00"
+  "packagingSnapshotAt": "2026-11-22T12:56:29.462432+00:00",
+  "previousCandidate82": {
+    "package": {
+      "version": "0.0.0-edge.82",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "sourceArchiveSHA256": "cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0",
+      "wheelSHA256": "58b285dce84b7d160cbc0b131f0658c5c56eb9c5d04686b4211dc1ad63ec9dd6",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
+        ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
+      },
+      "storageSchema": 37,
+      "status": "Historical native-normal-qualified82, with known queuedreadfinding4658107744. Sourcefix qualified separately; newimmutable83 stillrequired beforemerge."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T12:18:38.906886+00:00",
+      "image": "domus-162-edge82:pinned",
+      "imageId": "sha256:226273ac0465cb9f43493f8dfba2bee595e97857a144244abefd54582f26dbe2",
+      "architecture": "arm64",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "version": "0.0.0-edge.82",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 18.275,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "at": "2026-11-22T12:49:17.271Z",
+      "versionObserved": "0.0.0-edge.82",
+      "previousObserved": "0.0.0-edge.81",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "packagingHead": "cf30ae38c06109a7ac53ee2151af46df0931b560",
+      "appSlug": "abb0c2fd_domus_edge",
+      "household": "Domus QA 162 Edge78",
+      "moduleBasenameObserved": "index-CpDS3NEI.js",
+      "method": "Official CUA Chrome UI only: native Supervisor version, public app forms, DOM-backed focus/geometry and actual touch. No private HA API, hidden application state, host data or clock changes.",
+      "backupCreated": false,
+      "newHouseholdProductsTasksOrExtras": 0,
+      "desktop": {
+        "extra": "QA 162 Edge82 unsent extra",
+        "note": "QA 162 Edge82\nRetain\t\ud83d\ude00",
+        "refreshEnabled": true,
+        "heading": {
+          "bottom": 106.5546875,
+          "top": 68.15625
+        },
+        "focused": true
+      },
+      "mobile": {
+        "extra": "QA 162 Edge82 unsent extra",
+        "note": "QA 162 Edge82\nRetain\t\ud83d\ude00",
+        "refreshEnabled": true,
+        "heading": {
+          "bottom": 106.1640625,
+          "top": 67.765625
+        },
+        "focused": true,
+        "activeTab": "page",
+        "actualTouchOverflow": true,
+        "actualTouchStockRefreshAndTabs": true,
+        "itemEntryAfterRestart": {
+          "bottom": 414.59375,
+          "focused": true,
+          "top": 389,
+          "uniqueLocatorMatches": 1,
+          "iframeViewport": 804,
+          "fixedNavigationBottom": 56
+        }
+      },
+      "savedNotesAfterRestart": [
+        {
+          "text": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00",
+          "children": 0
+        },
+        {
+          "text": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>",
+          "children": 0
+        }
+      ],
+      "savedExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low"
+        }
+      ],
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "historyAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "sessionsAfterRestart": "There are no purchase sessions recorded.",
+      "restart": "Actual Supervisor Stop reached Detenido/Iniciar at82; Start reached En ejecuci\u00f3n/Open Web UI at82. Fresh entry reread saved notes, priorities, quantities and empty histories.",
+      "temporaryEmulationRestored": true,
+      "finalState": "Observed82Detenido/Iniciar; same exactapp/data/source cleanup confirmation pending. No deletion.",
+      "screenshots": [
+        "native82-installed-version.jpg",
+        "native82-en-light-keyboard.jpg",
+        "native82-es-dark-touch.jpg",
+        "native82-es-dark-item-entry-after-restart.jpg"
+      ],
+      "limitation": "Normal native journeys and data/restart qualified only. Review4658107744 identified a queued-read race while leaving Shopping with busy catalog. Two unit and two actual compiled82 C02 variants reproduced it; source correction is qualified separately for next83 beforemerge."
+    },
+    "sourceFrontendTests": 2196,
+    "remainingFinding": "4658107744: a busy-catalog/alreadyqueued Shopping read survived leaving the destination. Both actual compiled82 C02 variants and both composition cases reproduced it. Currentfae runtime retires the old queue before tracker reset."
+  }
 }

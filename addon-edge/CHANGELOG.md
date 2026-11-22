@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.83
+
+- Retire Shopping navigation queued before a section change, including while the product catalog is loading.
+- Keep the destination you opened responsible for its reads and status; a later Shopping entry still refreshes its current list.
+- Preserve drafts, original requests, schema-37 notes, priorities, stock and receipts.
+
 ## 0.0.0-edge.82
 
 - Keep Stock usable when a former Shopping item read is denied; refresh retained Shopping work only after returning to its current destination.

@@ -11,12 +11,12 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The previous pinned runtime is published as
-`8ecbf6c145a7a415998766b7b299544487d823fe` on the admitted managed ref. Edge.82
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
+`fae1e6ae06993202260d765dbf27bea2144adc89` on the admitted managed ref. Edge.83
 pins that exact source and archive SHA-256
-`cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0`.
+`7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12`.
 All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`58b285dce84b7d160cbc0b131f0658c5c56eb9c5d04686b4211dc1ad63ec9dd6`.
+`641b66199213ce0e366f516911fb318ff35da7fb4f5e4632fde1434a19c5faf5`.
 The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
 restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
 Its installed native Home Assistant walkthrough then exposed two mobile viewport
@@ -251,3 +251,7 @@ stay zero, with no purchases or sessions. It is stopped, with the same exact
 app/data/source cleanup confirmation pending and no new household records or
 backup. This normal native qualification does not accept the known queued-read
 race: the next immutable Edge.83 and final current-head acceptance remain required.
+
+This Edge.83 packaging snapshot pins the queue-retirement runtime. The linked PR retains final current-head CI/review and installed acceptance; the previous Edge.82 normal walkthrough does not establish this correction's acceptance.
+
+The current Edge.83 actual local ARM64 image passes all six exact-byte, authority, native/standalone listener, restart, genuine schema-20/schema-36 migration and snapshot-restore checks in 18.44 seconds. Its native installed walkthrough and complete current-head CPU/source CI remain required.

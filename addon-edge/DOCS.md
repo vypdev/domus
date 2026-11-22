@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.82 packages the immutable runtime declared in
+Edge 0.0.0-edge.83 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
@@ -17,6 +17,8 @@ or a verified participant/household change retires protected state. Navigation
 itself never creates, posts, cancels or repeats a command.
 
 A pending operation belongs to the verified household and member even after reload. The same owner keeps the original request bytes and key. Browser packets from an older version that cannot establish that owner, or that belong to another owner, follow the existing incompatible-scope retirement without a lookup or resend. Previously committed server receipts remain unchanged; review current records before submitting another change.
+
+Leaving Shopping while its product information is loading retires the older destination request. The section you open keeps its own current status; return to Shopping to read its list. Drafts and original operations remain with the verified participant.
 
 Stock refresh does not repeat a hidden Shopping read. Returning to Shopping revalidates its retained work with the current route. A rejected operation names the relevant Shopping, Inventory or combined access; purchase drafts remain available for explicit correction and retry.
 
