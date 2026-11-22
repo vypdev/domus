@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge81 source/wheel/actualARM64/native installed acceptance PASS; final same-head CI and merge/destination pending",
+  "status": "Current source review corrections qualified2196/100 and12realbrowservariants; next immutable Edge82 and latest-head CI/review pending. Edge81 installed observations remain historical.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -19,15 +19,15 @@
     "legacyPendingPacketHandling": "Existing incompatible-scope retirement for ownerless or unmatched packets; no lookup/resend/reassignment and no change to committed server receipts."
   },
   "executedSource": {
-    "frontendTests": 2190,
+    "frontendTests": 2196,
     "frontendTestFiles": 50,
     "authoredRuntimeFiles": 121,
     "coverage": {
       "globalAndPerFileAllFourMetrics": 100,
-      "statements": 9504,
-      "branches": 8721,
-      "functions": 2025,
-      "lines": 6914,
+      "statements": 9523,
+      "branches": 8748,
+      "functions": 2027,
+      "lines": 6930,
       "authoredFileAudit": "PASS"
     },
     "runtimeAndCatalogTypes": "PASS",
@@ -37,7 +37,7 @@
     "retainedAnnotationBrowserVariants": 4,
     "retainedFullWorkspaceBrowserVariants": 2,
     "newBrowserVariants": 12,
-    "newBrowserResult": "12 PASS30.1seconds onceeach zero retries. C04 now returns503 forhousehold facts inboth deployments, reloads theactualapp, verifies authorizedShopping fields/refresh remainenabled and zero automaticwrites; all originalstale/denial/role assertions retained.",
+    "newBrowserResult": "12PASS30.4seconds, each once zero retries. C02 includes Stock refresh afteritemroute whileShopping-list reads would return403; zero hiddenShopping reads and Stock remains usable. C04 verifies deniedpurchase guidance, retaineddraft and successfulretry; all previous assertions retained.",
     "catalogBrowserTests": 68,
     "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
     "nodePolicyTests": 42,
@@ -64,6 +64,10 @@
     "partialHouseholdFactRegression": {
       "beforeFix": "2positiveworkspacefailures/1negativeunverifiedscopepass",
       "afterFix": "BothInventory andShopping load only fromcurrentverifiedcapabilityhousehold/member; no catalogwhenbothfactsandcapabilities unavailable; full2190unitcoveragePASS100."
+    },
+    "hiddenShoppingAndGuidanceRegression": {
+      "beforeFix": "4failures: manualStockrefresh andsuccessfulStocksave each repeat a hiddenShopping read; EN/ES purchase denial reportswronggrant.",
+      "afterFix": "All4pass; scope retirement/unavailable during reentry also stop new route reads. Full2196 tests/all4metrics100; actualC02/C04bothdeployments pass."
     }
   },
   "requiredImageBrowserInventory": 86,
@@ -198,7 +202,7 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     },
     "storageSchema": 37,
-    "status": "Immutable source/wheel, actual local ARM64 image and native installed upgrade/restart qualified. Final same-head CI and merge/destination remain required."
+    "status": "Historical native-qualified Edge81; does not include current hidden-read/guidance corrections. Immutable Edge82 qualification and final latest-head checks remain pending."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
@@ -257,7 +261,10 @@
     "late-focus": "Immediate item focus plus next-frame scroll only if that same target still owns focus. Later user focus and retired target regression pass.",
     "durableOwnerAcrossReload": "Scope contains verified household/member. Sameowner retainsrawbytes/key; replacementandlegacyownerlesspacketretired viaexistingScopedCommandJournal; failedretirement blocksrecovery. Four unit/compositioncases andC05actualreload variants qualify.",
     "catalogFrontendCount": "Catalog readiness now points to the canonical executed qualification inventory rather than copying a numeric count that drifts.",
-    "partialHouseholdFacts": "Use matching independentlyverified administration capabilityhousehold when entrydisplayfacts unavailable. Use the same resolvedhome in authorityrevisionbinding. No catalogwithoutverifiedhome/member and no newwrites."
+    "partialHouseholdFacts": "Use matching independentlyverified administration capabilityhousehold when entrydisplayfacts unavailable. Use the same resolvedhome in authorityrevisionbinding. No catalogwithoutverifiedhome/member and no newwrites.",
+    "hiddenShoppingRefresh": "Stock refresh and post-command refresh do not resume hidden Shopping reads. Retained selected projections/drafts remain; Shopping reentry refreshes them using the current route. Scope retirement/failure stops the continuation.",
+    "shoppingDeniedGuidance": "Requesters, Shopping managers, Inventory receipt posting and combined Shopping/Inventory correction/return receive distinct current-grant guidance in EN/ES; purchase draft survives deniedresponse and succeeds on explicitretry.",
+    "baselineSourceAssessment": "Two non-normative source-assessment paragraphs now explicitly name immutable base7770. Preexisting ownerprefix and every original requirement/case row remain byte-identical; no native inventory changes."
   },
   "previousCandidate79": {
     "package": {
@@ -507,5 +514,13 @@
     "branchSyncRun": 45017144691,
     "commitRun": 45017144716,
     "result": "Review, Verification, Branch Sync and Commit PASS. All five historical findings resolved. Final evidence head still requires its own applicable checks."
+  },
+  "nativeSpecificationCompatibility": {
+    "nativeCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
+    "retainedPrefixExact": true,
+    "allRequirementAndCaseRowsExact": true,
+    "uniqueRequirements": 11,
+    "distinctCases": 6,
+    "onlyBaselineObservationParagraphsClarified": 2
   }
 }

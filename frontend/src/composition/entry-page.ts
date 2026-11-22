@@ -475,8 +475,7 @@ export function mountEntry(page: EntryPage): PageMount {
         const current = element.inventory!;
         if (current.busy || current.report === null) return;
         shoppingNavigation = null;
-        if (scheduled.target !== null) void inventoryController.showShoppingItem(scheduled.target);
-        else if (current.shoppingList == null || current.shoppingFocus != null) void inventoryController.showShoppingList();
+        void inventoryController.openShoppingDestination(scheduled.target);
       }, 0);
     };
     const inventoryJournal = new InventorySessionJournal({getItem:key => browser.storage().getItem(key),
@@ -513,6 +512,7 @@ export function mountEntry(page: EntryPage): PageMount {
         inventoryOwner = {identity, key};
         const authorityKey = JSON.stringify([home, authority?.member?.memberId,
           authority?.member?.revision, authority?.policyRevision]);
+        inventoryController.setShoppingActive(element.workspaceDestination === 'shopping');
         inventoryController.bind({key, context, readOnly:entry.decision.readOnly, authorityKey});
         const scope = element.inventory!.scope;
         const route = element.workspaceDestination === 'shopping' ? element.shoppingTarget ?? '' : null;

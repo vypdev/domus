@@ -1,5 +1,6 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import type {InventoryState} from '../src/application/inventory-controller';
+import {inventoryCommand} from '../src/domain/inventory';
 import '../src/presentation/domus-shopping-workspace';
 
 const owned: HTMLElement[] = [];
@@ -104,6 +105,28 @@ test('stale Shopping sources are disabled until the current catalog is available
   await node.updateComplete; await shopping.updateComplete; await list.updateComplete; await source().updateComplete;
   expect(source().disabled).toBe(false); source().shadowRoot!.querySelector('button')!.click();
   expect(events.mock.lastCall?.[0].detail).toEqual({type:'shopping-sources', productId:'tea'});
+});
+
+test.each(['en','es'] as const)('denied commands explain the actual Shopping and stock grants in %s', async language => {
+  const node = await mount(); node.language = language;
+  const examples = [
+    [{action:'shopping.purchase',product_id:'tea',name:null,quantity:'1'},
+      language === 'en' ? 'Shopping was not changed. Ask a household member with shopping management access.'
+        : 'Compras no ha cambiado. Pide ayuda a un miembro del hogar que pueda gestionar las compras.'],
+    ...['shopping.return-receipt','shopping.correct-posted-receipt'].map(action => [
+      {action,purchase_id:'purchase',receipt_id:'receipt',reason:'Correction',expected_revision:'1'},
+      language === 'en' ? 'Nothing was changed. Ask a household member with both shopping and inventory management access.'
+        : 'No ha cambiado nada. Pide ayuda a un miembro del hogar que pueda gestionar tanto las compras como el inventario.',
+    ]),
+    [{action:'shopping.post-receipt',purchase_id:'purchase',receipt_id:'receipt'},
+      language === 'en' ? 'Stock was not changed. Ask a household member with inventory management access.'
+        : 'El stock no ha cambiado. Pide ayuda a un miembro del hogar que pueda gestionar el inventario.'],
+  ] as const;
+  for (const [raw,message] of examples) {
+    node.view = {...initial,result:{kind:'rejected',reason:'permission_denied',command:inventoryCommand(raw)}};
+    await node.updateComplete;
+    expect(node.shadowRoot!.querySelector('vyp-ha-feedback')!.state?.message).toBe(message);
+  }
 });
 
 test('item entry scroll waits for nested layout and respects a later user focus or a retired item', async () => {

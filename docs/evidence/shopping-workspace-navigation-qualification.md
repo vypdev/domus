@@ -11,7 +11,7 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The previously qualified runtime is published as
 `acf8587d1809e061a17a29c29e9e15782e514829` on the admitted managed ref. Edge.81
 pins that exact source and archive SHA-256
 `c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d`.
@@ -31,13 +31,14 @@ actual ARM64 image passes the same six checks. Its native in-place update, norma
 keyboard/touch journeys, saved literal records and public stop/start are qualified
 separately below. Partial-read fault injection remains an owned-fixture check,
 not a claim about faults introduced into native Home Assistant.
-The pre-existing specification prefix and published #162 unit are
-preserved. Backend, API, schema 37, canonical journal packet format and exact published
+The pre-existing specification prefix and all published #162 requirement/case
+identities are preserved. Two non-normative source-assessment paragraphs now
+explicitly identify the immutable base instead of describing it as current source. Backend, API, schema 37, canonical journal packet format and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
-The complete current frontend campaign passes 2,190 tests across 50 files, with
+The complete current frontend campaign passes 2,196 tests across 50 files, with
 all four metrics at 100% globally and per authored runtime file (121 files):
-9,504 statements, 8,721 branches, 2,025 functions and 6,914 lines. Its independent
+9,523 statements, 8,748 branches, 2,027 functions and 6,930 lines. Its independent
 source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
 product Vite build and the actual wheel package test pass. All 250 Python module
 bytes equal accepted Edge.77; the four compiled UI resources match the new wheel.
@@ -189,3 +190,30 @@ changes were used. At packaging head `5f0bb08`, Review, Verification, Commit and
 Branch Sync pass and all five historical findings are resolved. The final
 evidence head still requires its own applicable CI and review, followed by normal
 merge, destination CI/Branch Sync and native issue closure.
+
+## Active destination refresh and denied-command guidance
+
+The final evidence-head review found that Stock refresh could resume the former
+Shopping item read. A Shopping-only denial then retired the independently readable
+Stock view. Real composition regressions reproduce this for manual refresh and
+post-save refresh. The shared controller now retains Shopping projections while
+Stock refreshes, and revalidates them only on Shopping entry with the current
+route. It preserves drafts, selections, pending command ownership and current
+scope checks. Failed catalog proof or scope retirement stops that continuation.
+
+Two EN/ES regressions also reproduce purchase denials recommending Inventory
+access. Feedback now distinguishes Shopping request access, Shopping management,
+Inventory receipt posting and the combined grants for posted corrections/returns.
+The existing C02 actual-browser journey verifies zero hidden Shopping reads during
+Stock refresh even when those reads would return 403. C04 verifies the denied
+purchase message, retained purchase fields and an explicit successful retry. All
+original assertions remain. All twelve variants pass once, without retries, and
+all 2,196 frontend tests preserve global/per-file 100% on all four metrics. The
+independent source coverage audit, types, SDK catalog and package/docs checks pass.
+
+Edge.81's installed acceptance above is historical and does not include these
+last two runtime corrections. Their next immutable Edge package, current actual
+CPU images, installed walkthrough and final same-head checks remain required.
+The two stale source-assessment paragraphs in the Action-published unit now name
+the immutable base explicitly. The preceding owner prefix and every published
+requirement/case row remain byte-identical; no acceptance identity was changed.

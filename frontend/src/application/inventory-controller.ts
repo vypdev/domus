@@ -112,6 +112,8 @@ export class InventoryController {
   private owned: EntryRead<unknown> | null = null;
   private request: InventoryRequest | null = null;
   private shoppingTarget: string | null = null;
+  private shoppingActive = true;
+  private shoppingRefreshNeeded = false;
 
   constructor(private readonly server: InventoryServer, private readonly journal: InventoryJournal,
     private readonly entropy: EntryEntropy, private readonly publish: (state: InventoryState | null) => void) {}
@@ -124,6 +126,7 @@ export class InventoryController {
     this.owned = null;
     this.request = null;
     this.shoppingTarget = scope?.shoppingTarget ?? null;
+    this.shoppingRefreshNeeded = false;
     this.view = scope === null ? null : {scope, report: null, history: null, pending: false, busy: false, result: null, notice: null};
     this.publish(this.view);
     if (scope === null) return;
@@ -140,22 +143,42 @@ export class InventoryController {
     await this.load(null);
     if (state?.history && this.view?.scope === state.scope && this.view.history)
       await this.showHistory(state.history.productId);
-    if (state?.purchases && this.view?.scope === state.scope && this.view.purchases)
-      await this.showPurchases();
-    if (state?.purchaseSessions && this.view?.scope === state.scope && this.view.purchaseSessions)
-      await this.showPurchaseSessions();
-    if (state?.purchaseSession && this.view?.scope === state.scope && this.view.purchaseSession)
-      await this.showPurchaseSession(state.purchaseSession.session.id);
-    if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts)
-      await this.showPurchaseReceipts(state.purchaseReceipts.purchase.id);
-    if (state && this.view?.scope === state.scope && this.view.report) {
-      if (this.shoppingTarget) await this.openShoppingItem(state.scope, this.shoppingTarget);
-      else if (state.shoppingList) await this.showShoppingList();
-    }
-    if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
-      await this.showShoppingSources(state.shoppingSources.item.productId!);
+    if (this.shoppingActive) {
+      this.shoppingRefreshNeeded = false;
+      if (state?.purchases && this.view?.scope === state.scope && this.view.purchases)
+        await this.showPurchases();
+      if (state?.purchaseSessions && this.view?.scope === state.scope && this.view.purchaseSessions)
+        await this.showPurchaseSessions();
+      if (state?.purchaseSession && this.view?.scope === state.scope && this.view.purchaseSession)
+        await this.showPurchaseSession(state.purchaseSession.session.id);
+      if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts)
+        await this.showPurchaseReceipts(state.purchaseReceipts.purchase.id);
+      if (state && this.view?.scope === state.scope && this.view.report) {
+        if (this.shoppingTarget) await this.openShoppingItem(state.scope, this.shoppingTarget);
+        else if (state.shoppingList) await this.showShoppingList();
+      }
+      if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
+        await this.showShoppingSources(state.shoppingSources.item.productId!);
+    } else this.shoppingRefreshNeeded = true;
     if (state?.barcode && this.view?.scope === state.scope && this.view.report)
       await this.showBarcode(state.barcode.code);
+  }
+
+  /** Presentation changes never replace the scope, draft or original command. */
+  setShoppingActive(active: boolean): void {this.shoppingActive = active;}
+
+  async openShoppingDestination(target: string | null): Promise<void> {
+    const state = this.view;
+    if (state === null || state.report === null || this.owned !== null) return;
+    this.shoppingTarget = target;
+    const refresh = this.shoppingRefreshNeeded;
+    // Stock refreshed while Shopping was hidden. Revalidate its retained reads
+    // only on entry, using the current route rather than the former item target.
+    if (refresh) await this.refresh();
+    if (this.view?.scope !== state.scope || this.view.report === null) return;
+    if (target !== null) {
+      if (!refresh || this.view.shoppingFocus?.key !== target) await this.showShoppingItem(target);
+    } else if (this.view.shoppingList == null || this.view.shoppingFocus != null) await this.showShoppingList();
   }
 
   async showBarcode(value: string): Promise<void> {

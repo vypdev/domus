@@ -362,19 +362,39 @@ test('a failed purchase read keeps the actual form and disables its retained dra
 test('item navigation waits for current catalog proof and never interrupts an owned read', async () => {
   const f = controller(), app = f.controller;
   await app.showShoppingItem('extra:request');
+  await app.openShoppingDestination('extra:request');
   expect(f.current()).toBeUndefined();
   f.load.mockReturnValueOnce(lost()); app.bind(scope);
   await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
   const unavailable = f.current();
   await app.showShoppingItem('extra:request'); await app.showPurchaseReceipts('purchase');
+  await app.openShoppingDestination(null);
   expect(f.current()).toBe(unavailable);
   await app.refresh();
   const loading = app.showPurchases();
+  const destination = app.openShoppingDestination('extra:request');
   await app.showShoppingItem('extra:request');
-  await loading; await app.refresh();
+  await destination; await loading; await app.refresh();
   expect(f.current()?.notice).toBeNull();
   expect(f.current()?.purchases).toEqual(purchases);
   expect(f.send).not.toHaveBeenCalled();
+});
+
+test.each(['scope retirement','catalog failure'] as const)('Shopping re-entry stops after %s during retained-read refresh', async situation => {
+  const f = controller(), app = f.controller;
+  app.setShoppingActive(false); app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  const gate = Promise.withResolvers<InventoryReport>();
+  f.load.mockReturnValueOnce({result:gate.promise,cancel:vi.fn()});
+  app.setShoppingActive(true);
+  const entry = app.openShoppingDestination('extra:request');
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(true));
+  if (situation === 'scope retirement') {app.bind(null); gate.resolve(report);}
+  else gate.reject(new EntryReadError('unavailable'));
+  await entry;
+  if (situation === 'scope retirement') expect(f.current()).toBeNull();
+  else expect(f.current()).toMatchObject({report:null,retainedReport:report,notice:'unavailable'});
+  expect(f.send).not.toHaveBeenCalled(); expect(f.original).not.toHaveBeenCalled();
 });
 
 test('denial of a Shopping read cannot retain previously visible private purchase facts', async () => {

@@ -28,7 +28,11 @@ export function inventoryOperationFeedback(view: InventoryState, language: Langu
   const movement = saved?.movement;
   const message = result?.kind === 'rejected'
     ? result.reason === 'permission_denied' && result.command.action === 'shopping.add-extra'
-      ? 'shoppingRequestDenied' : result.reason === 'inventory_stock_capacity' && result.command.action === 'shopping.post-receipt'
+      ? 'shoppingRequestDenied' : result.reason === 'permission_denied'
+          && (result.command.action === 'shopping.correct-posted-receipt' || result.command.action === 'shopping.return-receipt')
+        ? 'shoppingAndStockDenied' : result.reason === 'permission_denied'
+            && result.command.action.startsWith('shopping.') && result.command.action !== 'shopping.post-receipt'
+          ? 'shoppingManagementDenied' : result.reason === 'inventory_stock_capacity' && result.command.action === 'shopping.post-receipt'
         ? 'shoppingPostingCapacity' : result.reason
     : view.accessDenied ? 'inventoryAccessDenied' : notice;
   return html`${message === null ? nothing : html`<vyp-ha-feedback

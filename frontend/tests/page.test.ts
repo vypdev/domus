@@ -1640,6 +1640,44 @@ test('Overview shopping retries and opens the current shared-list item beyond an
   expect(f.postRequests()).toBe(0);
 });
 
+test.each(['refresh', 'save'] as const)('Inventory %s does not replay a hidden Shopping target and re-entry refreshes retained work', async action => {
+  const f = fixture(); f.phase('active'); f.shoppingItem(true);
+  const base = f.page.location.href;
+  const navigate = (hash:string) => {f.page.location.href = base + hash; f.events.dispatchEvent(new Event('hashchange'));};
+  navigate('#shopping/product:product'); const {app} = await f.open();
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+  const retained = app.inventory!.shoppingList;
+  navigate('#inventory');
+  const original = f.fetch.getMockImplementation()!;
+  let deny = true, hiddenReads = 0;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (deny && path.includes('/inventory/shopping-list/')) {
+      hiddenReads++;
+      const reply = new Response(JSON.stringify({state:'blocked',code:'permission_denied',message:'Denied.',
+        action_required:'Review Shopping access.',correlation_id:'cor_hidden_shopping'}),
+      {status:403,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:corpus.standalone.endpoint.origin + path}); return reply;
+    }
+    return original(path,init);
+  });
+  const reads = () => f.fetch.mock.calls.filter(([path]) => /\/inventory\?/.test(path)).length;
+  const before = reads();
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent',{detail:action === 'refresh' ? {type:'refresh'} : {
+    type:'submit',command:{action:'inventory.register-product',name:'New Stock product',base_unit:'piece'},
+  },bubbles:true,composed:true}));
+  await vi.waitFor(() => expect(reads()).toBeGreaterThan(before));
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  expect(hiddenReads).toBe(0);
+  expect(app.inventory?.report?.mayManage).toBe(true);
+  expect(app.inventory?.shoppingList).toBe(retained);
+  expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true});
+  deny = false; f.shoppingItem(false);
+  navigate('#shopping/product:product');
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:false}));
+  expect(f.fetch.mock.calls.filter(([,init]) => init.method === 'POST' && String(init.body).includes('inventory.register-product')))
+    .toHaveLength(action === 'save' ? 1 : 0);
+});
+
 test('the weekly Family summary retries its own read and retires on member and workspace changes', async () => {
   const f = fixture(); f.phase('active');
   const {app} = await f.open();

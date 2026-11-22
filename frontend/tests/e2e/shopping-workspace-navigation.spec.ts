@@ -106,7 +106,7 @@ for (const mode of ['native','standalone'] as const) {
 
   test(`inventory1-C02 (#162): direct, history, Overview and legacy item entry in ${mode}`, async ({page,context,request},info) => {
     await page.setViewportSize({width:390,height:844});
-    const {base,tabs,shop,write,stats} = await create(page,context,request,mode);
+    const {base,tabs,stock,shop,write,stats} = await create(page,context,request,mode);
     const product = (await write('navigation-product',{action:'inventory.register-product',name:'Navigation tea',base_unit:'piece'})).result;
     await write('navigation-policy',{action:'inventory.configure-replenishment',product_id:product.product_id,minimum:'1',target:'2',expected_revision:'0'});
     const extra = (await write('navigation-extra',{action:'shopping.add-extra',product_id:null,name:'Navigation bags',quantity:'1'})).result;
@@ -130,6 +130,20 @@ for (const mode of ['native','standalone'] as const) {
         await info.attach('back-navigation-focus',{body:JSON.stringify(observation),contentType:'application/json'}); throw error;
       });
       await page.goForward(); await expect(page.locator('domus-app #inventory')).toBeFocused();
+      const shoppingPath = new URL(base + 'api/v1/inventory/shopping-list/').pathname;
+      const hiddenShopping = (url:URL) => url.pathname.startsWith(shoppingPath);
+      let hiddenReads = 0;
+      await page.route(hiddenShopping,route => {
+        hiddenReads++;
+        return route.fulfill({status:403,headers:{'Cache-Control':'no-store'},
+          json:{state:'blocked',code:'permission_denied',message:'Shopping denied.',
+            action_required:'Review Shopping access.',correlation_id:'cor_hidden_shopping'}});
+      });
+      await stock.getByRole('button',{name:'Refresh inventory',exact:true}).click();
+      await expect(stock.getByRole('button',{name:'Register product',exact:true})).toBeEnabled();
+      await expect(stock.getByRole('heading',{name:'Navigation tea',exact:true})).toBeVisible();
+      expect(hiddenReads).toBe(0);
+      await page.unroute(hiddenShopping);
       await tabs.getByRole('link',{name:'Overview',exact:true}).press('Enter');
       await page.locator('domus-shopping-attention').getByRole('link',{name:new RegExp('^'+name+' ')}).press('Enter');
       await expect(page).toHaveURL(base + '#shopping/' + kind + ':' + id); await expectVisibleItem(row,tabs);
@@ -274,6 +288,12 @@ for (const mode of ['native','standalone'] as const) {
         if(role === 'adult') {
           await otherShop.getByRole('textbox',{name:'Untracked item name',exact:true}).fill('Bought without Inventory grant');
           await otherShop.getByRole('textbox',{name:'Quantity purchased',exact:true}).fill('1');
+          await other.route(base + 'api/v1/inventory/commands',route => route.fulfill({status:403,
+            headers:{'Cache-Control':'no-store'},json:{state:'blocked',code:'permission_denied',message:'Denied.',
+              action_required:'Review Shopping access.',correlation_id:'cor_purchase_denied'}}),{times:1});
+          await otherShop.getByRole('button',{name:'Record purchase',exact:true}).click();
+          await expect(otherShop.getByText('Shopping was not changed. Ask a household member with shopping management access.',{exact:true})).toBeVisible();
+          await expect(otherShop.getByRole('textbox',{name:'Untracked item name',exact:true})).toHaveValue('Bought without Inventory grant');
           await otherShop.getByRole('button',{name:'Record purchase',exact:true}).click();
           await expect(otherShop.getByText('Purchase recorded.',{exact:true})).toBeVisible();
         }
