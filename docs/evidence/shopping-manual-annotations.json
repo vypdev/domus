@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Immutable76 source/archive/wheel,6020backend100,68catalog,actualARM64image+schema qualified; native76 and finalsameheadCI/reviewpending",
+  "status": "Immutable77archive/wheel,6022backend100+ASTaudit,83HTTP/2240540ECMA/59static/actualARM64sixcases+installedschemaqualified;native77/finalsameheadCIpending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
@@ -17,14 +17,14 @@
   },
   "sourceQualification": {
     "backend": {
-      "tests": 6020,
-      "expectedFinalCITestsIncludingPackage": 6030,
+      "tests": 6022,
+      "expectedFinalCITestsIncludingPackage": 6032,
       "runtimeFiles": 250,
       "statements": 19235,
       "branches": 5160,
       "globalAndPerFileCoverage": 100,
       "independentSourceASTAudit": "PASS",
-      "all250HashesMatchCurrent76Wheel": true
+      "all250HashesMatchCurrent77Wheel": true
     },
     "frontend": {
       "tests": 2164,
@@ -101,16 +101,16 @@
     "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
   },
   "pendingGates": [
-    "Installed native76 acceptance and immediate owned test cleanup",
-    "Allfinalhead6030backend/2164frontend/129source/68catalog/62container+74browser perCPU plusretainedstableartifacts;review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
+    "Installednative77acceptanceandimmediateownedQAcleanup",
+    "Finalsamehead6032backend/2164frontend/129source/68catalog/62container+74browserperCPUandstableartifacts;review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-22T01:26:20.731363+00:00",
-  "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
+  "recordedAt": "2026-11-22T02:37:22.045426+00:00",
+  "sourceCommit": "ecdf2c6007247b1df891c52f938bd1bb28ffeed3",
   "currentPackage": {
-    "version": "0.0.0-edge.76",
-    "sourceArchiveSHA256": "ebce2f880fe1a65d153e0d8d2b555bf5abc646237c283d6ea7a26573c4acbb8c",
-    "wheelSHA256": "175004f4900a6fb896c287ea2bd9e914ca0ce92d637d650e2a37eb1b15f46001",
+    "version": "0.0.0-edge.77",
+    "sourceArchiveSHA256": "b39e8d132271a985c32ac7a6b6d806909002250ac849255366692719d3efe475",
+    "wheelSHA256": "01cabd7e72268f511563218afd5414350f39c25e22ed151a07411d9ca2bc8c44",
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
@@ -124,7 +124,7 @@
     "trackedFiles": 1018,
     "allTrackedGitBlobsMatch": true,
     "all250WheelRuntimeFilesMatchArchive": true,
-    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/e157e8f3e17c02651814b2a8ee324d28998875b8"
+    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/ecdf2c6007247b1df891c52f938bd1bb28ffeed3"
   },
   "priorCandidate73": {
     "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
@@ -412,10 +412,11 @@
     "stagingRemovalActor": "Not observed; no attribution to Copilot."
   },
   "localActualArm64Image": {
-    "image": "domus-157-edge76:pinned",
-    "imageId": "sha256:4c30e43be51ad348bde8ac8fa87efb436c1d4e73abc0f009bea6b3ebcfa64b89",
+    "at": "2026-11-22T02:32:20.939304+00:00",
+    "image": "domus-157-edge77:pinned",
+    "imageId": "sha256:2b2154a3e0cb9d1ade051fa3588361a9b9ec5808555aab89ff33117841d4ced7",
     "architecture": "arm64",
-    "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
+    "sourceCommit": "ecdf2c6007247b1df891c52f938bd1bb28ffeed3",
     "allPythonFiles": 250,
     "allUIFiles": 4,
     "allProductBytesMatchWheel": true,
@@ -424,10 +425,91 @@
       20,
       36
     ],
-    "actualInstalledRequestSchemaMatchesBothSnapshots": true,
-    "all62UnsupportedControlsKeepOriginalValidationError": true,
-    "nativeAndStandaloneListeners": true,
     "restartAndSnapshotRestoration": true,
-    "limits": "Full compatible previous-binary checkpoint tests remain mandatory in both final CI CPU jobs; obsolete local historical images were retired at the explicit user request."
+    "nativeAndStandaloneListeners": true,
+    "actualInstalledRequestSchemaMatchesBothSnapshots": true,
+    "all2048SurrogatesAnd62ControlsRejected": true,
+    "validSupplementaryJSONAccepted": true,
+    "limits": "Full previous-binary rollback remains required in both final CPU jobs; obsolete local historical images retired at owner request."
+  },
+  "priorCandidate76": {
+    "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
+    "currentPackage": {
+      "version": "0.0.0-edge.76",
+      "sourceArchiveSHA256": "ebce2f880fe1a65d153e0d8d2b555bf5abc646237c283d6ea7a26573c4acbb8c",
+      "wheelSHA256": "175004f4900a6fb896c287ea2bd9e914ca0ce92d637d650e2a37eb1b15f46001",
+      "storageSchema": 37,
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+        "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+      }
+    },
+    "backend": {
+      "tests": 6020,
+      "expectedFinalCITestsIncludingPackage": 6030,
+      "runtimeFiles": 250,
+      "statements": 19235,
+      "branches": 5160,
+      "globalAndPerFileCoverage": 100,
+      "independentSourceASTAudit": "PASS",
+      "all250HashesMatchCurrent76Wheel": true
+    },
+    "localActualArm64Image": {
+      "image": "domus-157-edge76:pinned",
+      "imageId": "sha256:4c30e43be51ad348bde8ac8fa87efb436c1d4e73abc0f009bea6b3ebcfa64b89",
+      "architecture": "arm64",
+      "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "actualInstalledRequestSchemaMatchesBothSnapshots": true,
+      "all62UnsupportedControlsKeepOriginalValidationError": true,
+      "nativeAndStandaloneListeners": true,
+      "restartAndSnapshotRestoration": true,
+      "limits": "Full compatible previous-binary checkpoint tests remain mandatory in both final CI CPU jobs; obsolete local historical images were retired at the explicit user request."
+    },
+    "native": "PASS;all32C1,realES390lightHighqty2literalnote,publicrestartandfreshOverviewread/stock0;appandsourcecleaned",
+    "finalCi": {
+      "run": 44972930697,
+      "amd64": "62container+74browserPASS,0skip/flaky/retry",
+      "arm64": "62container+74browserPASS,0skip/flaky/retry",
+      "backend": "ObsoletecampaigncancelledafterbothCPUjobscompleted; notclaimedaccepted",
+      "branchSync": "SUCCESS"
+    },
+    "review": {
+      "head": "30720cdbc5897f3e07d0fec69ec4e3a9282d69ff",
+      "coverage": "complete",
+      "fixed": 3,
+      "open": 1,
+      "finding": "Isolated surrogate declaration mismatch, corrected in current77",
+      "mergeAccepted": false
+    }
+  },
+  "schemaSurrogateCorrection": {
+    "finding": "https://github.com/vypdev/domus/pull/158#discussion_r4656164091",
+    "runtimeSource": "ecdf2c6007247b1df891c52f938bd1bb28ffeed3",
+    "metadataOnlyAllOtherASTUnchanged": true,
+    "focusedHTTPAndSnapshots": 83,
+    "all2048IsolatedSurrogatesRejected": true,
+    "allUnicodeCodepointsInBothECMAModes": true,
+    "ECMAAssertions": 2240540,
+    "validSupplementaryBoundariesAnd1000EmojiAccepted": true,
+    "directFieldErrorUnchanged": "invalid_shopping_note",
+    "malformedJSONBoundaryErrorUnchanged": "invalid_request",
+    "sameKeyCorrectionAndReplayWithoutDuplicateEffects": true,
+    "owningRequirementsRetained": 8,
+    "owningCasesRetained": 10,
+    "standards": [
+      "https://json-schema.org/understanding-json-schema/reference/regular_expressions",
+      "https://www.rfc-editor.org/info/rfc8259/"
+    ]
   }
 }

@@ -5,14 +5,52 @@
 retained Shopping owner. This record distinguishes executed source checks
 from publication, compiled images and installed acceptance still pending.
 
-Current checkpoint: the schema-37 backend, annotated reads/recovery and complete
-note/priority form pass their source checks. All five `0.1.0-next.5` packages
-were published through [ha-ui #44](https://github.com/vypdev/ha-ui/pull/44).
-Domus pins that exact public core version and its lockfile; all 172 installed
-package files match the independently downloaded public tarball. The
-[machine-readable qualification](shopping-manual-annotations.json) records
-the compiled source bytes and separates the pending immutable package,
-CPU-image and installed acceptance gates.
+Current candidate: Edge.77, immutable source
+`ecdf2c6007247b1df891c52f938bd1bb28ffeed3`, storage schema 37. Its archive matches
+all 1,018 tracked Git blobs and all 250 wheel modules. All 120 tracked frontend
+source files and four compiled UI files are unchanged from Edge.76. Domus pins
+exact published `@vypdev/ha-ui@0.1.0-next.5`; all 172 installed core files match
+the independent public archive. The five packages were published through
+[ha-ui #44](https://github.com/vypdev/ha-ui/pull/44).
+
+Current focused validation passes 83 HTTP/schema tests, mypy across 250 modules
+and 2,240,540 ECMAScript assertions. Every Unicode codepoint is exercised in
+both default and Unicode regex modes, including all 2,048 isolated surrogates,
+embedded malformed sequences, all 62 prohibited controls, supplementary
+boundaries and the 1,000-emoji limit. Both snapshots equal the actual model.
+The complete 6,022-case backend campaign passes with 100% statement/branch coverage
+globally and per file across all 250 modules. The independent source/AST audit passes,
+and every module hash matches the current77 wheel.
+
+The actual local ARM64 Edge.77 image passes six byte, genuine schema-20/36
+migration, restart, snapshot and listener cases. Its installed model independently
+rejects all 2,110 prohibited control/surrogate codepoints and matches both snapshots.
+Valid supplementary JSON text retains its original acceptance. Whole compatible
+previous-binary rollback remains mandatory in both final CPU campaigns; the owner
+explicitly requested retirement of obsolete local runnable versions.
+
+The fourth valid review finding concerned isolated UTF-16 surrogates in the
+published declaration. The correction changes note annotation metadata only;
+all other runtime AST, validators, defaults and errors are unchanged. The pattern
+preserves valid pairs for default JavaScript engines as well as Unicode mode,
+following [JSON Schema regex portability](https://json-schema.org/understanding-json-schema/reference/regular_expressions)
+and [JSON supplementary-character representation](https://www.rfc-editor.org/info/rfc8259/).
+Direct field validation retains `invalid_shopping_note`; malformed escaped JSON
+retains the existing HTTP boundary's `invalid_request`. Both compositions prove
+no effects are created, then reuse the same keys with valid escaped supplementary
+text and exact original-result replay.
+
+Installed Edge.76 passed all 32 actual C1 insertions with accepted text and focus
+retained. A literal multiline/tab/emoji note saved as a High-priority quantity-2
+request by real 44 px touch at 390 px in Spanish/light. Public restart and a fresh
+Overview-to-Shopping read retain its exact note, priority and quantity with all
+three stock values zero. Its synthetic installation and source are removed,
+preserving all eight original HA sources. Installed Edge.77 acceptance and cleanup,
+final same-head CI/review, normal merge and destination checks remain required.
+
+The [machine-readable qualification](shopping-manual-annotations.json) separates
+source, immutable package, actual CPU images, installed acceptance and final CI.
+The earlier observations below retain their original candidate identities.
 
 The installed Edge.73 baseline rejects and retains a 1,001-character note with
 focus returned to the field, then saves a literal multiline/tab/emoji note with
@@ -22,7 +60,7 @@ Domus's existing body font stack. Edge.74 passed an actual cold update preservin
 that note, Spanish 390 px touch correction in both themes, a second independent
 Low-priority note, a free-text Normal-priority 1,000-emoji note and public restart
 retention of all three requests. Actual native error/help contrast exceeds 4.5:1
-in both themes. The stopped installation is retained for the corrected update.
+in both themes. That installation was subsequently updated and retired after its acceptance.
 
 Review then identified two valid findings. Shopping-specific validation now
 rejects every C1 control U+0080–U+009F in the backend, typed note insertion, input
@@ -32,9 +70,8 @@ an invalid write creates no extra, receipt, audit, outbox or stock movement, and
 a corrected request with the same key commits once. All four compiled HTTP
 journeys reject these controls without a POST and retain the accepted note.
 The complete frontend still passes 2,164 tests with all four coverage metrics
-at 100%; all 68 catalog cases and the four compiled journeys pass. A fresh full
-6,020-case backend campaign, actual Edge.76 image, both final CPU campaigns and
-installed Edge.74-to-75 acceptance are still required.
+at 100%; all 68 catalog cases and the four compiled journeys pass. The source, image, installed and final CI gates were then evaluated separately
+in the following checkpoints.
 
 The public Edge.75 archive matches all 1,018 tracked Git blobs and all 250
 wheel runtime files. Its exact source, archive, wheel and UI digests are recorded
@@ -75,8 +112,9 @@ returns the same note schema as both published snapshots, rejecting all 62 contr
 with the original error while accepting allowed whitespace and supplementary text.
 Full previous-binary rollback remains required in both final CPU campaigns; the
 obsolete local historical images were retired at the owner's explicit request.
-Installed acceptance/cleanup and final same-head CI/review remain pending. Existing native
-requirement and case identities are unchanged.
+Installed Edge.76 acceptance and cleanup subsequently passed as recorded above.
+Its review identified the additional surrogate declaration mismatch corrected
+by current77. Native requirement and case identities are unchanged.
 
 The historical Edge.75 Linux frontend passed all 129 protected entry cases, then
 exhausted the catalog's 90-second global budget after 56 of 68 cases. The upload
@@ -99,16 +137,16 @@ has not been established.
 
 | Native case | Evidence and current outcome |
 | --- | --- |
-| `shopping-manual-annotations-C01` | The [domain/storage tests](../../tests/backend/test_shopping_annotations.py), [both protected HTTP compositions](../../tests/backend/test_shopping_annotations_http.py) and [client contracts](../../frontend/tests/shopping-annotations.test.ts) exercise empty/omitted defaults, all four priorities, exact quantities, 1,000 supplementary characters, literal CR/LF/tab and prohibited controls. The four [compiled HTTP journeys](../../frontend/tests/e2e/shopping-annotations.spec.ts) pass with actual note entry, native Enter, correction, literal HTML text, supplementary characters and independent requests. Installed Edge.74 acceptance passed; corrected Edge.75 acceptance remains pending. |
-| `shopping-manual-annotations-C02` | Strict annotated read tests retain independent manual-source identities and annotations, with `null` for automatic and aggregate entries. A 25-note page of 1,000 supplementary characters per note passes its bounded read budget. Source component checks verify independent literal notes and textual priorities in English and Spanish; installed Edge.74 display passed; corrected Edge.75 display remains pending. |
+| `shopping-manual-annotations-C01` | The [domain/storage tests](../../tests/backend/test_shopping_annotations.py), [both protected HTTP compositions](../../tests/backend/test_shopping_annotations_http.py) and [client contracts](../../frontend/tests/shopping-annotations.test.ts) exercise empty/omitted defaults, all four priorities, exact quantities, 1,000 supplementary characters, literal CR/LF/tab and prohibited controls. The four [compiled HTTP journeys](../../frontend/tests/e2e/shopping-annotations.spec.ts) pass with actual note entry, native Enter, correction, literal HTML text, supplementary characters and independent requests. Installed Edge.74/75/76 acceptance passed; installed current77 remains required. |
+| `shopping-manual-annotations-C02` | Strict annotated read tests retain independent manual-source identities and annotations, with `null` for automatic and aggregate entries. A 25-note page of 1,000 supplementary characters per note passes its bounded read budget. Source component checks verify independent literal notes and textual priorities in English and Spanish; installed Edge.74/75/76 display passed; installed current77 remains required. |
 | `shopping-manual-annotations-C03` | Both HTTP compositions exercise current request/read/task-detail grants, cross-household denial and separately bound legacy/annotated cursors. Existing client HTTP, roster and page-navigation regressions pass. |
-| `shopping-manual-annotations-C04` | The exact public next.5 selector and textarea supply localized labels, defaults, controlled values and field errors. All 68 cases across the 45-story catalog pass, including eight shopping examples in both modes/locales, real keyboard submission and 390 px touch in both themes. Error, help and entered-text contrast is measured at least 4.5:1. Actual invalid-note correction returns focus to the field. The four protected HTTP journeys also pass at 390 px with touch enabled. Installed Edge.74 acceptance passed; corrected Edge.75 acceptance remains pending. |
+| `shopping-manual-annotations-C04` | The exact public next.5 selector and textarea supply localized labels, defaults, controlled values and field errors. All 68 cases across the 45-story catalog pass, including eight shopping examples in both modes/locales, real keyboard submission and 390 px touch in both themes. Error, help and entered-text contrast is measured at least 4.5:1. Actual invalid-note correction returns focus to the field. The four protected HTTP journeys also pass at 390 px with touch enabled. Installed Edge.74/75/76 acceptance passed; installed current77 remains required. |
 | `shopping-manual-annotations-C05` | The [actual Edge.72 journal/controller fixture](../../frontend/tests/fixtures/edge72-inventory-journal.provenance.json) preserves exact legacy packets and refuses new annotated pending data without sending or deleting it. Cold re-upgrade recovers original committed, historical and missing outcomes with the same key/command. Form ownership regressions include note and priority edits and preserve later drafts after edits, form/scope changes and historical/rejected outcomes; temporary disabled state does not change the entered-value fingerprint. Four real HTTP journeys lose a committed reply, reload and recover the original operation without another POST. |
 | `shopping-manual-annotations-C06` | Original-key replay returns the original result; changing explicit note or priority conflicts without creating another extra. Omitted annotation fields preserve the legacy fingerprint. |
 | `shopping-manual-annotations-C07` | Independent writers race duplicate and changed requests. Failures after extra, receipt, audit and outbox writes roll back the entire operation; retry then commits once. Quantities, stock and purchase facts retain their original semantics. |
 | `shopping-manual-annotations-C08` | The [genuine schema-36 fixture](../../tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json) was captured through the actual previous runtime before the schema changed. Focused schema-36/schema-20 migration, failed second ALTER, reopen, actual snapshot activation and historical receipt tests pass. Final candidate/image compatible rollback remains pending. |
 | `shopping-manual-annotations-C09` | The companion retains its eight native requirement IDs, ten case IDs and reciprocal ownership. API snapshots describe the additive annotated wrappers; legacy response shapes remain unchanged. The retained catalog SDK regenerated and validated the actual view for all eleven capabilities. Final candidate-linked qualification remains pending. |
-| `shopping-manual-annotations-C10` | Frontend after the typography correction: 2,164 tests pass with 100% global/per-file coverage across all four metrics and all 119 runtime files; the 68 catalog cases pass. The previous backend passed 5,919 source tests with 100% statement/branch coverage globally and per file across all 250 runtime modules; the current full campaign adds the schema-admission regression for 6,020 source tests after the complete 6,019-case C1 campaign passed. The 42 Node policy tests, 187 tooling tests and 51 Python architecture checks pass. The prior Edge.73 source passed all 129 protected compiled entry cases, with zero skipped, unexpected, flaky or retried cases, and all ten static package contracts plus its actual wheel bundle/license check. Its public archive matched all 1,018 Git blobs and all 250 wheel runtime files. Its local ARM64 image passed nine byte, migration, restart, restoration, rollback and listener cases. Current complete entry execution remains required in final-head CI; the local repeat stopped before any case because an active Actions image fixture owned its ports. Immutable Edge.76, both final CPU campaigns and corrected installed acceptance/cleanup remain pending. Distribution and Stable are outside this increment. |
+| `shopping-manual-annotations-C10` | Source frontend: 2,164 tests, all four coverage metrics at 100% globally and per file across 119 runtime modules; 68 catalog cases pass. All 120 frontend source files and four compiled UI bytes are unchanged by current77. Current77 passes 83 focused HTTP/schema cases, 2,240,540 ECMAScript assertions, mypy across 250 modules and six actual ARM64 image cases. All 6,022 backend cases pass with 100% global/per-file statement/branch coverage and the independent source/AST audit. Final-head 6,032 backend/2,164 frontend/129 source/68 catalog/62 container+74 browser per CPU, current77 native acceptance/cleanup and complete same-head review remain required. Distribution and Stable are outside this increment. |
 
 The original failed draft regressions demonstrated that an earlier outcome
 could reset another form. The correction binds a submission to its scope,
