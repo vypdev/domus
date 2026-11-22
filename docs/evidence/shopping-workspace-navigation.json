@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge79 immutable source/wheel and actual ARM64 image qualified; installed upgrade and final same-head CI pending",
+  "status": "Edge79 source/wheel, actual local ARM64 and installed native acceptance PASS; final same-head CI/review/merge/destination pending",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -74,16 +74,89 @@
         36
       ],
       "restartAndSnapshotRestoration": true,
-      "nativeAndStandaloneListeners": true,
-      "originalLog": "/private/tmp/domus-162-edge79-qualified-arm64-original.log",
-      "resultXML": "/private/tmp/domus-162-edge79.767c4hc9/actual-arm64-results.xml"
+      "nativeAndStandaloneListeners": true
     }
   },
   "installedEdge": {
-    "status": "PENDING Edge79 upgrade of independently owned abb0c2fd_domus_edge",
-    "household": "Domus QA 162 Edge78",
-    "recordsToPreserve": "Tea product, tracked extra quantity2/Urgent and free Bags quantity1/Low with exact LF/HT/emoji/plaintext notes, no stock changes",
-    "previousCandidate78Accepted": false
+    "status": "PASS native acceptance; stopped, permanent cleanup awaiting action-time confirmation",
+    "versionObserved": "0.0.0-edge.79",
+    "previousVersionObserved": "0.0.0-edge.78",
+    "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+    "packagingCommitObserved": "dc41b993a09acbfd9965a60e774dac83401ff044",
+    "inPlaceUpdate": true,
+    "nativeSDDCasesDirectlyExercised": [
+      "inventory1-C01",
+      "inventory1-C02",
+      "inventory1-C03"
+    ],
+    "method": "Official CUA Chrome UI only; native Supervisor version/update and public app pages. No private HA APIs, injected data, host data reads or clock changes.",
+    "mobile": {
+      "viewport": [
+        390,
+        844
+      ],
+      "theme": "dark",
+      "language": "es",
+      "input": "Actual CDP touch dispatch using fresh observed target rectangles",
+      "selectedProduct": {
+        "focused": true,
+        "top": 389,
+        "bottom": 414.59375,
+        "iframeHeight": 804,
+        "fixedNavigationBottom": 56
+      },
+      "shoppingHeadingAfterRepeatedTouch": {
+        "top": 67.765625,
+        "bottom": 106.1640625,
+        "fixedNavigationBottom": 56,
+        "regionFocused": true,
+        "activeTab": "page"
+      },
+      "overflowArrowTouch": true,
+      "stockAndShoppingTabTouch": true,
+      "unsentExtraAndLiteralNotePreservedAcrossStock": true
+    },
+    "desktop": {
+      "viewport": [
+        1120,
+        844
+      ],
+      "theme": "light",
+      "language": "en",
+      "keyboard": "Enter on Inventory and Shopping tabs",
+      "shoppingHeading": {
+        "top": 68.15625,
+        "bottom": 106.5546875
+      },
+      "regionFocused": true,
+      "bothUnsentStockAndShoppingDraftsPreserved": true
+    },
+    "literalNotesAfterUpdateAndPublicRestart": true,
+    "savedManualExtras": [
+      {
+        "item": "QA 162 Edge78 Tea",
+        "quantity": "2",
+        "priority": "Urgent",
+        "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+      },
+      {
+        "item": "QA 162 Edge78 Bags",
+        "quantity": "1",
+        "priority": "Low",
+        "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+      }
+    ],
+    "stockAfterRestart": {
+      "recorded": "0",
+      "reserved": "0",
+      "available": "0"
+    },
+    "movementHistoryAfterRestart": "There are no movements for this product.",
+    "purchasesAfterRestart": "There are no purchases recorded.",
+    "purchaseSessionsAfterRestart": "There are no purchase sessions recorded.",
+    "publicRestart": "Clicked Supervisor Reiniciar for version79, reopened app, reread both exact notes/priorities, zero stock/history and empty purchases/sessions.",
+    "cleanup": "Observed version79 Detenido/Iniciar in Supervisor. Exact permanent uninstall dialog open. Action-time browser-policy confirmation requested for only owned app, synthetic household/product2extras and exact source; no backup created. Awaiting answer.",
+    "emulationRestored": true
   },
   "finalSameHeadChecks": "PENDING",
   "mergeAndDestination": "PENDING",
@@ -106,7 +179,7 @@
       "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
     },
     "storageSchema": 37,
-    "status": "Immutable public source, wheel and actual ARM64 image qualified. Installed upgrade and final both-CPU CI pending."
+    "status": "Immutable source, wheel, actual local ARM64 and installed native upgrade accepted. Final current both-CPU/source CI and review remain required."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,

@@ -24,7 +24,8 @@ defects: repeated Shopping entry left its heading above the screen, and focusing
 an Overview item before nested control layout left the row below the screen.
 Edge.78 is not accepted. Its original source, wheel, image and findings remain
 distinct in `previousCandidate78`; the new Edge.79 image passes the same six checks, including all 254 product
-file hashes. Its installed upgrade remains pending. The pre-existing specification prefix and published #162 unit are
+file hashes. Its installed upgrade also passes the native acceptance below.
+The pre-existing specification prefix and published #162 unit are
 preserved. Backend, API, schema 37, journal serialization and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
@@ -78,11 +79,37 @@ retries in each CPU job. Actual execution of those jobs remains pending.
 
 ## Remaining qualification
 
-Complete the full source browser campaign and retain its original result. Qualify an immutable Edge candidate
-in real Home Assistant and both current actual CPU images, including original
+Complete the full source browser campaign and retain its original result. Qualify both current actual CPU images, including original
 receipt/ledger compatibility and restart/restore. Record source, wheel, image,
 runtime and package identities, review responsive focus/contrast and permission
 states, then retire only owned obsolete QA artifacts. Same-head CI, Branch Sync,
 review/progress, normal merge, destination checks and native issue closure remain
 required. This is one bounded navigation increment, not completion of the wider
 application-experience capability or M4/M5 roadmap.
+
+## Installed Edge.79
+
+Supervisor reported installed Edge.78 and available Edge.79 before an in-place
+update of the independent synthetic installation. It then reported installed
+Edge.79. The native UI preserved its household, Tea product and two manual extras:
+Tea quantity two/Urgent and Bags quantity one/Low. Both notes retained their exact
+LF, HT, emoji and literal markup-looking text, with no HTML children. A public
+Supervisor restart and fresh app entry preserved those values. Recorded, reserved
+and available stock remain zero; movement history, purchases and sessions are empty.
+
+The Spanish dark-mode 390-by-844 touch walkthrough used actual touch input for
+tab overflow, Shopping and Inventory. The focused Overview product is at
+389–414.59 within the 804-pixel Ingress frame, below navigation ending at 56.
+Repeated Shopping entry reveals its heading at 67.77–106.16 and focuses its active
+region. The English light-mode 1120-by-844 keyboard journey reveals the heading
+at 68.16–106.55. Stock and Shopping drafts and the literal unsent note survive
+switching between those destinations. Temporary viewport, touch and media
+overrides were reset. These observations directly exercise C01–C03; the source
+and both-CPU campaigns retain the broader permission, interruption and restore
+inventory.
+
+The owned app is stopped. Home Assistant's permanent-uninstall warning requires
+action-time browser-policy confirmation for the synthetic app/data and exact
+temporary source; that confirmation is pending. No backup was created. The
+original twelve apps and eight repository sources remain protected. This native
+acceptance does not substitute for current same-head CI or final review.
