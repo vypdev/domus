@@ -1533,9 +1533,9 @@
     "issue": 157,
     "qualification": "docs/evidence/shopping-manual-annotations-qualification.md",
     "record": "docs/evidence/shopping-manual-annotations.json",
-    "scope": "Current C1-corrected source and wheel UI identity. Full source/CPU/native75 acceptance and cleanup remain separate gates.",
-    "sourceCommit": "b4cfc95e014520a9fe1d891ea1a6b415641021d0",
-    "version": "0.0.0-edge.75"
+    "scope": "Current request-schema declaration correction; all four compiled UI bytes are unchanged from75. Current finalCI/image/native acceptance remains separately qualified.",
+    "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
+    "version": "0.0.0-edge.76"
   },
   "preShoppingAnnotationTypographyCorrection": {
     "version": "0.0.0-edge.73",
@@ -1558,5 +1558,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     },
     "scope": "Historical74 font-corrected UI; native acceptance passed, then valid C1-control review finding required75."
+  },
+  "preShoppingSchemaDeclarationCorrection": {
+    "version": "0.0.0-edge.75",
+    "sourceCommit": "b4cfc95e014520a9fe1d891ea1a6b415641021d0",
+    "actualProductFiles": {
+      ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+      "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+    },
+    "scope": "Historical75 actual UI; unchanged by schema-only76 metadata correction. Native75 passed and was cleaned. Its source129cases passed, while the catalog hit the90-second suite limit after56of68."
   }
 }

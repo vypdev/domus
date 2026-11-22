@@ -1,7 +1,8 @@
 import {defineConfig} from '@playwright/test';
 
 export default defineConfig({
-  testDir: 'tests/e2e', forbidOnly: true, retries: 0, workers: 1, globalTimeout: 90_000,
+  // The 68-case matrix exceeds 90 seconds on the shared Linux runner.
+  testDir: 'tests/e2e', forbidOnly: true, retries: 0, workers: 1, globalTimeout: 180_000,
   outputDir: 'test-results/catalog-artifacts',
   reporter: [['list'], ['json', {outputFile: 'test-results/catalog-results.json'}]],
   use: {headless: true, screenshot: 'only-on-failure', trace: 'retain-on-failure'},

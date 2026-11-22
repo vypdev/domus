@@ -67,9 +67,25 @@ pattern. It exercises all 62 prohibited C0/DEL/C1 controls and preserves tab, LF
 CR, nonbreaking space and 1,000 supplementary characters. Both ordinary and Unicode
 ECMAScript regular-expression modes pass 136 independent checks. All 120 tracked
 frontend source files and four compiled UI files are byte-identical to Edge.75.
-The corrected immutable Edge.76, current 6,020-case source campaign, installed Edge.76
-acceptance and cleanup and final same-head CI/review remain pending. Existing native
+The corrected immutable Edge.76 archive matches every tracked Git blob and all
+250 wheel modules. Its full 6,020-case backend campaign passes at 100% globally
+and per file, with the independent source/AST audit. The actual local ARM64 image then passes six byte, genuine schema-20/36 migration,
+restart, snapshot and listener cases. Its installed request model independently
+returns the same note schema as both published snapshots, rejecting all 62 controls
+with the original error while accepting allowed whitespace and supplementary text.
+Full previous-binary rollback remains required in both final CPU campaigns; the
+obsolete local historical images were retired at the owner's explicit request.
+Installed acceptance/cleanup and final same-head CI/review remain pending. Existing native
 requirement and case identities are unchanged.
+
+The historical Edge.75 Linux frontend passed all 129 protected entry cases, then
+exhausted the catalog's 90-second global budget after 56 of 68 cases. The upload
+also attempted to stat a vanished Playwright staging ZIP. The budget is now 180 seconds,
+with the complete inventory, one worker and zero retries retained. Only ephemeral
+worker staging directories are excluded from artifact collection; completed traces,
+screenshots, reports and coverage remain required. All 68 cases pass locally in 43.1 seconds
+and all 48 workflow policy cases pass. Shared Linux execution and successful artifact
+retention remain required in the final current CI.
 
 One prior amd64 job completed its container checks but could not start a browser
 case because another image job still owned the fixture ports. The first job's

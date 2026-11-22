@@ -329,6 +329,7 @@ def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
         "frontend/test-results/",
         "backend/src/domus/ui/",
         "dist/*.whl",
+        "!frontend/test-results/**/.playwright-artifacts-*/**",
     ]
     assert artifact["with"]["if-no-files-found"] == "error"
     assert artifact["with"]["include-hidden-files"] == "true"

@@ -226,12 +226,14 @@ jobs:
         with:
           name: frontend-application-${{ github.sha }}
           include-hidden-files: true
+          # Failed teardown may still retire worker staging ZIPs; retain final captures and reports.
           path: |
             frontend/coverage/
             frontend/storybook-static/
             frontend/test-results/
             backend/src/domus/ui/
             dist/*.whl
+            !frontend/test-results/**/.playwright-artifacts-*/**
           if-no-files-found: error
           retention-days: 7
 

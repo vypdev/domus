@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Schema declaration correction source-qualified; corrected76 immutable pin/image/native/finalCI still pending",
+  "status": "Immutable76 source/archive/wheel,6020backend100,68catalog,actualARM64image+schema qualified; native76 and finalsameheadCI/reviewpending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
@@ -17,10 +17,14 @@
   },
   "sourceQualification": {
     "backend": {
-      "expectedCurrentSourceTests": 6020,
+      "tests": 6020,
       "expectedFinalCITestsIncludingPackage": 6030,
       "runtimeFiles": 250,
-      "status": "Current full source campaign running; the complete6019/6029 100%75 result is preserved separately."
+      "statements": 19235,
+      "branches": 5160,
+      "globalAndPerFileCoverage": 100,
+      "independentSourceASTAudit": "PASS",
+      "all250HashesMatchCurrent76Wheel": true
     },
     "frontend": {
       "tests": 2164,
@@ -53,7 +57,8 @@
       "flaky": 0,
       "retries": 0,
       "actualErrorHelpAndInputContrastAtLeast": 4.5,
-      "touchCorrection": "Validate the note while editing so an error revealed on blur cannot move the Save button before the touch click."
+      "touchCorrection": "Validate the note while editing so an error revealed on blur cannot move the Save button before the touch click.",
+      "globalTimeoutMilliseconds": 180000
     },
     "focusedProtectedHttp": {
       "tests": 4,
@@ -96,18 +101,16 @@
     "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
   },
   "pendingGates": [
-    "Complete current6020 backend source campaign with100% global/per-file statement/branch coverage",
-    "Publish immutable76 runtime/archive/wheel pin and qualify actual current image bytes and schema declaration",
     "Installed native76 acceptance and immediate owned test cleanup",
-    "All final-head6030backend/2164frontend/129source/62container+74browser perCPU; review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
+    "Allfinalhead6030backend/2164frontend/129source/68catalog/62container+74browser perCPU plusretainedstableartifacts;review0open,BranchSync,normalmerge,destinationCI/BS/nativeclosure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-22T01:14:33.394951+00:00",
-  "sourceCommit": "b4cfc95e014520a9fe1d891ea1a6b415641021d0",
+  "recordedAt": "2026-11-22T01:26:20.731363+00:00",
+  "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
   "currentPackage": {
-    "version": "0.0.0-edge.75",
-    "sourceArchiveSHA256": "5f5e44037001f01891e7ccd6f065c6017c72b828661d5fda2305765e582dad04",
-    "wheelSHA256": "6dd8b6ca949ed4aa1fd7e5cad00192f7abecbadb1bd3ba81b33aad31b79006e8",
+    "version": "0.0.0-edge.76",
+    "sourceArchiveSHA256": "ebce2f880fe1a65d153e0d8d2b555bf5abc646237c283d6ea7a26573c4acbb8c",
+    "wheelSHA256": "175004f4900a6fb896c287ea2bd9e914ca0ce92d637d650e2a37eb1b15f46001",
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
@@ -121,7 +124,7 @@
     "trackedFiles": 1018,
     "allTrackedGitBlobsMatch": true,
     "all250WheelRuntimeFilesMatchArchive": true,
-    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/b4cfc95e014520a9fe1d891ea1a6b415641021d0"
+    "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/e157e8f3e17c02651814b2a8ee324d28998875b8"
   },
   "priorCandidate73": {
     "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
@@ -362,6 +365,20 @@
       "open": 1,
       "finding": "Published note schema omits control-character restriction; corrected in current source.",
       "mergeAccepted": false
+    },
+    "sourceCompiledEntry": {
+      "tests": 129,
+      "duration": "13.6m",
+      "retries": 0,
+      "run": 44965071837,
+      "status": "PASS; overallfrontendjob laterfailedcatalogdeadline andartifactrace"
+    },
+    "catalogCI": {
+      "expected": 68,
+      "passed": 56,
+      "notRun": 12,
+      "suiteLimitMilliseconds": 90000,
+      "outcome": "failure;globaltest/teardowntimeouts, noindividualfailedassertionreported"
     }
   },
   "schemaDeclarationCorrection": {
@@ -385,5 +402,32 @@
     "retainedOwningRequirements": 8,
     "retainedOwningCases": 10,
     "standardsReference": "https://json-schema.org/understanding-json-schema/reference/regular_expressions"
+  },
+  "ciCatalogCapacityCorrection": {
+    "failedRun": 44965071837,
+    "failedJob": 137042819813,
+    "observed": "The full129source journey passed; catalogue exhausted90s at56of68. Artifact upload stat hit an absent temporary Playwright stagingZIP.",
+    "fix": "180-second total catalog budget, unchanged68cases/oneworker/zero retries. Exclude only ephemeral.playwright-artifacts-*children from frontend artifact collection; final captures, reports andcoverage remain required.",
+    "localResult": "All68casesPASS43.1s with zero skipped/flaky/retried; all48workflowpolicy casesPASS. SharedLinux finalrun andartifactupload remain required.",
+    "stagingRemovalActor": "Not observed; no attribution to Copilot."
+  },
+  "localActualArm64Image": {
+    "image": "domus-157-edge76:pinned",
+    "imageId": "sha256:4c30e43be51ad348bde8ac8fa87efb436c1d4e73abc0f009bea6b3ebcfa64b89",
+    "architecture": "arm64",
+    "sourceCommit": "e157e8f3e17c02651814b2a8ee324d28998875b8",
+    "allPythonFiles": 250,
+    "allUIFiles": 4,
+    "allProductBytesMatchWheel": true,
+    "selectedTests": 6,
+    "genuineSourceSchemas": [
+      20,
+      36
+    ],
+    "actualInstalledRequestSchemaMatchesBothSnapshots": true,
+    "all62UnsupportedControlsKeepOriginalValidationError": true,
+    "nativeAndStandaloneListeners": true,
+    "restartAndSnapshotRestoration": true,
+    "limits": "Full compatible previous-binary checkpoint tests remain mandatory in both final CI CPU jobs; obsolete local historical images were retired at the explicit user request."
   }
 }
