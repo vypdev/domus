@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.80
+
+- Keep an interrupted Shopping or stock request bound to the verified household and member after reload.
+- Preserve the matching owner's exact original request; retire older ownerless or unmatched browser packets without resending them. Committed server receipts remain available.
+- Preserve schema-37 notes, priorities, stock and the existing packet format.
+
 ## 0.0.0-edge.79
 
 - Keep Shopping headings and selected items visible below fixed navigation after keyboard, touch and history entry.

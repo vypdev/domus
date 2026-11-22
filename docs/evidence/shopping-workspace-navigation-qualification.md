@@ -12,11 +12,11 @@ executed source checks, compiled images, installed Edge and final CI.
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
 `7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
-`8ff8bf2d037b6726c00d9bce5a79f7f4086b3077` on the admitted managed ref. Edge.79
+`a5f74c2829a7a273adef7a459978bbc43474716a` on the admitted managed ref. Edge.80
 pins that exact source and archive SHA-256
-`52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa`.
+`3f2e5327e2cbd621fbfa8ce1d4f1424c75e5f05e70ea5257db3a434d78e5544c`.
 All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`8eb1af9c77efae0adfe475003d1220165dde21cc74edd4faef10088058b4585e`.
+`38a00bb5b354e1f72be22922a3ae5acd47c180b1ba6a4ad9fd68cc3a7c3bf56e`.
 The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
 restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
 Its installed native Home Assistant walkthrough then exposed two mobile viewport
@@ -25,11 +25,13 @@ an Overview item before nested control layout left the row below the screen.
 Edge.78 is not accepted. Its original source, wheel, image and findings remain
 distinct in `previousCandidate78`; the new Edge.79 image passes the same six checks, including all 254 product
 file hashes. Its installed upgrade also passes the native acceptance below.
+The new Edge.80 actual ARM64 image also passes all six checks, including every
+Python and UI file hash. Its installed durable-owner correction remains pending.
 The pre-existing specification prefix and published #162 unit are
 preserved. Backend, API, schema 37, journal serialization and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
-The complete current frontend campaign passes 2,184 tests across 50 files, with
+The complete current frontend campaign passes 2,188 tests across 50 files, with
 all four metrics at 100% globally and per authored runtime file (121 files):
 9,504 statements, 8,719 branches, 2,025 functions and 6,914 lines. Its independent
 source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
@@ -87,7 +89,7 @@ review/progress, normal merge, destination checks and native issue closure remai
 required. This is one bounded navigation increment, not completion of the wider
 application-experience capability or M4/M5 roadmap.
 
-## Installed Edge.79
+## Installed Edge.79 (previous viewport candidate)
 
 Supervisor reported installed Edge.78 and available Edge.79 before an in-place
 update of the independent synthetic installation. It then reported installed
@@ -113,3 +115,26 @@ action-time browser-policy confirmation for the synthetic app/data and exact
 temporary source; that confirmation is pending. No backup was created. The
 original twelve apps and eight repository sources remain protected. This native
 acceptance does not substitute for current same-head CI or final review.
+
+## Durable owner after reload
+
+The next same-head review found that mount-local member tracking could not retire
+a previous member's request after reload under the same HA subject. A real
+composition regression reproduced three failures: replacement-member adoption,
+legacy ownerless-scope adoption and recovery after failed retirement. The same
+owner already preserved its request. All four variants now pass. The persisted
+scope includes the verified household/member with installation, channel and HA
+subject. Destination and permission revisions do not change the owner.
+
+The existing slot, packet fields, canonical format and original request key stay
+compatible. A matching owner reopens the exact original bytes. Older ownerless or
+unmatched scopes follow the journal's existing incompatible-scope retirement;
+there is no lookup, resend, reassignment or change to committed server receipts.
+Failure to retire blocks recovery and writes. The actual C05 browser journey also
+reloads with a pending request, proves exact packet equality and zero automatic
+lookups/resends, then closes the protected view. Both deployment variants pass,
+as do all twelve current cases, once each without retries. The full 2,188-case
+frontend run preserves all four coverage metrics at 100% with the same runtime
+inventory. Catalog readiness now points to the owning executed record rather
+than duplicating a test count that can drift. Edge.80 qualifies this corrected
+runtime separately from the historical Edge.79 acceptance above.

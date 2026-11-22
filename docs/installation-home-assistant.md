@@ -7,7 +7,7 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
-The Edge.79 candidate adds a direct **Shopping / Compras** destination while
+The Edge.80 candidate adds a direct **Shopping / Compras** destination while
 Inventory keeps products and stock. It retains schema 37 and the original ledger
 and receipt formats. Its [qualification](evidence/shopping-workspace-navigation-qualification.md)
 distinguishes source checks, actual images and installed acceptance; match the

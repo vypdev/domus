@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge79 source/wheel, actual local ARM64 and installed native acceptance PASS; final same-head CI/review/merge/destination pending",
+  "status": "Edge80 source/wheel and actualARM64 sixchecksPASS; installed80 and finalsameheadCI/review pending",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -13,10 +13,13 @@
     "schemaChange": false,
     "backendOrApiChange": false,
     "journalSerializationChange": false,
-    "haUi": "0.1.0-next.5"
+    "haUi": "0.1.0-next.5",
+    "journalPacketSlotAndCanonicalFieldsUnchanged": true,
+    "journalScopeIdentity": "Verified installation, channel, HA subject, household and member; destination and policy revisions remain outside ownership.",
+    "legacyPendingPacketHandling": "Existing incompatible-scope retirement for ownerless or unmatched packets; no lookup/resend/reassignment and no change to committed server receipts."
   },
   "executedSource": {
-    "frontendTests": 2184,
+    "frontendTests": 2188,
     "frontendTestFiles": 50,
     "authoredRuntimeFiles": 121,
     "coverage": {
@@ -34,7 +37,7 @@
     "retainedAnnotationBrowserVariants": 4,
     "retainedFullWorkspaceBrowserVariants": 2,
     "newBrowserVariants": 12,
-    "newBrowserResult": "12 PASS, once each, six cases x two deployments, zero retries. Strengthened C01/C02 verify actual heading and item viewport geometry.",
+    "newBrowserResult": "12 PASS29.0seconds, onceeach, sixcases x2deployments, zero retries. C05 now also verifies same-owner rawpacket preservation and no automatic lookup/resend after real browser reload.",
     "catalogBrowserTests": 68,
     "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
     "nodePolicyTests": 42,
@@ -52,19 +55,24 @@
       "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
       "finalFullSameHeadCI": "PENDING"
     },
-    "localPrivatePortQualification": "Canonical ports56174/56175 belong to active selfhostedCI. Private copy differs only by56184/56185, byte-equivalence verified; same actual backend/product and unchanged assertions/deadlines/retry policy."
+    "localPrivatePortQualification": "Canonical ports56174/56175 belong to active selfhostedCI. Private copy differs only by56184/56185, byte-equivalence verified; same actual backend/product and unchanged assertions/deadlines/retry policy.",
+    "durableOwnerRegression": {
+      "tests": 4,
+      "red": "Three failures/onepass beforefix",
+      "green": "Allfourpass: sameowner rawpacket/exactoriginalkey recovery; replacementmember retirement afternewmount; legacyownerlessscope retirement; failedretirement blocks recovery/writes."
+    }
   },
   "requiredImageBrowserInventory": 86,
   "actualImages": {
     "amd64": "PENDING",
     "aarch64": "PENDING",
     "localPinnedAarch64": {
-      "at": "2026-11-22T10:18:14.290370+00:00",
-      "image": "domus-162-edge79:pinned",
-      "imageId": "sha256:66f379e62a3c78b0a2c417067a1f6e25451a46c36712ed7c5155b5417cf86e55",
+      "at": "2026-11-22T10:58:11.388591+00:00",
+      "image": "domus-162-edge80:pinned",
+      "imageId": "sha256:353ffcedc4323769bfd159e046c8f33cab0717e449f11f42c560107725798e8a",
       "architecture": "arm64",
-      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
-      "version": "0.0.0-edge.79",
+      "sourceCommit": "a5f74c2829a7a273adef7a459978bbc43474716a",
+      "version": "0.0.0-edge.80",
       "allPythonFiles": 250,
       "allUIFiles": 4,
       "allProductBytesMatchWheel": true,
@@ -78,114 +86,38 @@
     }
   },
   "installedEdge": {
-    "status": "PASS native acceptance; stopped, permanent cleanup awaiting action-time confirmation",
-    "versionObserved": "0.0.0-edge.79",
-    "previousVersionObserved": "0.0.0-edge.78",
-    "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
-    "packagingCommitObserved": "dc41b993a09acbfd9965a60e774dac83401ff044",
-    "inPlaceUpdate": true,
-    "nativeSDDCasesDirectlyExercised": [
-      "inventory1-C01",
-      "inventory1-C02",
-      "inventory1-C03"
-    ],
-    "method": "Official CUA Chrome UI only; native Supervisor version/update and public app pages. No private HA APIs, injected data, host data reads or clock changes.",
-    "mobile": {
-      "viewport": [
-        390,
-        844
-      ],
-      "theme": "dark",
-      "language": "es",
-      "input": "Actual CDP touch dispatch using fresh observed target rectangles",
-      "selectedProduct": {
-        "focused": true,
-        "top": 389,
-        "bottom": 414.59375,
-        "iframeHeight": 804,
-        "fixedNavigationBottom": 56
-      },
-      "shoppingHeadingAfterRepeatedTouch": {
-        "top": 67.765625,
-        "bottom": 106.1640625,
-        "fixedNavigationBottom": 56,
-        "regionFocused": true,
-        "activeTab": "page"
-      },
-      "overflowArrowTouch": true,
-      "stockAndShoppingTabTouch": true,
-      "unsentExtraAndLiteralNotePreservedAcrossStock": true
-    },
-    "desktop": {
-      "viewport": [
-        1120,
-        844
-      ],
-      "theme": "light",
-      "language": "en",
-      "keyboard": "Enter on Inventory and Shopping tabs",
-      "shoppingHeading": {
-        "top": 68.15625,
-        "bottom": 106.5546875
-      },
-      "regionFocused": true,
-      "bothUnsentStockAndShoppingDraftsPreserved": true
-    },
-    "literalNotesAfterUpdateAndPublicRestart": true,
-    "savedManualExtras": [
-      {
-        "item": "QA 162 Edge78 Tea",
-        "quantity": "2",
-        "priority": "Urgent",
-        "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
-      },
-      {
-        "item": "QA 162 Edge78 Bags",
-        "quantity": "1",
-        "priority": "Low",
-        "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
-      }
-    ],
-    "stockAfterRestart": {
-      "recorded": "0",
-      "reserved": "0",
-      "available": "0"
-    },
-    "movementHistoryAfterRestart": "There are no movements for this product.",
-    "purchasesAfterRestart": "There are no purchases recorded.",
-    "purchaseSessionsAfterRestart": "There are no purchase sessions recorded.",
-    "publicRestart": "Clicked Supervisor Reiniciar for version79, reopened app, reread both exact notes/priorities, zero stock/history and empty purchases/sessions.",
-    "cleanup": "Observed version79 Detenido/Iniciar in Supervisor. Exact permanent uninstall dialog open. Action-time browser-policy confirmation requested for only owned app, synthetic household/product2extras and exact source; no backup created. Awaiting answer.",
-    "emulationRestored": true
+    "status": "PENDING80. Independent79haspassed andisstopped; existinghousehold/product2extras retained. Exactownapp/data/sourcecleanupconfirmationalreadyrequested.",
+    "appSlug": "abb0c2fd_domus_edge",
+    "dataUnchanged": "Domus QA 162 Edge78, Tea product, Tea extra2/Urgent+literalnote, Bags extra1/Low+literalnote, zeroStock; no newrecords for80 yet."
   },
   "finalSameHeadChecks": "PENDING",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
-    "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
-    ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+    "index.html": "3468a9311ff2ad2cd5480be6efab6dcef0852693ee269cd5b420e60e97b6d060",
+    ".vite/manifest.json": "e144c8550e1333557351d9ad9dbd64ab538d30bab0db995d25847fe18da911da",
+    "assets/index-BJhKKO99.js": "db6d2367aa3e53cee327ce3956df8c5e2d6331bd6c9c75c29d90fb26e0ee2f16",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
   },
   "currentPackage": {
-    "version": "0.0.0-edge.79",
-    "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
-    "sourceArchiveSHA256": "52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa",
-    "wheelSHA256": "8eb1af9c77efae0adfe475003d1220165dde21cc74edd4faef10088058b4585e",
+    "version": "0.0.0-edge.80",
+    "sourceCommit": "a5f74c2829a7a273adef7a459978bbc43474716a",
+    "sourceArchiveSHA256": "3f2e5327e2cbd621fbfa8ce1d4f1424c75e5f05e70ea5257db3a434d78e5544c",
+    "wheelSHA256": "38a00bb5b354e1f72be22922a3ae5acd47c180b1ba6a4ad9fd68cc3a7c3bf56e",
     "pythonFiles": 250,
     "actualProductFiles": {
-      "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
-      ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+      "index.html": "3468a9311ff2ad2cd5480be6efab6dcef0852693ee269cd5b420e60e97b6d060",
+      ".vite/manifest.json": "e144c8550e1333557351d9ad9dbd64ab538d30bab0db995d25847fe18da911da",
+      "assets/index-BJhKKO99.js": "db6d2367aa3e53cee327ce3956df8c5e2d6331bd6c9c75c29d90fb26e0ee2f16",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     },
     "storageSchema": 37,
-    "status": "Immutable source, wheel, actual local ARM64 and installed native upgrade accepted. Final current both-CPU/source CI and review remain required."
+    "status": "Immutable source/wheel and actual local ARM64 image qualified; installed80 and finalsamehead CI/review pending."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
     "allTrackedBlobsMatch": true,
-    "archiveBytes": 3084922,
-    "sha256": "52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa"
+    "archiveBytes": 3088235,
+    "sha256": "3f2e5327e2cbd621fbfa8ce1d4f1424c75e5f05e70ea5257db3a434d78e5544c"
   },
   "previousCandidate78": {
     "package": {
@@ -235,6 +167,126 @@
   "reviewCorrections": {
     "stale-source-action": "Disabled sources while retained catalog/shopping data is displayed; native button unit regression verifies no intent and fresh recovery.",
     "base-shopping-route-keeps-item-focused-list": "Base Shopping reloads the shared first page, clears contextual focus and private item target. Composition regression verifies paged item -> empty first page -> item and zero writes.",
-    "late-focus": "Immediate item focus plus next-frame scroll only if that same target still owns focus. Later user focus and retired target regression pass."
+    "late-focus": "Immediate item focus plus next-frame scroll only if that same target still owns focus. Later user focus and retired target regression pass.",
+    "durableOwnerAcrossReload": "Scope contains verified household/member. Sameowner retainsrawbytes/key; replacementandlegacyownerlesspacketretired viaexistingScopedCommandJournal; failedretirement blocksrecovery. Four unit/compositioncases andC05actualreload variants qualify.",
+    "catalogFrontendCount": "Catalog readiness now points to the canonical executed qualification inventory rather than copying a numeric count that drifts."
+  },
+  "previousCandidate79": {
+    "package": {
+      "version": "0.0.0-edge.79",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "sourceArchiveSHA256": "52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa",
+      "wheelSHA256": "8eb1af9c77efae0adfe475003d1220165dde21cc74edd4faef10088058b4585e",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
+        ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+      },
+      "storageSchema": 37,
+      "status": "Immutable source, wheel, actual local ARM64 and installed native upgrade accepted. Final current both-CPU/source CI and review remain required."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T10:18:14.290370+00:00",
+      "image": "domus-162-edge79:pinned",
+      "imageId": "sha256:66f379e62a3c78b0a2c417067a1f6e25451a46c36712ed7c5155b5417cf86e55",
+      "architecture": "arm64",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "version": "0.0.0-edge.79",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "status": "PASS native acceptance; stopped, permanent cleanup awaiting action-time confirmation",
+      "versionObserved": "0.0.0-edge.79",
+      "previousVersionObserved": "0.0.0-edge.78",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "packagingCommitObserved": "dc41b993a09acbfd9965a60e774dac83401ff044",
+      "inPlaceUpdate": true,
+      "nativeSDDCasesDirectlyExercised": [
+        "inventory1-C01",
+        "inventory1-C02",
+        "inventory1-C03"
+      ],
+      "method": "Official CUA Chrome UI only; native Supervisor version/update and public app pages. No private HA APIs, injected data, host data reads or clock changes.",
+      "mobile": {
+        "viewport": [
+          390,
+          844
+        ],
+        "theme": "dark",
+        "language": "es",
+        "input": "Actual CDP touch dispatch using fresh observed target rectangles",
+        "selectedProduct": {
+          "focused": true,
+          "top": 389,
+          "bottom": 414.59375,
+          "iframeHeight": 804,
+          "fixedNavigationBottom": 56
+        },
+        "shoppingHeadingAfterRepeatedTouch": {
+          "top": 67.765625,
+          "bottom": 106.1640625,
+          "fixedNavigationBottom": 56,
+          "regionFocused": true,
+          "activeTab": "page"
+        },
+        "overflowArrowTouch": true,
+        "stockAndShoppingTabTouch": true,
+        "unsentExtraAndLiteralNotePreservedAcrossStock": true
+      },
+      "desktop": {
+        "viewport": [
+          1120,
+          844
+        ],
+        "theme": "light",
+        "language": "en",
+        "keyboard": "Enter on Inventory and Shopping tabs",
+        "shoppingHeading": {
+          "top": 68.15625,
+          "bottom": 106.5546875
+        },
+        "regionFocused": true,
+        "bothUnsentStockAndShoppingDraftsPreserved": true
+      },
+      "literalNotesAfterUpdateAndPublicRestart": true,
+      "savedManualExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent",
+          "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low",
+          "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+        }
+      ],
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "movementHistoryAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "purchaseSessionsAfterRestart": "There are no purchase sessions recorded.",
+      "publicRestart": "Clicked Supervisor Reiniciar for version79, reopened app, reread both exact notes/priorities, zero stock/history and empty purchases/sessions.",
+      "cleanup": "Observed version79 Detenido/Iniciar in Supervisor. Exact permanent uninstall dialog open. Action-time browser-policy confirmation requested for only owned app, synthetic household/product2extras and exact source; no backup created. Awaiting answer.",
+      "emulationRestored": true
+    },
+    "sourceFrontendTests": 2184,
+    "remainingFinding": "Mount-local ownership did not protect pending requests after reload under a replacement member. Current durable scope includes verified household/member."
   }
 }
