@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.78
+
+- Open Shopping directly from the localized household tabs, Overview item links and existing shared shopping fragments.
+- Keep Inventory for products, stock, locations and materials while preserving same-participant drafts and one original-operation recovery owner.
+- Retain last-loaded Shopping information after failed reads, distinguish denied access and restore contextual focus during rapid history navigation.
+- Preserve schema 37, the stock ledger, original receipts and the published shared component cohort.
+
 ## 0.0.0-edge.76
 
 - Publish the same shopping note character restrictions enforced by the command, including allowed tabs and line breaks.

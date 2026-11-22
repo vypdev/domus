@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Implementation in progress; immutable candidate and acceptance pending",
+  "status": "Immutable Edge78 source/wheel qualified; actual image, installed Edge and final CI pending",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -56,7 +56,20 @@
   "requiredImageBrowserInventory": 86,
   "actualImages": {
     "amd64": "PENDING",
-    "aarch64": "PENDING"
+    "aarch64": "PENDING",
+    "localPinnedAarch64": {
+      "imageId": "sha256:b5d672638577553ef3c0b51cbd628b4b52f7255d6d5c69cfe25a429eb33a1178",
+      "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
+      "version": "0.0.0-edge.78",
+      "tests": 6,
+      "all250PythonAnd4UIFilesMatch": true,
+      "schemas": [
+        20,
+        36
+      ],
+      "restartAndRestore": true,
+      "nativeAndStandaloneListeners": true
+    }
   },
   "installedEdge": "PENDING",
   "finalSameHeadChecks": "PENDING",
@@ -69,7 +82,7 @@
   },
   "currentPackage": {
     "version": "0.0.0-edge.78",
-    "sourceCommit": null,
+    "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
     "wheelSHA256": "1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed",
     "pythonFiles": 250,
     "actualProductFiles": {
@@ -78,6 +91,14 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
     },
-    "status": "Immutable source pin and actual image pending"
+    "status": "Published immutable source, wheel and actual local ARM64 image bytes qualified. Installed Home Assistant and final both-CPU CI remain pending.",
+    "sourceArchiveSHA256": "ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157",
+    "storageSchema": 37
+  },
+  "sourceArchiveQualification": {
+    "trackedFiles": 1025,
+    "allTrackedBlobsMatch": true,
+    "archiveBytes": 3082671,
+    "sha256": "ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157"
   }
 }

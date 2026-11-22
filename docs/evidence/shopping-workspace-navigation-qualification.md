@@ -11,9 +11,16 @@ executed source checks, compiled images, installed Edge and final CI.
 
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
-`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. Implementation is currently uncommitted
-in the admitted managed checkout; no immutable implemented candidate or PR is
-claimed yet. The pre-existing specification prefix and published #162 unit are
+`7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
+`bfc59504ffa370e14b859d692ba350e22750109a` on the admitted managed ref. Edge.78
+pins that exact source and archive SHA-256
+`ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157`.
+All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
+`1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed`.
+The actual local ARM64 image passes six checks: all 250 Python and four UI
+files match the wheel; native and standalone listeners, authority, restart,
+genuine schema-20/schema-36 migration and snapshot restoration pass. The
+installed Home Assistant candidate and final both-CPU CI remain pending. The pre-existing specification prefix and published #162 unit are
 preserved. Backend, API, schema 37, journal serialization and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 

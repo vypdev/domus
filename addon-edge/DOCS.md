@@ -1,15 +1,28 @@
 # Installation and operation
 
-Edge 0.0.0-edge.76 packages the immutable runtime declared in
-[artifact.json](artifact.json). In Inventory, open the shared shopping list and
-add a manual extra for a product or a free-text item. Its optional note accepts
-up to 1,000 Unicode characters, multiple lines and tabs. Unsupported control
-characters are rejected while retaining the accepted text for correction. Choose
-Low, Normal, High or Urgent priority, with Normal as the default. Source details show each manual
-request's own note, priority and requested quantity. Validation keeps entered
-values for correction. After an interrupted response, **Recover original
-request** checks that same operation; checking an earlier request preserves a
-later unrelated draft.
+Edge 0.0.0-edge.78 packages the immutable runtime declared in
+[artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
+list, manual extras, store sessions, purchases and physical receipts. Open
+**Inventory / Inventario** for products, Pantry, locations, materials and stock.
+Overview item links and previously shared shopping fragments focus the same item
+in Shopping. Unknown fragments fall back to Overview without a command.
+
+Switching between Shopping and Inventory keeps same-participant drafts, literal
+notes, priorities, selected work and interrupted-operation identity. Use
+**Refresh Shopping / Actualizar Compras** after a read fails. The last loaded
+information and draft remain visible; Shopping changes wait for a fresh read.
+Denied access hides private facts. **Check original operation / Consultar operación
+original** checks the same original request and preserves unrelated work. Logout
+or a verified participant/household change retires protected state. Navigation
+itself never creates, posts, cancels or repeats a command.
+
+Manual extras retain optional notes of up to 1,000 Unicode characters, including
+line breaks and tabs, and Low, Normal, High or Urgent priority. Unsupported
+controls remain rejected. Current permissions still independently authorize
+shopping requests, shopping management and stock management. This presentation
+change retains schema 37, ledger and original receipts; it adds no migration.
+The [Shopping navigation qualification](../docs/evidence/shopping-workspace-navigation-qualification.md)
+separates executed source checks from actual images and installed acceptance.
 
 Schema 37 adds the two annotation columns while preserving existing manual
 extras, daily controls and original receipts. Edge.73 is a breaking-version
