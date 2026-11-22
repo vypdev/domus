@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.79
+
+- Keep Shopping headings and selected items visible below fixed navigation after keyboard, touch and history entry.
+- Let a later user focus win over a pending item scroll and use Shopping-specific loading guidance.
+- Disable source actions on retained data and return from item links to the general shared list.
+- Preserve Edge.78 schema-37 records, literal notes, priorities, ledger and original receipts.
+
 ## 0.0.0-edge.78
 
 - Open Shopping directly from the localized household tabs, Overview item links and existing shared shopping fragments.

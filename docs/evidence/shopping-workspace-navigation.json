@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Immutable Edge78 source/wheel qualified; actual image, installed Edge and final CI pending",
+  "status": "Edge79 immutable source/wheel and actual ARM64 image qualified; installed upgrade and final same-head CI pending",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -16,15 +16,15 @@
     "haUi": "0.1.0-next.5"
   },
   "executedSource": {
-    "frontendTests": 2182,
+    "frontendTests": 2184,
     "frontendTestFiles": 50,
     "authoredRuntimeFiles": 121,
     "coverage": {
       "globalAndPerFileAllFourMetrics": 100,
-      "statements": 9495,
-      "branches": 8707,
-      "functions": 2024,
-      "lines": 6909,
+      "statements": 9504,
+      "branches": 8719,
+      "functions": 2025,
+      "lines": 6914,
       "authoredFileAudit": "PASS"
     },
     "runtimeAndCatalogTypes": "PASS",
@@ -34,7 +34,7 @@
     "retainedAnnotationBrowserVariants": 4,
     "retainedFullWorkspaceBrowserVariants": 2,
     "newBrowserVariants": 12,
-    "newBrowserResult": "PASS, each executed once; six distinct cases x two deployment modes",
+    "newBrowserResult": "12 PASS, once each, six cases x two deployments, zero retries. Strengthened C01/C02 verify actual heading and item viewport geometry.",
     "catalogBrowserTests": 68,
     "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
     "nodePolicyTests": 42,
@@ -51,13 +51,86 @@
       },
       "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
       "finalFullSameHeadCI": "PENDING"
-    }
+    },
+    "localPrivatePortQualification": "Canonical ports56174/56175 belong to active selfhostedCI. Private copy differs only by56184/56185, byte-equivalence verified; same actual backend/product and unchanged assertions/deadlines/retry policy."
   },
   "requiredImageBrowserInventory": 86,
   "actualImages": {
     "amd64": "PENDING",
     "aarch64": "PENDING",
     "localPinnedAarch64": {
+      "at": "2026-11-22T10:18:14.290370+00:00",
+      "image": "domus-162-edge79:pinned",
+      "imageId": "sha256:66f379e62a3c78b0a2c417067a1f6e25451a46c36712ed7c5155b5417cf86e55",
+      "architecture": "arm64",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "version": "0.0.0-edge.79",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true,
+      "originalLog": "/private/tmp/domus-162-edge79-qualified-arm64-original.log",
+      "resultXML": "/private/tmp/domus-162-edge79.767c4hc9/actual-arm64-results.xml"
+    }
+  },
+  "installedEdge": {
+    "status": "PENDING Edge79 upgrade of independently owned abb0c2fd_domus_edge",
+    "household": "Domus QA 162 Edge78",
+    "recordsToPreserve": "Tea product, tracked extra quantity2/Urgent and free Bags quantity1/Low with exact LF/HT/emoji/plaintext notes, no stock changes",
+    "previousCandidate78Accepted": false
+  },
+  "finalSameHeadChecks": "PENDING",
+  "mergeAndDestination": "PENDING",
+  "compiledProductFiles": {
+    "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
+    ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+  },
+  "currentPackage": {
+    "version": "0.0.0-edge.79",
+    "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+    "sourceArchiveSHA256": "52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa",
+    "wheelSHA256": "8eb1af9c77efae0adfe475003d1220165dde21cc74edd4faef10088058b4585e",
+    "pythonFiles": 250,
+    "actualProductFiles": {
+      "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
+      ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+    },
+    "storageSchema": 37,
+    "status": "Immutable public source, wheel and actual ARM64 image qualified. Installed upgrade and final both-CPU CI pending."
+  },
+  "sourceArchiveQualification": {
+    "trackedFiles": 1025,
+    "allTrackedBlobsMatch": true,
+    "archiveBytes": 3084922,
+    "sha256": "52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa"
+  },
+  "previousCandidate78": {
+    "package": {
+      "version": "0.0.0-edge.78",
+      "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
+      "wheelSHA256": "1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
+        ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
+      },
+      "status": "Published immutable source, wheel and actual local ARM64 image bytes qualified. Installed Home Assistant and final both-CPU CI remain pending.",
+      "sourceArchiveSHA256": "ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157",
+      "storageSchema": 37
+    },
+    "actualLocalImage": {
       "imageId": "sha256:b5d672638577553ef3c0b51cbd628b4b52f7255d6d5c69cfe25a429eb33a1178",
       "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
       "version": "0.0.0-edge.78",
@@ -69,36 +142,26 @@
       ],
       "restartAndRestore": true,
       "nativeAndStandaloneListeners": true
+    },
+    "installed": "Installed and exercised in native Home Assistant. Rejected for heading and selected-item viewport defects. Two saved literal notes/priorities and zero stock retained for Edge79 upgrade.",
+    "findings": [
+      "Repeated Shopping activation focused the region but left its heading above the viewport.",
+      "Overview item selection focused the right row before nested controls completed layout; row ended below mobile viewport."
+    ],
+    "originalSourceBrowserInventory": {
+      "inventory": 141,
+      "firstCampaign": {
+        "passed": 139,
+        "failed": 2,
+        "cause": "Barcode403assertions expected old generic unavailable copy; current explicitdenial was observed. All quantities, authority, history and recovery assertions remain."
+      },
+      "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
+      "finalFullSameHeadCI": "PENDING"
     }
   },
-  "installedEdge": "PENDING",
-  "finalSameHeadChecks": "PENDING",
-  "mergeAndDestination": "PENDING",
-  "compiledProductFiles": {
-    "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
-    ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
-  },
-  "currentPackage": {
-    "version": "0.0.0-edge.78",
-    "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
-    "wheelSHA256": "1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed",
-    "pythonFiles": 250,
-    "actualProductFiles": {
-      "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
-      ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
-    },
-    "status": "Published immutable source, wheel and actual local ARM64 image bytes qualified. Installed Home Assistant and final both-CPU CI remain pending.",
-    "sourceArchiveSHA256": "ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157",
-    "storageSchema": 37
-  },
-  "sourceArchiveQualification": {
-    "trackedFiles": 1025,
-    "allTrackedBlobsMatch": true,
-    "archiveBytes": 3082671,
-    "sha256": "ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157"
+  "reviewCorrections": {
+    "stale-source-action": "Disabled sources while retained catalog/shopping data is displayed; native button unit regression verifies no intent and fresh recovery.",
+    "base-shopping-route-keeps-item-focused-list": "Base Shopping reloads the shared first page, clears contextual focus and private item target. Composition regression verifies paged item -> empty first page -> item and zero writes.",
+    "late-focus": "Immediate item focus plus next-frame scroll only if that same target still owns focus. Later user focus and retired target regression pass."
   }
 }

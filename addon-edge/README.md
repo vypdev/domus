@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.79 opens **Shopping / Compras** directly, keeps its heading and selected items visible below navigation, and returns item links to the general shared list. Inventory keeps products and stock. Switching between these two destinations preserves drafts and original-operation recovery. Failed reads retain entered work and offer **Refresh Shopping**; denied access hides private information. This update preserves schema-37 notes, priorities, stock and receipts.
+
 Edge.75 rejects unsupported control characters in a shopping note while preserving
 the accepted text for correction and retry.
 

@@ -12,21 +12,25 @@ executed source checks, compiled images, installed Edge and final CI.
 The native Action published specification commit
 `a67ee381043a8e34ca9fec02b811c9cd9d330078` from accepted base
 `7770b1e560800fa4bb78d36b0583b2c1beb784d7`. The implemented runtime is published as
-`bfc59504ffa370e14b859d692ba350e22750109a` on the admitted managed ref. Edge.78
+`8ff8bf2d037b6726c00d9bce5a79f7f4086b3077` on the admitted managed ref. Edge.79
 pins that exact source and archive SHA-256
-`ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157`.
+`52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa`.
 All 1,025 public archive files match their Git blobs. The wheel SHA-256 is
-`1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed`.
-The actual local ARM64 image passes six checks: all 250 Python and four UI
-files match the wheel; native and standalone listeners, authority, restart,
-genuine schema-20/schema-36 migration and snapshot restoration pass. The
-installed Home Assistant candidate and final both-CPU CI remain pending. The pre-existing specification prefix and published #162 unit are
+`8eb1af9c77efae0adfe475003d1220165dde21cc74edd4faef10088058b4585e`.
+The earlier actual local ARM64 Edge.78 image passed six byte, listener, authority,
+restart, genuine schema-20/schema-36 migration and snapshot-restoration checks.
+Its installed native Home Assistant walkthrough then exposed two mobile viewport
+defects: repeated Shopping entry left its heading above the screen, and focusing
+an Overview item before nested control layout left the row below the screen.
+Edge.78 is not accepted. Its original source, wheel, image and findings remain
+distinct in `previousCandidate78`; the new Edge.79 image passes the same six checks, including all 254 product
+file hashes. Its installed upgrade remains pending. The pre-existing specification prefix and published #162 unit are
 preserved. Backend, API, schema 37, journal serialization and exact published
 `@vypdev/ha-ui@0.1.0-next.5` are unchanged.
 
-The complete current frontend campaign passes 2,182 tests across 50 files, with
+The complete current frontend campaign passes 2,184 tests across 50 files, with
 all four metrics at 100% globally and per authored runtime file (121 files):
-9,495 statements, 8,707 branches, 2,024 functions and 6,909 lines. Its independent
+9,504 statements, 8,719 branches, 2,025 functions and 6,914 lines. Its independent
 source-inventory coverage audit passes. Runtime/catalog TypeScript checks,
 product Vite build and the actual wheel package test pass. All 250 Python module
 bytes equal accepted Edge.77; the four compiled UI resources match the new wheel.
@@ -58,6 +62,16 @@ previous tab when two delayed hash events observe the same final item URL.
 The composition now requests destination focus and schedules the current item
 read even in that ordering. Both deployment variants pass the red/green
 regression. Existing source coverage and semantic assertions remain enforced.
+The stronger C01/C02 regressions also reproduce the installed Edge.78 geometry
+failures against its old bundle. With Edge.79's runtime, all twelve variants pass:
+the Shopping heading is visible below fixed navigation, and each focused item
+is inside the mobile viewport after direct entry, reload, history and Overview.
+Only local fixture ports differ while concurrent self-hosted CI owns the canonical
+ports; reverse substitution verifies all other authored test bytes are identical.
+There are no retries or reused fixture servers. A later user focus wins over a
+pending post-layout scroll. Review regressions also verify that stale source
+buttons stay disabled until refresh and that base Shopping retires an item filter
+and reads the shared first page without a command.
 The CI selection explicitly includes the new file and requires all 86 actual
 image browser journeys with zero skipped, flaky or unexpected results and zero
 retries in each CPU job. Actual execution of those jobs remains pending.

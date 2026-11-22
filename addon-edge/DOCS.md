@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.78 packages the immutable runtime declared in
+Edge 0.0.0-edge.79 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
