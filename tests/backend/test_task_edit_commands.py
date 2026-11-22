@@ -3,6 +3,7 @@
 from dataclasses import replace
 
 import pytest
+from test_rewards_storage import command_evidence, hold_writer_until_busy
 from test_task_commands import child_commands, fixture, resource
 from test_task_execution_commands import perform, work_at
 
@@ -14,8 +15,9 @@ from domus.application.task_requests import (
     UpdateTaskDependencies,
     UpdateTaskPolicy,
 )
-from domus.domain.errors import Conflict, Forbidden, InvalidInput, StorageFailure
+from domus.domain.errors import Conflict, Forbidden, InvalidInput, StorageBusy, StorageFailure
 from domus.domain.identity import Role
+from domus.domain.storage import Receipt
 from domus.domain.task_values import (
     DefinitionState,
     DependencyGate,
@@ -24,6 +26,7 @@ from domus.domain.task_values import (
     TaskOverrides,
     TaskRules,
 )
+from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
 
@@ -381,7 +384,8 @@ def test_dependency_receipt_cannot_restore_an_older_graph_after_an_explicit_chan
         assert unit.tasks.occurrence("home", first).prerequisite_ids == (third,)
 
 
-def test_competing_opposite_edges_cannot_commit_a_cycle(tmp_path):
+@pytest.mark.parametrize("busy_side", [None, 0, 1])
+def test_competing_opposite_edges_cannot_commit_a_cycle(tmp_path, busy_side, monkeypatch):
     from concurrent.futures import ThreadPoolExecutor
     from threading import Barrier
 
@@ -390,26 +394,62 @@ def test_competing_opposite_edges_cannot_commit_a_cycle(tmp_path):
     _, second = created(commands, "second")
     gate = Barrier(2)
 
-    def link(pair):
-        target, required = pair
-        gate.wait(timeout=5)
-        try:
-            return commands.update_dependencies(
-                target, UpdateTaskDependencies(target, 1, (required,))
-            )
-        except InvalidInput as error:
-            assert error.code == "task_dependency_cycle"
-            return None
-
+    other = replace(commands, transactions=SQLiteDatabase(store.path, store.installation))
+    operations = (
+        lambda: commands.update_dependencies(first, UpdateTaskDependencies(first, 1, (second,))),
+        lambda: other.update_dependencies(second, UpdateTaskDependencies(second, 1, (first,))),
+    )
     before = snapshot(store)
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(link, [(first, second), (second, first)]))
+    evidence = command_evidence(store)
+    assert store.busy_timeout == other.transactions.busy_timeout == 0.25
+    with monkeypatch.context() as patch:
+        if busy_side is not None:
+            ready, observed = hold_writer_until_busy(
+                (store, other.transactions)[1 - busy_side], patch
+            )
+
+        def link(index):
+            gate.wait(timeout=5)
+            if index == busy_side:
+                assert ready.wait(timeout=5), "competing writer did not enter"
+            try:
+                return operations[index]()
+            except InvalidInput as error:
+                assert error.code == "task_dependency_cycle"
+                return None
+            except StorageBusy as error:
+                if busy_side is not None:
+                    observed.set()
+                return error
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(link, [0, 1]))
+    if busy_side is not None:
+        assert isinstance(results[busy_side], StorageBusy)
+        assert isinstance(results[1 - busy_side], Receipt)
+    committed = {value.operation_id for value in results if isinstance(value, Receipt)}
+    assert command_evidence(store) == tuple(value + len(committed) for value in evidence)
+    for index, result in enumerate(results):
+        if isinstance(result, StorageBusy):
+            # The winning writer is closed: retry the same key, revision and
+            # edge once, and still require the original no-cycle rejection.
+            try:
+                results[index] = operations[index]()
+            except InvalidInput as error:
+                assert error.code == "task_dependency_cycle"
+                results[index] = None
     assert sum(result is not None for result in results) == 1
+    assert all(result is None or isinstance(result, Receipt) for result in results)
     after = snapshot(store)
     assert len(after[3]) == len(before[3]) + 1 and len(after[4]) == len(before[4]) + 1
     with store.read() as unit:
         a, b = unit.tasks.occurrence("home", first), unit.tasks.occurrence("home", second)
         assert (a.prerequisite_ids, b.prerequisite_ids) in [((second,), ()), ((), (first,))]
+    assert command_evidence(store) == tuple(value + 1 for value in evidence)
+    winner = next(index for index, result in enumerate(results) if isinstance(result, Receipt))
+    assert operations[winner]() == results[winner]
+    assert snapshot(store) == after
+    assert command_evidence(store) == tuple(value + 1 for value in evidence)
 
 
 def test_definition_edit_accepts_maximum_utf8_content_without_exceeding_atomic_document_bounds(

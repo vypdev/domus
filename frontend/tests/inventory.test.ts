@@ -5,10 +5,12 @@ import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../src/adapters/in
 import {InventoryController} from '../src/application/inventory-controller';
 import type {InventoryRequest, InventoryResult, InventoryScope, InventoryState} from '../src/application/inventory-controller';
 import type {EntryRead} from '../src/application/ports';
+import {EntryReadError} from '../src/application/ports';
 import {adjustmentQuantity, canonicalGtin, intakeQuantity, inventoryCommand} from '../src/domain/inventory';
 import {revisionValue} from '../src/domain/administration';
-import type {BarcodeLookup, InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases, PurchaseSessions, PurchaseSessionDetail} from '../src/domain/inventory';
+import type {BarcodeLookup, InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases, PurchaseSessions, PurchaseSessionDetail, ShoppingList} from '../src/domain/inventory';
 import '../src/presentation/domus-inventory';
+import '../src/presentation/domus-shopping-workspace';
 import corpus from './fixtures/entry-wire.json';
 
 const context = {installationId:'047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6', channel:'edge' as const, subject:'a'.repeat(32)};
@@ -288,12 +290,217 @@ function controller() {
   const movements = vi.fn((_scope: InventoryScope, _product: string, _cursor: string|null): EntryRead<MovementHistory> => read(history));
   const buys = vi.fn((_scope: InventoryScope, _cursor: string|null): EntryRead<Purchases> => read(purchases));
   const arrivals = vi.fn((_scope: InventoryScope, _id:string, _cursor: string|null): EntryRead<PurchaseReceipts> => read(purchaseReceipts));
+  const lists = vi.fn((_scope: InventoryScope, _cursor:string|null): EntryRead<ShoppingList> => lost());
   const controller = new InventoryController({barcode:barcodes,read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,
-    purchaseSessions:() => lost(),purchaseSession:() => lost(),shoppingList:() => lost(),shoppingSources:() => lost(),send,original},
+    purchaseSessions:() => lost(),purchaseSession:() => lost(),shoppingList:lists,shoppingSources:() => lost(),send,original},
     local.journal,{requestKey:() => request.key},publish);
   const current = () => publish.mock.lastCall?.[0];
-  return {...local, controller, load, barcodes, movements, buys, arrivals, send, original, current};
+  return {...local, controller, load, barcodes, movements, buys, arrivals, lists, send, original, current};
 }
+
+test('a failed catalog read retains only a display snapshot and cannot authorize a new write', async () => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  f.load.mockReturnValueOnce(lost());
+  await app.refresh();
+  expect(f.current()).toMatchObject({report:null, retainedReport:report, notice:'unavailable'});
+  await app.submit(buy);
+  expect(f.send).not.toHaveBeenCalled();
+  f.load.mockReturnValueOnce(lost());
+  await app.refresh();
+  expect(f.current()).toMatchObject({report:null, retainedReport:report});
+  await app.refresh();
+  expect(f.current()).toMatchObject({report, retainedReport:null, accessDenied:false});
+  f.load.mockReturnValueOnce({result:Promise.reject(new EntryReadError('forbidden')), cancel:vi.fn()});
+  await app.refresh();
+  expect(f.current()).toMatchObject({report:null, retainedReport:null, accessDenied:true});
+  await app.submit(buy);
+  expect(f.send).not.toHaveBeenCalled();
+});
+
+test('denied access clears cached facts while preserving the original unresolved operation', async () => {
+  const f = controller();
+  f.journal.save(request);
+  f.controller.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  f.load.mockReturnValueOnce({result:Promise.reject(new EntryReadError('authentication_required')), cancel:vi.fn()});
+  await f.controller.refresh();
+  expect(f.current()).toMatchObject({report:null, retainedReport:null, accessDenied:true, pending:true, notice:'uncertain'});
+  expect(f.journal.open(scope.key)).toEqual(request);
+  expect(f.send).not.toHaveBeenCalled();
+});
+
+test('a failed purchase read keeps the actual form and disables its retained draft until refresh', async () => {
+  const f = controller(); f.controller.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await f.controller.showPurchases();
+  const {node,root,events,submit} = component('shopping');
+  node.view = f.current()!; await node.updateComplete;
+  const shopping = root.querySelector('domus-shopping')!; await shopping.updateComplete;
+  const form = shopping.shadowRoot!.querySelector<HTMLFormElement>('#purchase-form')!;
+  const name = form.querySelector<HTMLInputElement>('input[name=name]')!;
+  const amount = form.querySelector<HTMLInputElement>('input[name=quantity]')!;
+  name.value = '  Retained new purchase 😀  '; amount.value = '2';
+  f.buys.mockReturnValueOnce(lost());
+  await f.controller.showPurchases();
+  expect(f.current()?.purchases).toBeNull();
+  node.view = f.current()!; await node.updateComplete; await shopping.updateComplete;
+  expect(shopping.shadowRoot!.querySelector('#purchase-form')).toBe(form);
+  expect(name.value).toBe('  Retained new purchase 😀  ');
+  expect(amount.value).toBe('2'); expect(amount.disabled).toBe(true);
+  submit(form);
+  expect(events).not.toHaveBeenCalled();
+  await f.controller.submit(buy);
+  expect(f.send).not.toHaveBeenCalled();
+  await f.controller.refresh();
+  node.view = f.current()!; await node.updateComplete; await shopping.updateComplete;
+  expect(shopping.shadowRoot!.querySelector('#purchase-form')).toBe(form);
+  expect(name.value).toBe('  Retained new purchase 😀  ');
+  expect(amount.disabled).toBe(false);
+});
+
+test('item navigation waits for current catalog proof and never interrupts an owned read', async () => {
+  const f = controller(), app = f.controller;
+  await app.showShoppingItem('extra:request');
+  await app.openShoppingDestination('extra:request');
+  expect(f.current()).toBeUndefined();
+  f.load.mockReturnValueOnce(lost()); app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  const unavailable = f.current();
+  await app.showShoppingItem('extra:request'); await app.showPurchaseReceipts('purchase');
+  await app.openShoppingDestination(null);
+  expect(f.current()).toBe(unavailable);
+  await app.refresh();
+  const loading = app.showPurchases();
+  const destination = app.openShoppingDestination('extra:request');
+  await app.showShoppingItem('extra:request');
+  await destination; await loading; await app.refresh();
+  expect(f.current()?.notice).toBeNull();
+  expect(f.current()?.purchases).toEqual(purchases);
+  expect(f.send).not.toHaveBeenCalled();
+});
+
+test.each(['scope retirement','catalog failure'] as const)('Shopping re-entry stops after %s during retained-read refresh', async situation => {
+  const f = controller(), app = f.controller;
+  app.setShoppingActive(false); app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  const gate = Promise.withResolvers<InventoryReport>();
+  f.load.mockReturnValueOnce({result:gate.promise,cancel:vi.fn()});
+  app.setShoppingActive(true);
+  const entry = app.openShoppingDestination('extra:request');
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(true));
+  if (situation === 'scope retirement') {app.bind(null); gate.resolve(report);}
+  else gate.reject(new EntryReadError('unavailable'));
+  await entry;
+  if (situation === 'scope retirement') expect(f.current()).toBeNull();
+  else expect(f.current()).toMatchObject({report:null,retainedReport:report,notice:'unavailable'});
+  expect(f.send).not.toHaveBeenCalled(); expect(f.original).not.toHaveBeenCalled();
+});
+
+test.each([
+  ['base',false],['item',false],['base',true],['item',true],
+] as const)('a retired Shopping %s entry cannot resume after catalog refresh (returned=%s)', async (kind,returned) => {
+  const f = controller(), app = f.controller;
+  f.journal.save(request); app.setShoppingActive(false); app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  const catalog = Promise.withResolvers<InventoryReport>(), cancel = vi.fn();
+  f.load.mockReturnValueOnce({result:catalog.promise,cancel});
+  f.lists.mockImplementation(() => ({result:Promise.reject(new EntryReadError('forbidden')),cancel:vi.fn()}));
+  app.setShoppingActive(true);
+  const entry = app.openShoppingDestination(kind === 'base' ? null : 'extra:request');
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(true));
+  app.setShoppingActive(false);
+  if (returned) app.setShoppingActive(true);
+  catalog.resolve(report); await entry;
+  expect(f.lists).not.toHaveBeenCalled();
+  expect(f.current()).toMatchObject({report,pending:true,notice:null});
+  expect(f.journal.open(scope.key)).toEqual(request); expect(cancel).not.toHaveBeenCalled();
+  expect(f.send).not.toHaveBeenCalled(); expect(f.original).not.toHaveBeenCalled();
+  // A new explicit entry remains usable after the obsolete continuation retires.
+  f.lists.mockReset().mockReturnValue(read({items:[],cursor:null}));
+  app.setShoppingActive(true); await app.openShoppingDestination(null);
+  expect(f.lists).toHaveBeenCalledOnce(); expect(f.journal.open(scope.key)).toEqual(request);
+});
+
+test('a hidden Shopping destination does not begin a new read', async () => {
+  const f = controller(); f.controller.setShoppingActive(false); f.controller.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await f.controller.openShoppingDestination(null);
+  expect(f.lists).not.toHaveBeenCalled(); expect(f.current()?.report).toEqual(report);
+});
+
+test.each(['Stock','returned Shopping','another Shopping route'] as const)(
+  'a paged item read admits no continuation after navigation to %s', async destination => {
+    const f = controller(), app = f.controller; f.journal.save(request); app.bind(scope);
+    await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+    const page = Promise.withResolvers<ShoppingList>(), cancel = vi.fn();
+    f.lists.mockReturnValueOnce({result:page.promise,cancel});
+    const selecting = app.showShoppingItem('product:later');
+    await vi.waitFor(() => expect(f.current()?.busy).toBe(true));
+    if (destination === 'another Shopping route') app.retireShoppingNavigation();
+    else {
+      app.setShoppingActive(false);
+      if (destination === 'returned Shopping') app.setShoppingActive(true);
+    }
+    page.resolve({items:[],cursor:'older'}); await selecting;
+    expect(f.lists).toHaveBeenCalledOnce(); expect(cancel).not.toHaveBeenCalled();
+    expect(f.current()).toMatchObject({report,pending:true,shoppingFocus:undefined});
+    expect(f.journal.open(scope.key)).toEqual(request);
+    expect(f.send).not.toHaveBeenCalled(); expect(f.original).not.toHaveBeenCalled();
+    f.lists.mockReset().mockReturnValue(read({items:[],cursor:null}));
+    app.setShoppingActive(true); await app.openShoppingDestination(null);
+    expect(f.lists).toHaveBeenCalledOnce();
+  });
+
+test.each([0,1,2,3,4,5] as const)('Shopping refresh stops new reads after retiring projection %s', async stage => {
+  const adapter = http([[200,sessionPage],[200,wireSessionDetail]]).server;
+  const sessionHistory = await adapter.purchaseSessions(scope,null).result;
+  const sessionDetail = await adapter.purchaseSession(scope,'session').result;
+  const pages = await shoppingPages(), local = journal(); local.journal.save(request);
+  const publish = vi.fn<(state:InventoryState|null) => void>();
+  const load = vi.fn(() => read(report)), buys = vi.fn(() => read(purchases));
+  const sessions = vi.fn(() => read(sessionHistory)), session = vi.fn(() => read(sessionDetail));
+  const arrivals = vi.fn(() => read(purchaseReceipts)), lists = vi.fn(() => read(pages.shoppingList));
+  const sources = vi.fn(() => read(pages.shoppingSources));
+  const send = vi.fn(() => read(committed)), original = vi.fn(() => read(null));
+  const app = new InventoryController({read:load,purchases:buys,purchaseSessions:sessions,purchaseSession:session,
+    purchaseReceipts:arrivals,shoppingList:lists,shoppingSources:sources,history:() => lost(),barcode:() => lost(),send,original},
+  local.journal,{requestKey:() => 'never-new'},publish);
+  const state = () => publish.mock.lastCall?.[0]; app.bind(scope);
+  await vi.waitFor(() => expect(state()?.busy).toBe(false));
+  await app.showPurchases(); await app.showPurchaseSessions(); await app.showPurchaseSession('session');
+  await app.showPurchaseReceipts('purchase'); await app.showShoppingList(); await app.showShoppingSources('product');
+  function hold<T>(fn:{mockImplementationOnce(callback:()=>EntryRead<T>):unknown}, value:T) {
+    const begun = Promise.withResolvers<void>(), done = Promise.withResolvers<T>(), cancel = vi.fn();
+    fn.mockImplementationOnce(() => {begun.resolve();return {result:done.promise,cancel};});
+    return {begun:begun.promise,finish:() => done.resolve(value),cancel};
+  }
+  const holds = [() => hold(buys,purchases),() => hold(sessions,sessionHistory),() => hold(session,sessionDetail),
+    () => hold(arrivals,purchaseReceipts),() => hold(lists,pages.shoppingList),() => hold(sources,pages.shoppingSources)];
+  const reads = [buys,sessions,session,arrivals,lists,sources], before = reads.map(fn => fn.mock.calls.length);
+  const gate = holds[stage](), refresh = app.refresh(); await gate.begun;
+  app.setShoppingActive(false); gate.finish(); await refresh;
+  reads.forEach((fn,index) => expect(fn.mock.calls.length).toBe(before[index] + (index <= stage ? 1 : 0)));
+  expect(state()).toMatchObject({report,pending:true,busy:false,notice:null});
+  expect(gate.cancel).not.toHaveBeenCalled(); expect(local.journal.open(scope.key)).toEqual(request);
+  const previousLoads = load.mock.calls.length;
+  app.setShoppingActive(true); await app.openShoppingDestination(null);
+  expect(load).toHaveBeenCalledTimes(previousLoads+1);
+  expect(send).not.toHaveBeenCalled(); expect(original).not.toHaveBeenCalled();
+});
+
+test('denial of a Shopping read cannot retain previously visible private purchase facts', async () => {
+  const f = controller(); f.journal.save(request); f.controller.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await f.controller.showPurchases();
+  f.buys.mockReturnValueOnce({result:Promise.reject(new EntryReadError('forbidden')), cancel:vi.fn()});
+  await f.controller.showPurchases();
+  expect(f.current()).toMatchObject({report:null, purchases:null, retainedReport:null,
+    retainedShopping:null, accessDenied:true, pending:true, notice:'uncertain'});
+  expect(f.journal.open(scope.key)).toEqual(request);
+  expect(f.send).not.toHaveBeenCalled();
+});
 
 test('shopping reads and writes stay within the current authorized session and use original recovery', async () => {
   const f = controller(), app = f.controller;
@@ -446,8 +653,9 @@ test('retired reads and recovered results cannot populate a different identity',
 
 const mounted: HTMLElement[] = [];
 afterEach(() => {for (const node of mounted.splice(0)) node.remove();});
-function component() {
-  const node = document.createElement('domus-inventory'); document.body.append(node); mounted.push(node);
+function component(surface: 'inventory' | 'shopping' = 'inventory') {
+  const node = surface === 'shopping' ? document.createElement('domus-shopping-workspace') : document.createElement('domus-inventory');
+  document.body.append(node); mounted.push(node);
   const root = node.shadowRoot!, events = vi.fn();
   node.addEventListener('domus-inventory-intent',events);
   const press = (label:string) => {
@@ -464,8 +672,22 @@ function component() {
 }
 const initial: InventoryState = {scope,report:null,history:null,busy:false,pending:false,result:null,notice:null};
 
+test('Inventory retains incoming purchase facts and a committed receipt when a later catalog read is unavailable', async () => {
+  const {node,root} = component();
+  const incoming = {...report, products:[{...report.products[0], outstandingPurchase:'2', shoppingNeeded:'1.000001'}]};
+  node.view = {...initial, report:incoming}; await node.updateComplete;
+  expect(root.textContent).toContain('Open purchase quantity · 2 millilitres');
+  expect(root.textContent).toContain('1.000001');
+  node.view = {...initial, retainedReport:incoming, notice:'unavailable', result:committed};
+  await node.updateComplete;
+  expect(root.textContent).toContain('1.250001 millilitres');
+  expect(root.textContent).toContain('operation');
+  expect(root.querySelectorAll('article')).toHaveLength(0);
+  expect([...root.querySelectorAll('a')].some(link => link.textContent === 'View product')).toBe(false);
+});
+
 test('Shopping distinguishes tracked stock posting from an untracked receipt and retains the original operations', async () => {
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
   const open = {...initial,report};
   node.view = open;
   await node.updateComplete;
@@ -1049,7 +1271,7 @@ test('opening a shopping item retires incomplete pages, rejects cursor loops and
 
 test('shared Shopping renders bilingual per-source totals and controls for authorized users', async () => {
   const pages = await shoppingPages();
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
   const open = {...initial,report};
   node.view = open;
   await node.updateComplete;
@@ -1256,7 +1478,7 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
   const adapter = http([[200,wireHistory],[200,namedSessionDetail]]).server;
   const history = await adapter.purchaseSessions(scope,null).result;
   const detail = await adapter.purchaseSession(scope,'session').result;
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
   const open = {...initial,report,shoppingList};
   node.view = open;
   await node.updateComplete;
@@ -1422,7 +1644,7 @@ test('only a shopper can cancel and the purchase and receipt views reload after 
 });
 
 test('purchase details confirm the exact remaining amount, require a reason, and show the attributed cancellation', async () => {
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
   const open = {...initial,report:{...report,mayManage:false},purchaseReceipts};
   node.view = open;
   await node.updateComplete;
@@ -1525,7 +1747,7 @@ test('voiding uses current shopping authority and refreshes the original receipt
 });
 
 test('only a pending tracked receipt can be voided with a reason, and its history remains visible', async () => {
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
   const open = {...initial,report,purchaseReceipts};
   node.view = open;
   await node.updateComplete;
@@ -1627,22 +1849,23 @@ test('the posted correction requires both current grants and refreshes receipt h
 });
 
 test('posted receipt correction uses the shared reason form and keeps both history links', async () => {
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
+  const stock = component();
   const posted = {...purchaseReceipts,purchase:{...purchase,revision:correctPosted.expected_revision,pendingStock:'0'},
     items:[{...purchaseReceipts.items[0],movementId:'original'}]};
   const stockHistory = {...history,movements:[{...history.movements[0],shoppingReceipt:true}]};
   const open = {...initial,report,purchaseReceipts:posted,history:stockHistory};
-  node.view = open;
-  await node.updateComplete;
+  node.view = open; stock.node.view = open;
+  await Promise.all([node.updateComplete, stock.node.updateComplete]);
   const element = root.querySelector('domus-shopping')!;
   const shop = element.shadowRoot!;
   const assign = async (state:InventoryState) => {
-    node.view = state;
-    await node.updateComplete;
+    node.view = state; stock.node.view = state;
+    await Promise.all([node.updateComplete, stock.node.updateComplete]);
     await element.updateComplete;
   };
-  expect(root.textContent).toContain('Review this receipt in Shopping.');
-  expect([...root.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).not.toContain('Reverse this intake');
+  expect(stock.root.textContent).toContain('Review this receipt in Shopping.');
+  expect([...stock.root.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).not.toContain('Reverse this intake');
   await assign({...open,report:{...report,mayManage:false}});
   expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
   await assign({...open,report:{...report,mayShop:false}});
@@ -1724,7 +1947,8 @@ test('a physical return needs both grants and reloads receipt history', async ()
 });
 
 test('only a valid posting on a settled purchase exposes the full physical return', async () => {
-  const {node,root,events,submit} = component();
+  const {node,root,events,submit} = component('shopping');
+  const stock = component();
   const settled = {...purchase,received:purchase.purchased,remaining:'0',pendingStock:'0',revision:returnReceipt.expected_revision};
   const posted = {...purchaseReceipts,purchase:settled,items:[{...purchaseReceipts.items[0],movementId:'original'}]};
   const open = {...initial,report,purchaseReceipts:posted};
@@ -1733,8 +1957,8 @@ test('only a valid posting on a settled purchase exposes the full physical retur
   const element = root.querySelector('domus-shopping')!;
   const shop = element.shadowRoot!;
   const assign = async (state:InventoryState) => {
-    node.view = state;
-    await node.updateComplete;
+    node.view = state; stock.node.view = state; stock.node.language = node.language;
+    await Promise.all([node.updateComplete, stock.node.updateComplete]);
     await element.updateComplete;
   };
   await assign({...open,report:{...report,mayManage:false}});
@@ -1765,8 +1989,8 @@ test('only a valid posting on a settled purchase exposes the full physical retur
   expect(shop.textContent).toContain(wireReturn.reason);
   expect(shop.textContent).toContain('shopper');
   expect(root.textContent).toContain('Devolución física registrada.');
-  expect(root.textContent).toContain('Devolución de compra');
-  expect(root.textContent).toContain('original');
+  expect(stock.root.textContent).toContain('Devolución de compra');
+  expect(stock.root.textContent).toContain('original');
   await assign({...open,purchaseReceipts:{...posted,items:[{...posted.items[0],returned:{...returned,authorAlias:'Marta'}}]}});
   expect(shop.textContent).toContain('Marta');
 });

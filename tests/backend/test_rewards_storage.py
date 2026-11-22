@@ -2,10 +2,10 @@
 
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import closing
+from contextlib import closing, contextmanager
 from dataclasses import replace
 from pathlib import Path
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
 from test_activation_compatibility import identity_at
@@ -46,6 +46,31 @@ def award(tasks, points, member, key, amount=1000):
     saved = tasks.complete(key, CompleteTask(oid, 1, (member,), 90))
     assert points.tick(lambda: True) == 1
     return ReopenTask(oid, 2, cycle_of(saved), "Review the original work")
+
+
+def command_evidence(database):
+    """Count durable command evidence independently of application projections."""
+    with closing(sqlite3.connect(database.path, autocommit=True)) as connection:
+        return tuple(
+            connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+            for table in ("receipts", "audit", "outbox")
+        )
+
+
+def hold_writer_until_busy(database, patch):
+    """Keep one real writer open until its contender reports the bounded busy result."""
+    ready, observed = Event(), Event()
+    write = database.write
+
+    @contextmanager
+    def held():
+        with write() as unit:
+            ready.set()
+            yield unit
+            assert observed.wait(timeout=5), "contender did not report bounded busy"
+
+    patch.setattr(database, "write", held)
+    return ready, observed
 
 
 def race(first, second):

@@ -74,7 +74,7 @@ test('the shopping card distinguishes pending, denied and failed reads and local
   expect(root.querySelector('p')!.textContent).toBe('There are no items to buy.');
   await show({state:'ready',data:{total:1,items:[item]}});
   expect(root.querySelector('a')?.textContent).toContain('2.000001');
-  expect(root.querySelector('a')?.getAttribute('href')).toBe('#inventory-shopping/product:oil');
+  expect(root.querySelector('a')?.getAttribute('href')).toBe('#shopping/product:oil');
   expect(root.querySelector('b')).toBeNull();
 
   element.language = 'es';

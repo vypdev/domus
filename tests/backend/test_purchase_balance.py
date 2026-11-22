@@ -12,13 +12,13 @@ from test_inventory_catalog_http import INVENTORY, VIEWER, get, post, register
 from test_inventory_catalog_storage import setup
 from test_recurrence_http import USER
 from test_rewards_http import member_context
-from test_rewards_storage import race
+from test_rewards_storage import command_evidence, hold_writer_until_busy, race
 from test_shared_shopping import queries
 from test_shopping_http import command, original, view
 from test_task_runtime import api as api
 
 from domus.application.inventory import CatalogAction, InventoryCommands
-from domus.domain.errors import InvalidInput, NotFound, StorageFailure
+from domus.domain.errors import Conflict, InvalidInput, NotFound, StorageBusy, StorageFailure
 from domus.domain.identity import (
     HumanIdentity,
     Member,
@@ -201,7 +201,8 @@ def test_protected_cancel_preserves_receipts_and_reopens_demand(api):
 
 
 @pytest.mark.parametrize("competitor", ["same-key", "cancel", "arrival"])
-def test_balance_races_and_original_retry(tmp_path, competitor):
+@pytest.mark.parametrize("busy_side", [None, 0, 1])
+def test_balance_races_and_original_retry(tmp_path, competitor, busy_side, monkeypatch):
     _, store, commands = setup(tmp_path)
     purchase = commands.purchase("buy", None, "Lemons", M("6")).result.decode()["purchase_id"]
     other = replace(commands, transactions=SQLiteDatabase(store.path, store.installation))
@@ -212,7 +213,49 @@ def test_balance_races_and_original_retry(tmp_path, competitor):
             return other.receive_purchase(key, purchase, M("4"), 1)
         return other.cancel_purchase_balance(key, purchase, REASON, 1)
 
-    results = race(lambda: commands.cancel_purchase_balance("first", purchase, REASON, 1), second)
+    operations = (lambda: commands.cancel_purchase_balance("first", purchase, REASON, 1), second)
+    assert store.busy_timeout == other.transactions.busy_timeout == 0.25
+    before = command_evidence(store)
+    with monkeypatch.context() as patch:
+        if busy_side is not None:
+            databases = (store, other.transactions)
+            ready, observed = hold_writer_until_busy(databases[1 - busy_side], patch)
+
+        def attempt(index):
+            if index == busy_side:
+                assert ready.wait(timeout=5), "competing writer did not enter"
+            try:
+                return operations[index]()
+            except StorageBusy as error:
+                if busy_side is not None:
+                    observed.set()
+                return error
+
+        results = list(race(lambda: attempt(0), lambda: attempt(1)))
+    if busy_side is not None:
+        assert isinstance(results[busy_side], StorageBusy)
+        assert isinstance(results[1 - busy_side], Receipt)
+    committed = {value.operation_id for value in results if isinstance(value, Receipt)}
+    assert command_evidence(store) == tuple(value + len(committed) for value in before)
+    # Both contenders have finished and released their connections. A bounded
+    # busy response has no effect; explicitly retry only its identical request.
+    for index, result in enumerate(results):
+        if not isinstance(result, StorageBusy):
+            continue
+        action = (
+            CatalogAction.RECEIVE_PURCHASE if index == 1 and competitor == "arrival" else ACTION
+        )
+        request_key = "first" if index == 0 else key
+        winner = next((value for value in results if isinstance(value, Receipt)), None)
+        if competitor == "same-key" and winner is not None:
+            assert commands.original(action, request_key, commands.actor.current()) == winner
+        else:
+            with pytest.raises(NotFound, match="operation_missing"):
+                commands.original(action, request_key, commands.actor.current())
+        try:
+            results[index] = operations[index]()
+        except Conflict as error:
+            results[index] = error.code
     if competitor == "same-key":
         assert isinstance(results[0], Receipt) and results[0] == results[1]
     else:
@@ -234,6 +277,8 @@ def test_balance_races_and_original_retry(tmp_path, competitor):
     detail = query.physical_receipts(purchase, limit=25, cursor=None)
     assert detail.purchase.remaining == "0" and detail.cancellation is not None
     assert detail.purchase.cancelled == accepted.result.decode()["cancelled"]
+    committed_count = 2 if "cancelled" not in data else 1
+    assert command_evidence(store) == tuple(value + committed_count for value in before)
 
 
 def test_cancellation_rolls_back_with_original_receipt_and_checks_snapshot_integrity(

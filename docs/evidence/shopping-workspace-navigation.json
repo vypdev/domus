@@ -1,0 +1,838 @@
+{
+  "schemaVersion": 1,
+  "issue": 162,
+  "status": "Installed Edge85 native acceptance PASS; application payload unchanged by validation-only bounded-busy race corrections. Current source2212/allfour100 and12browservariants32.8s pass. Targeted107backend/storage cases pass; full6040/current-head CI and review remain required.",
+  "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
+  "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
+  "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
+  "nativeRequirementCount": 11,
+  "nativeDistinctCases": 6,
+  "caseIdentityScope": "#162 owning unit only; generic inventory1 references elsewhere remain distinct",
+  "compatibility": {
+    "schema": 37,
+    "schemaChange": false,
+    "backendOrApiChange": false,
+    "journalSerializationChange": false,
+    "haUi": "0.1.0-next.5",
+    "journalPacketSlotAndCanonicalFieldsUnchanged": true,
+    "journalScopeIdentity": "Verified installation, channel, HA subject, household and member; destination and policy revisions remain outside ownership.",
+    "legacyPendingPacketHandling": "Existing incompatible-scope retirement for ownerless or unmatched packets; no lookup/resend/reassignment and no change to committed server receipts."
+  },
+  "executedSource": {
+    "frontendTests": 2212,
+    "frontendTestFiles": 50,
+    "authoredRuntimeFiles": 121,
+    "coverage": {
+      "globalAndPerFileAllFourMetrics": 100,
+      "statements": 9540,
+      "branches": 8768,
+      "functions": 2030,
+      "lines": 6943,
+      "authoredFileAudit": "PASS"
+    },
+    "runtimeAndCatalogTypes": "PASS",
+    "productBuild": "PASS",
+    "wheelPackageTests": 1,
+    "all250PythonBytesUnchangedFromAcceptedEdge77": true,
+    "retainedAnnotationBrowserVariants": 4,
+    "retainedFullWorkspaceBrowserVariants": 2,
+    "newBrowserVariants": 12,
+    "newBrowserResult": "12 PASS32.8s, each once without retries, skipped, flaky or unexpected results. Existing C01 additionally returns from deep Shopping work and repeats Stock entry after a lower field, EN keyboard/ES touch and both themes. All prior assertions/deadlines remain.",
+    "catalogBrowserTests": 68,
+    "catalogResult": "PASS, no skipped/flaky/unexpected, zero retries",
+    "nodePolicyTests": 42,
+    "nodePolicyAllFourMetrics": 100,
+    "pythonArchitectureAndCIContracts": 99,
+    "localDocumentationLinks": "PASS",
+    "sdkCatalogCapabilities": 11,
+    "fullSourceBrowserCampaign": {
+      "inventory": 141,
+      "firstCampaign": {
+        "passed": 139,
+        "failed": 2,
+        "cause": "Barcode403assertions expected old generic unavailable copy; current explicitdenial was observed. All quantities, authority, history and recovery assertions remain."
+      },
+      "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
+      "finalFullSameHeadCI": "PENDING for Stock heading correction; prior B5 full local141 PASS is historical."
+    },
+    "localPrivatePortQualification": "Canonical ports56174/56175 belong to active selfhostedCI. Private copy differs only by56184/56185, byte-equivalence verified; same actual backend/product and unchanged assertions/deadlines/retry policy.",
+    "durableOwnerRegression": {
+      "tests": 4,
+      "red": "Three failures/onepass beforefix",
+      "green": "Allfourpass: sameowner rawpacket/exactoriginalkey recovery; replacementmember retirement afternewmount; legacyownerlessscope retirement; failedretirement blocks recovery/writes."
+    },
+    "partialHouseholdFactRegression": {
+      "beforeFix": "2positiveworkspacefailures/1negativeunverifiedscopepass",
+      "afterFix": "BothInventory andShopping load only fromcurrentverifiedcapabilityhousehold/member; no catalogwhenbothfactsandcapabilities unavailable; full2190unitcoveragePASS100."
+    },
+    "hiddenShoppingAndGuidanceRegression": {
+      "beforeFix": "4failures: manualStockrefresh andsuccessfulStocksave each repeat a hiddenShopping read; EN/ES purchase denial reportswronggrant.",
+      "afterFix": "All4pass; scope retirement/unavailable during reentry also stop new route reads. Full2196 tests/all4metrics100; actualC02/C04bothdeployments pass."
+    },
+    "queuedNavigationRetirementRegression": {
+      "finding": 4658107744,
+      "unitRed": "Both busycatalog andalreadyqueuedtick fail with one hiddenShopping read",
+      "actualRed": "Both actual compiled82 C02 deployment variants fail: hiddenShopping403 disables Stock registration",
+      "green": "Both controlled composition cases and all12actualbrowservariantsPASS;2198 frontend/all4metrics100",
+      "newNormativeCaseIdentities": 0
+    },
+    "activeEntryRetirementRegression": {
+      "finding": 4658614224,
+      "unitRed": "Four failures: base/item route crossed with leave/leave-and-return before catalog completion.",
+      "actualRed": "Both compiled83 Ingress/standalone C02 variants fail with a hidden403 that disables Stock. Original reports/traces/screenshots retained.",
+      "green": "All14 new controller regressions and full2212 tests PASS; all12 actual browser variants PASS once29.1s. Covers hidden admission, leave/return, all six retained projection stages and paged item continuations. Original pending packet unchanged; no original lookup, resend or read/command cancellation.",
+      "newNormativeCaseIdentities": 0
+    },
+    "stockHeadingVisibilityRegression": {
+      "nativeRed": "ES390 dark actual touch: returning from Shopping sources leaves Stock heading and Refresh inventory offscreen; Refresh rect y=-706.84 in804px frame. Guard prevented offscreen touch.",
+      "actualRed": "Both exact compiled84 C01 deployments fail heading geometry beforefix.",
+      "green": "All12 current variants PASS32.8s; repeated and deep-return Stock entry reveal its heading below sticky navigation in both locales/themes, EN keyboard/ES touch. Full2212 tests/allfourglobal-perfile100.",
+      "newNormativeCaseIdentities": 0
+    }
+  },
+  "requiredImageBrowserInventory": 86,
+  "actualImages": {
+    "amd64": "PENDING final current head",
+    "aarch64": "PENDING final current head",
+    "localPinnedAarch64": {
+      "at": "2026-11-22T15:57:12.596800+00:00",
+      "image": "domus-162-edge85:pinned",
+      "imageId": "sha256:676af5cb8c0517d9a57dfa89d890eddfd99564bf639805d65b52698826a6dd46",
+      "architecture": "arm64",
+      "sourceCommit": "1826444e659ad9fe5a7827ee448efd80ee8d6452",
+      "version": "0.0.0-edge.85",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 18.92,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true,
+      "originalLog": "/private/tmp/domus-162-edge85-qualified-arm64-original.log"
+    }
+  },
+  "installedEdge": {
+    "statusAtPackaging": "No installed85 claim yet. Prior84 partial native qualification found Stock heading offscreen and is not accepted; final85 native observations belong to linkedPR.",
+    "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
+    "appSlug": "abb0c2fd_domus_edge",
+    "newRecordsPlanned": 0,
+    "currentQualification": {
+      "status": "PASS native installed85; stopped, no permanent deletion",
+      "sourceCommit": "1826444e659ad9fe5a7827ee448efd80ee8d6452",
+      "packagingHeadObserved": "e9ea697bbff9e0dad160c15c05d1f283fd0dba16",
+      "moduleBasename": "index-eQtqrWRl.js",
+      "desktop": "English1120light keyboard; deep Stock heading, refresh/reentry andbothdrafts pass.",
+      "mobile": "Spanish390dark actualtouch overflow, deep/repeatedStock heading, Stockrefresh/Shopping reentry, retainednote andOverview item focus pass.",
+      "publicRestart": "ActualStop->Detenido thenStart->En ejecuci\u00f3n; freshentry verifies2extras/notes/quantities/priorities, zero stock/movements andempty purchases/sessions.",
+      "newHouseholdRecords": 0,
+      "backupCreated": false,
+      "interruptionLimit": "Unavailable reads and automatic remount coincided with an independently reported HA interruption. Original observation retained; fresh post-reconnect flow passes. No source cause inferred.",
+      "finalState": "Observed85Detenido; temporaryoverridesreset, ownQA tabclosed."
+    }
+  },
+  "finalSameHeadChecks": "Required new validation-only head: backend6040/all250coverage100; frontend2212/all121four100; source141/catalog68; eachCPU62+86 andnativeHA10all100. Earlier e9 results are historical, not rebound.",
+  "mergeAndDestination": "PENDING",
+  "compiledProductFiles": {
+    "index.html": "8470da65089af054428a2d82e16355a94251e8712e5706848031805e238f118f",
+    ".vite/manifest.json": "76344cb4588d48fc631b9bf5edc4b3b3b083e08105f1a2184c1a41b2e8f93e5f",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-eQtqrWRl.js": "06df87c3c49ccdce9d589d01b55d9b462bb5cdbb088896909702b02ff1ea4410"
+  },
+  "currentPackage": {
+    "version": "0.0.0-edge.85",
+    "sourceCommit": "1826444e659ad9fe5a7827ee448efd80ee8d6452",
+    "sourceArchiveSHA256": "ce60eb382ffada35c97dc9e976fdd854a6a38cdcda7902254b03d0b065cf48b1",
+    "wheelSHA256": "84314084096c5d9ee30c3d571325b8ae699951fd3fcf2788d6a8abb385e039ae",
+    "storageSchema": 37,
+    "pythonFiles": 250,
+    "actualProductFiles": {
+      "index.html": "8470da65089af054428a2d82e16355a94251e8712e5706848031805e238f118f",
+      ".vite/manifest.json": "76344cb4588d48fc631b9bf5edc4b3b3b083e08105f1a2184c1a41b2e8f93e5f",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-eQtqrWRl.js": "06df87c3c49ccdce9d589d01b55d9b462bb5cdbb088896909702b02ff1ea4410"
+    },
+    "status": "Immutable source/wheel, six actual local ARM64 and installed85 native acceptance pass. Final validation-only head CI/review remain required."
+  },
+  "sourceArchiveQualification": {
+    "trackedFiles": 1025,
+    "allTrackedBlobsMatch": true,
+    "all250WheelPythonBytesMatchArchive": true,
+    "archiveAndWheelHaUi": "0.1.0-next.5"
+  },
+  "previousCandidate78": {
+    "package": {
+      "version": "0.0.0-edge.78",
+      "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
+      "wheelSHA256": "1a3ee451ffcdd33d8f7d54b061571514dc7730c8acfdb16adb05ea4457adf6ed",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
+        ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
+      },
+      "status": "Published immutable source, wheel and actual local ARM64 image bytes qualified. Installed Home Assistant and final both-CPU CI remain pending.",
+      "sourceArchiveSHA256": "ae2e4619e9a195ac2906636a6bc6ad98e9eac957f8d2b677152f9358efb43157",
+      "storageSchema": 37
+    },
+    "actualLocalImage": {
+      "imageId": "sha256:b5d672638577553ef3c0b51cbd628b4b52f7255d6d5c69cfe25a429eb33a1178",
+      "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
+      "version": "0.0.0-edge.78",
+      "tests": 6,
+      "all250PythonAnd4UIFilesMatch": true,
+      "schemas": [
+        20,
+        36
+      ],
+      "restartAndRestore": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installed": "Installed and exercised in native Home Assistant. Rejected for heading and selected-item viewport defects. Two saved literal notes/priorities and zero stock retained for Edge79 upgrade.",
+    "findings": [
+      "Repeated Shopping activation focused the region but left its heading above the viewport.",
+      "Overview item selection focused the right row before nested controls completed layout; row ended below mobile viewport."
+    ],
+    "originalSourceBrowserInventory": {
+      "inventory": 141,
+      "firstCampaign": {
+        "passed": 139,
+        "failed": 2,
+        "cause": "Barcode403assertions expected old generic unavailable copy; current explicitdenial was observed. All quantities, authority, history and recovery assertions remain."
+      },
+      "correctedBarcodeRegression": "PASS both deployment variants, each once, all retained authority/history/recovery assertions",
+      "finalFullSameHeadCI": "PENDING"
+    }
+  },
+  "reviewCorrections": {
+    "stale-source-action": "Disabled sources while retained catalog/shopping data is displayed; native button unit regression verifies no intent and fresh recovery.",
+    "base-shopping-route-keeps-item-focused-list": "Base Shopping reloads the shared first page, clears contextual focus and private item target. Composition regression verifies paged item -> empty first page -> item and zero writes.",
+    "late-focus": "Immediate item focus plus next-frame scroll only if that same target still owns focus. Later user focus and retired target regression pass.",
+    "durableOwnerAcrossReload": "Scope contains verified household/member. Sameowner retainsrawbytes/key; replacementandlegacyownerlesspacketretired viaexistingScopedCommandJournal; failedretirement blocksrecovery. Four unit/compositioncases andC05actualreload variants qualify.",
+    "catalogFrontendCount": "Catalog readiness now points to the canonical executed qualification inventory rather than copying a numeric count that drifts.",
+    "partialHouseholdFacts": "Use matching independentlyverified administration capabilityhousehold when entrydisplayfacts unavailable. Use the same resolvedhome in authorityrevisionbinding. No catalogwithoutverifiedhome/member and no newwrites.",
+    "hiddenShoppingRefresh": "Stock refresh and post-command refresh do not resume hidden Shopping reads. Retained selected projections/drafts remain; Shopping reentry refreshes them using the current route. Scope retirement/failure stops the continuation.",
+    "shoppingDeniedGuidance": "Requesters, Shopping managers, Inventory receipt posting and combined Shopping/Inventory correction/return receive distinct current-grant guidance in EN/ES; purchase draft survives deniedresponse and succeeds on explicitretry.",
+    "baselineSourceAssessment": "Two non-normative source-assessment paragraphs now explicitly name immutable base7770. Preexisting ownerprefix and every original requirement/case row remain byte-identical; no native inventory changes.",
+    "queuedNavigationRetirement": "Every hashchange retires the pending Shopping object/timer before resetting route tracking. Leaving Shopping during an initial busycatalog or alreadyqueuedtick cannot schedule a hiddenread. Later legitimate entry still reads currentShopping; no commands/recovery are cancelled.",
+    "activeEntryRetirement": "A destination identity retires on activity changes, every hashchange and widget teardown. Entry refresh, retained projection chains and item pagination check that identity before starting another Shopping read. Finishing an already admitted read or the original command is not cancelled.",
+    "stockHeadingVisibility": "The existing presentation focus routine explicitly reveals both Shopping and Inventory. It preserves the same owner, drafts, commands and permissions; other destination behavior remains unchanged."
+  },
+  "previousCandidate79": {
+    "package": {
+      "version": "0.0.0-edge.79",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "sourceArchiveSHA256": "52075d71444437cdf36a307d65785a8d1e914af69d45d2c381b5dd97d56e53aa",
+      "wheelSHA256": "8eb1af9c77efae0adfe475003d1220165dde21cc74edd4faef10088058b4585e",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
+        ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+      },
+      "storageSchema": 37,
+      "status": "Immutable source, wheel, actual local ARM64 and installed native upgrade accepted. Final current both-CPU/source CI and review remain required."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T10:18:14.290370+00:00",
+      "image": "domus-162-edge79:pinned",
+      "imageId": "sha256:66f379e62a3c78b0a2c417067a1f6e25451a46c36712ed7c5155b5417cf86e55",
+      "architecture": "arm64",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "version": "0.0.0-edge.79",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "status": "PASS native acceptance; stopped, permanent cleanup awaiting action-time confirmation",
+      "versionObserved": "0.0.0-edge.79",
+      "previousVersionObserved": "0.0.0-edge.78",
+      "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+      "packagingCommitObserved": "dc41b993a09acbfd9965a60e774dac83401ff044",
+      "inPlaceUpdate": true,
+      "nativeSDDCasesDirectlyExercised": [
+        "inventory1-C01",
+        "inventory1-C02",
+        "inventory1-C03"
+      ],
+      "method": "Official CUA Chrome UI only; native Supervisor version/update and public app pages. No private HA APIs, injected data, host data reads or clock changes.",
+      "mobile": {
+        "viewport": [
+          390,
+          844
+        ],
+        "theme": "dark",
+        "language": "es",
+        "input": "Actual CDP touch dispatch using fresh observed target rectangles",
+        "selectedProduct": {
+          "focused": true,
+          "top": 389,
+          "bottom": 414.59375,
+          "iframeHeight": 804,
+          "fixedNavigationBottom": 56
+        },
+        "shoppingHeadingAfterRepeatedTouch": {
+          "top": 67.765625,
+          "bottom": 106.1640625,
+          "fixedNavigationBottom": 56,
+          "regionFocused": true,
+          "activeTab": "page"
+        },
+        "overflowArrowTouch": true,
+        "stockAndShoppingTabTouch": true,
+        "unsentExtraAndLiteralNotePreservedAcrossStock": true
+      },
+      "desktop": {
+        "viewport": [
+          1120,
+          844
+        ],
+        "theme": "light",
+        "language": "en",
+        "keyboard": "Enter on Inventory and Shopping tabs",
+        "shoppingHeading": {
+          "top": 68.15625,
+          "bottom": 106.5546875
+        },
+        "regionFocused": true,
+        "bothUnsentStockAndShoppingDraftsPreserved": true
+      },
+      "literalNotesAfterUpdateAndPublicRestart": true,
+      "savedManualExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent",
+          "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low",
+          "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+        }
+      ],
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "movementHistoryAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "purchaseSessionsAfterRestart": "There are no purchase sessions recorded.",
+      "publicRestart": "Clicked Supervisor Reiniciar for version79, reopened app, reread both exact notes/priorities, zero stock/history and empty purchases/sessions.",
+      "cleanup": "Observed version79 Detenido/Iniciar in Supervisor. Exact permanent uninstall dialog open. Action-time browser-policy confirmation requested for only owned app, synthetic household/product2extras and exact source; no backup created. Awaiting answer.",
+      "emulationRestored": true
+    },
+    "sourceFrontendTests": 2184,
+    "remainingFinding": "Mount-local ownership did not protect pending requests after reload under a replacement member. Current durable scope includes verified household/member."
+  },
+  "previousCandidate80": {
+    "package": {
+      "version": "0.0.0-edge.80",
+      "sourceCommit": "a5f74c2829a7a273adef7a459978bbc43474716a",
+      "sourceArchiveSHA256": "3f2e5327e2cbd621fbfa8ce1d4f1424c75e5f05e70ea5257db3a434d78e5544c",
+      "wheelSHA256": "38a00bb5b354e1f72be22922a3ae5acd47c180b1ba6a4ad9fd68cc3a7c3bf56e",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "3468a9311ff2ad2cd5480be6efab6dcef0852693ee269cd5b420e60e97b6d060",
+        ".vite/manifest.json": "e144c8550e1333557351d9ad9dbd64ab538d30bab0db995d25847fe18da911da",
+        "assets/index-BJhKKO99.js": "db6d2367aa3e53cee327ce3956df8c5e2d6331bd6c9c75c29d90fb26e0ee2f16",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      "storageSchema": 37,
+      "status": "Immutable source/wheel and actual local ARM64 image qualified; installed80 and finalsamehead CI/review pending."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T10:58:11.388591+00:00",
+      "image": "domus-162-edge80:pinned",
+      "imageId": "sha256:353ffcedc4323769bfd159e046c8f33cab0717e449f11f42c560107725798e8a",
+      "architecture": "arm64",
+      "sourceCommit": "a5f74c2829a7a273adef7a459978bbc43474716a",
+      "version": "0.0.0-edge.80",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "at": "2026-11-22T11:19:26.878759+00:00",
+      "versionObserved": "0.0.0-edge.80",
+      "previousObserved": "0.0.0-edge.79",
+      "sourceCommit": "a5f74c2829a7a273adef7a459978bbc43474716a",
+      "packagingHead": "4bf4ef00f8d8b7c33a2f4471e2b3e5d3c1c6968b",
+      "appSlug": "abb0c2fd_domus_edge",
+      "household": "Domus QA 162 Edge78",
+      "method": "Official CUA Chrome UI, native Supervisor versions, DOM-backed bundle filename, public app pages. No private HA API/state/clock injection.",
+      "moduleBasenameObserved": "index-BJhKKO99.js",
+      "inPlaceUpdate": true,
+      "backupCreated": false,
+      "newPersistedRecordsFor80": 0,
+      "savedExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent",
+          "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low",
+          "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+        }
+      ],
+      "exactLiteralNotesAfterUpdateAndRestart": true,
+      "literalHTMLChildren": [
+        0,
+        0
+      ],
+      "desktop": {
+        "viewport": [
+          1120,
+          844
+        ],
+        "locale": "en",
+        "theme": "light",
+        "keyboardTabEntry": true,
+        "headingTop": 68.15625,
+        "headingBottom": 106.5546875,
+        "regionFocused": true,
+        "activeTab": "page",
+        "sameOwnerStockAndShopDraftsRetained": true
+      },
+      "mobile": {
+        "viewport": [
+          390,
+          844
+        ],
+        "locale": "es",
+        "theme": "dark",
+        "actualTouchOverflow": true,
+        "actualTouchStockAndShoppingTabs": true,
+        "headingTop": 67.765625,
+        "headingBottom": 106.1640625,
+        "regionFocused": true,
+        "activeTab": "page",
+        "literalDraftRetained": "QA 162 Edge80\nRetain\t\ud83d\ude00",
+        "itemEntry": {
+          "top": 389,
+          "bottom": 414.59375,
+          "iframeViewport": 804,
+          "fixedNavigationBottom": 56,
+          "focused": true
+        }
+      },
+      "restart": "Supervisor Stop observed Detenido/Iniciar at80, then Start observed En ejecuci\u00f3n/Open Web UI at80; fresh public app entry reread exact2notes/quantities/priorities and current history.",
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "historyAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "sessionsAfterRestart": "There are no purchase sessions recorded.",
+      "temporaryEmulationRestored": true,
+      "finalState": "Observed version80 Detenido/Iniciar after native qualification. Permanent cleanup ofexactsameapp/data/source waits previously requested action-time confirmation.",
+      "screenshots": [
+        "native80-installed-version.jpg",
+        "native80-en-light-keyboard.jpg",
+        "native80-es-dark-touch.jpg",
+        "native80-es-dark-item-entry.jpg"
+      ],
+      "limitation": "Normal native journeys and saveddata/stop-start pass; later review finding4657842084 found transient householdfacts503 availability defect. Sourcefixacf8587 and Edge81 will qualify that separately beforemerge."
+    },
+    "sourceFrontendTests": 2188,
+    "remainingFinding": "4657842084: requiring display household facts incorrectly hid Inventory/Shopping when independently verified current capabilities established their household."
+  },
+  "reviewObservedBeforeNativeEvidence": {
+    "head": "5f0bb08a340b24d854f0dc19ecf76c849499b74b",
+    "reviewRun": 45017150697,
+    "branchSyncRun": 45017144691,
+    "commitRun": 45017144716,
+    "result": "Review, Verification, Branch Sync and Commit PASS. All five historical findings resolved. Final evidence head still requires its own applicable checks."
+  },
+  "nativeSpecificationCompatibility": {
+    "nativeCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
+    "retainedPrefixExact": true,
+    "allRequirementAndCaseRowsExact": true,
+    "uniqueRequirements": 11,
+    "distinctCases": 6,
+    "onlyBaselineObservationParagraphsClarified": 2
+  },
+  "previousCandidate81": {
+    "package": {
+      "version": "0.0.0-edge.81",
+      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+      "sourceArchiveSHA256": "c8c2ec35862de62652f8b2665dfd102fc0744c1153cb507006a64f12760c282d",
+      "wheelSHA256": "b8f96d19e77ed10aa027dad7786426eb93456406d5142d03ac75b8dfe4110ce8",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "05146fd7dbeec5654d996289e0abf26b6bbd321dbe1a09737f5f6260d91101a9",
+        ".vite/manifest.json": "56ad5688285421eb8857a69666069eb03ab1344e1fbaa842913ae3c96e6ab7e1",
+        "assets/index-BzSz5xDX.js": "4849181649b810e7ed98f24e554bef490b4087eede92f672b3cddcb29a903b34",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      "storageSchema": 37,
+      "status": "Historical native-qualified Edge81; does not include current hidden-read/guidance corrections. Immutable Edge82 qualification and final latest-head checks remain pending."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T11:24:01.187216+00:00",
+      "image": "domus-162-edge81:pinned",
+      "imageId": "sha256:40e9354b17f6c6208fbaeb6c2df7766e112f9f56748616f68b9290e5b274e0fe",
+      "architecture": "arm64",
+      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+      "version": "0.0.0-edge.81",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "at": "2026-11-22T11:46:14.182841+00:00",
+      "versionObserved": "0.0.0-edge.81",
+      "previousObserved": "0.0.0-edge.80",
+      "sourceCommit": "acf8587d1809e061a17a29c29e9e15782e514829",
+      "packagingHead": "5f0bb08a340b24d854f0dc19ecf76c849499b74b",
+      "appSlug": "abb0c2fd_domus_edge",
+      "household": "Domus QA 162 Edge78",
+      "method": "Official CUA Chrome UI, native Supervisor versions, DOM-backed bundle filename, public app pages. No private HA API/state/clock injection.",
+      "moduleBasenameObserved": "index-BzSz5xDX.js",
+      "inPlaceUpdate": true,
+      "backupCreated": false,
+      "savedExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent",
+          "note": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low",
+          "note": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00"
+        }
+      ],
+      "exactLiteralNotesAfterUpdateAndRestart": true,
+      "literalHTMLChildren": [
+        0,
+        0
+      ],
+      "desktop": {
+        "viewport": [
+          1120,
+          844
+        ],
+        "locale": "en",
+        "theme": "light",
+        "keyboardTabEntry": true,
+        "headingTop": 68.15625,
+        "headingBottom": 106.5546875,
+        "regionFocused": true,
+        "activeTab": "page",
+        "sameOwnerStockAndShopDraftsRetained": true
+      },
+      "mobile": {
+        "viewport": [
+          390,
+          844
+        ],
+        "locale": "es",
+        "theme": "dark",
+        "actualTouchOverflow": true,
+        "actualTouchStockAndShoppingTabs": true,
+        "headingTop": 67.765625,
+        "headingBottom": 106.1640625,
+        "regionFocused": true,
+        "activeTab": "page",
+        "literalDraftRetained": "QA 162 Edge81\nRetain\t\ud83d\ude00",
+        "itemEntry": {
+          "top": 389,
+          "bottom": 414.59375,
+          "iframeViewport": 804,
+          "fixedNavigationBottom": 56,
+          "focused": true
+        }
+      },
+      "restart": "Supervisor Stop observed Detenido/Iniciar at81, Start observed En ejecuci\u00f3n/Open Web UI at81. Fresh public app entry reread exact two notes/quantities/priorities, zero stock/history and empty purchases/sessions.",
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "historyAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "sessionsAfterRestart": "There are no purchase sessions recorded.",
+      "temporaryEmulationRestored": true,
+      "finalState": "Observed version81 Detenido/Iniciar after qualification. Permanent uninstall dialog open; same exact app/data/source confirmation requested earlier remains pending.",
+      "screenshots": [
+        "native81-installed-version.jpg",
+        "native81-en-light-keyboard.jpg",
+        "native81-es-dark-touch.jpg",
+        "native81-es-dark-item-entry.jpg",
+        "native81-cleanup-confirmation.jpg"
+      ],
+      "limitation": "Native installed normal keyboard/touch journeys, saved records and public restart qualified. Partial household-fact503 and member-replacement cases are qualified through owned actual browser fixtures and unit regressions, not injected into native Home Assistant. Final same-head CI and destination checks remain required.",
+      "newPersistedRecordsFor81": 0
+    },
+    "sourceFrontendTests": 2190,
+    "remainingFindings": "b7 review identified hidden Shopping refresh after Stock navigation and permission-denial guidance; current82 source fixes both. Native81 observations qualify only the previous runtime."
+  },
+  "packagingSnapshotAt": "2026-11-22T15:57:12.596800+00:00",
+  "previousCandidate82": {
+    "package": {
+      "version": "0.0.0-edge.82",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "sourceArchiveSHA256": "cf46a8529a4964eda4bd1cec518247424a6ea7e6d5ff592fc85caecd9f7c6bb0",
+      "wheelSHA256": "58b285dce84b7d160cbc0b131f0658c5c56eb9c5d04686b4211dc1ad63ec9dd6",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
+        ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
+      },
+      "storageSchema": 37,
+      "status": "Historical native-normal-qualified82, with known queuedreadfinding4658107744. Sourcefix qualified separately; newimmutable83 stillrequired beforemerge."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T12:18:38.906886+00:00",
+      "image": "domus-162-edge82:pinned",
+      "imageId": "sha256:226273ac0465cb9f43493f8dfba2bee595e97857a144244abefd54582f26dbe2",
+      "architecture": "arm64",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "version": "0.0.0-edge.82",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 18.275,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "installedAcceptance": {
+      "at": "2026-11-22T12:49:17.271Z",
+      "versionObserved": "0.0.0-edge.82",
+      "previousObserved": "0.0.0-edge.81",
+      "sourceCommit": "8ecbf6c145a7a415998766b7b299544487d823fe",
+      "packagingHead": "cf30ae38c06109a7ac53ee2151af46df0931b560",
+      "appSlug": "abb0c2fd_domus_edge",
+      "household": "Domus QA 162 Edge78",
+      "moduleBasenameObserved": "index-CpDS3NEI.js",
+      "method": "Official CUA Chrome UI only: native Supervisor version, public app forms, DOM-backed focus/geometry and actual touch. No private HA API, hidden application state, host data or clock changes.",
+      "backupCreated": false,
+      "newHouseholdProductsTasksOrExtras": 0,
+      "desktop": {
+        "extra": "QA 162 Edge82 unsent extra",
+        "note": "QA 162 Edge82\nRetain\t\ud83d\ude00",
+        "refreshEnabled": true,
+        "heading": {
+          "bottom": 106.5546875,
+          "top": 68.15625
+        },
+        "focused": true
+      },
+      "mobile": {
+        "extra": "QA 162 Edge82 unsent extra",
+        "note": "QA 162 Edge82\nRetain\t\ud83d\ude00",
+        "refreshEnabled": true,
+        "heading": {
+          "bottom": 106.1640625,
+          "top": 67.765625
+        },
+        "focused": true,
+        "activeTab": "page",
+        "actualTouchOverflow": true,
+        "actualTouchStockRefreshAndTabs": true,
+        "itemEntryAfterRestart": {
+          "bottom": 414.59375,
+          "focused": true,
+          "top": 389,
+          "uniqueLocatorMatches": 1,
+          "iframeViewport": 804,
+          "fixedNavigationBottom": 56
+        }
+      },
+      "savedNotesAfterRestart": [
+        {
+          "text": "QA 162 m\u00f3vil\nSegunda\tnota \ud83d\ude00",
+          "children": 0
+        },
+        {
+          "text": "QA 162\nKeep literal\t\ud83d\ude00 <b>text</b>",
+          "children": 0
+        }
+      ],
+      "savedExtras": [
+        {
+          "item": "QA 162 Edge78 Tea",
+          "quantity": "2",
+          "priority": "Urgent"
+        },
+        {
+          "item": "QA 162 Edge78 Bags",
+          "quantity": "1",
+          "priority": "Low"
+        }
+      ],
+      "stockAfterRestart": {
+        "recorded": "0",
+        "reserved": "0",
+        "available": "0"
+      },
+      "historyAfterRestart": "There are no movements for this product.",
+      "purchasesAfterRestart": "There are no purchases recorded.",
+      "sessionsAfterRestart": "There are no purchase sessions recorded.",
+      "restart": "Actual Supervisor Stop reached Detenido/Iniciar at82; Start reached En ejecuci\u00f3n/Open Web UI at82. Fresh entry reread saved notes, priorities, quantities and empty histories.",
+      "temporaryEmulationRestored": true,
+      "finalState": "Observed82Detenido/Iniciar; same exactapp/data/source cleanup confirmation pending. No deletion.",
+      "screenshots": [
+        "native82-installed-version.jpg",
+        "native82-en-light-keyboard.jpg",
+        "native82-es-dark-touch.jpg",
+        "native82-es-dark-item-entry-after-restart.jpg"
+      ],
+      "limitation": "Normal native journeys and data/restart qualified only. Review4658107744 identified a queued-read race while leaving Shopping with busy catalog. Two unit and two actual compiled82 C02 variants reproduced it; source correction is qualified separately for next83 beforemerge."
+    },
+    "sourceFrontendTests": 2196,
+    "remainingFinding": "4658107744: a busy-catalog/alreadyqueued Shopping read survived leaving the destination. Both actual compiled82 C02 variants and both composition cases reproduced it. Currentfae runtime retires the old queue before tracker reset."
+  },
+  "previousCandidate83": {
+    "package": {
+      "version": "0.0.0-edge.83",
+      "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
+      "sourceArchiveSHA256": "7fe626eebba24600268bca3cb032639d096fcdd8670dccc59dd03e91ea9c0a12",
+      "wheelSHA256": "641b66199213ce0e366f516911fb318ff35da7fb4f5e4632fde1434a19c5faf5",
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "1d81622a92cfd7688817f98791a2d16373cff1aef95b2ca1b82b2c5f7f6b6ec5",
+        ".vite/manifest.json": "8f3df26da87ff3597f996627efa3a579d31842e86a2f00f83d0ab6d500610cf9",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-MbFeI55R.js": "417df9de824d7bc791bdd343f914536b8987ab20fce03b187d8da28d92edf2bc"
+      },
+      "storageSchema": 37,
+      "status": "Immutable source/wheel andactualARM64sixchecks qualified. Native83/currentheadCI+review stillrequired, final terminal record in linkedPR."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T13:00:17.050309+00:00",
+      "image": "domus-162-edge83:pinned",
+      "imageId": "sha256:4684d044381aa7b9ccc2763b896d49892b21cd210d1b40d5a6f4cb0656f133a2",
+      "architecture": "arm64",
+      "sourceCommit": "fae1e6ae06993202260d765dbf27bea2144adc89",
+      "version": "0.0.0-edge.83",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 18.44,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true
+    },
+    "normalNativeAcceptance": "https://github.com/vypdev/domus/pull/163#issuecomment-7079835319",
+    "remainingFinding": "4658614224: after Shopping entry had begun its own catalog refresh, leaving it allowed a later Shopping read. Four unit and both actual compiled83 C02 variants reproduce it. Edge84 must qualify the correction."
+  },
+  "previousCandidate84": {
+    "package": {
+      "version": "0.0.0-edge.84",
+      "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
+      "sourceArchiveSHA256": "235e250dd79d53e1d671d109e7af176ca1d21cc4821add78f2818d98e1651057",
+      "wheelSHA256": "0325cc9c8cee709d3b661bd5b994791077ec63c74367f599b7a71eaeeddfbca7",
+      "storageSchema": 37,
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "49a2c4daa4b40e72ce87dfd54a514bb88e2109cd668f07184935b02214c36329",
+        ".vite/manifest.json": "c247d0b249d0ec3c4420a3cf59c2b6c738c064848372277da3e98e2301bdeba4",
+        "assets/index-CUfMikor.js": "e95d43c7b92dd9f839438751df04fc21d8dbf1963d6ac0c44760792c62e42b35",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      "status": "Immutable source/wheel and actual ARM64 six checks qualified. Native84 and final samehead CI/review remain required in linkedPR."
+    },
+    "actualLocalImage": {
+      "at": "2026-11-22T15:35:11.043530+00:00",
+      "image": "domus-162-edge84:pinned",
+      "imageId": "sha256:069d0718d703bbe97ffa77031fafaea932894846fbd0cbc6638dfbabcb821d21",
+      "architecture": "arm64",
+      "sourceCommit": "e53b928411e542ca8bdd849890df10bf19cf65a3",
+      "version": "0.0.0-edge.84",
+      "allPythonFiles": 250,
+      "allUIFiles": 4,
+      "allProductBytesMatchWheel": true,
+      "selectedTests": 6,
+      "testSeconds": 17.61,
+      "genuineSourceSchemas": [
+        20,
+        36
+      ],
+      "restartAndSnapshotRestoration": true,
+      "nativeAndStandaloneListeners": true,
+      "originalLog": "/private/tmp/domus-162-edge84-qualified-arm64-original.log",
+      "selection": [
+        "test_pinned_edge_runtime_and_bundle_match_every_reviewed_product_file",
+        "test_pinned_edge_native_launcher_authority_storage_and_restart",
+        "test_pinned_edge_standalone_listener_serves_the_exact_private_bundle",
+        "test_image_requires_supervisor_configuration_and_never_falls_back_to_an_admin",
+        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[20]",
+        "test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data[36]"
+      ]
+    },
+    "nativeQualification": "Partial: exact installed module index-CUfMikor.js; EN keyboard and drafts/literal notes pass. ES390 touch return from deep Shopping leaves Inventory heading above viewport. App stopped; overrides reset; no new household records or backup.",
+    "publicFinding": "https://github.com/vypdev/domus/pull/163#issuecomment-7081605813",
+    "redEvidence": "Both actual compiled84 C01 deployments fail the heading-visibility assertion before correction; original traces/screenshots/context retained."
+  },
+  "backendRaceQualification": {
+    "at": "2026-11-22T16:51:44.668036+00:00",
+    "headBeforeCommit": "e9ea697bbff9e0dad160c15c05d1f283fd0dba16",
+    "originalCIFailure": {
+      "run": 45041176913,
+      "job": 137265757690,
+      "test": "test_balance_races_and_original_retry[arrival]",
+      "result": "6031 passed/1 failed in1563.10sec",
+      "error": "StorageBusy during schema inspection; original holder duration/scheduling not logged",
+      "receipt": "/private/tmp/domus-162-edge85-final-evidence/backend-failed/diagnostic-receipt.json"
+    },
+    "controlledBeforeFix": "8 real bounded-busy failures/4 natural-race passes,4.89sec",
+    "controlledAfterFix": "12 PASS3.69sec",
+    "affectedAndSQLiteCampaign": "107 PASS11.95sec",
+    "fullBackendCollected": 6040,
+    "productionBusyBudgetMs": 250,
+    "sameOriginalRequestRetry": "Exactly one explicit client retry after both contenders finish. Same key/payload/revision; no new key, automatic rebase, loop or workflow retry.",
+    "assertions": "All previous balance, receipt, no-cycle and audit/outbox assertions retained. Independent receipt/audit/outbox row counts checked before/after busy recovery and original receipt replay; no partial or duplicate effects.",
+    "runtimePayload": "All250 Python+4compiledUI byte-identical to installed85; no new Edge required.",
+    "newNativeCaseIDs": 0,
+    "remaining": "New same-head complete CI/review and destination acceptance. No unchanged CI retry launched."
+  }
+}

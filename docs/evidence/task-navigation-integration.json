@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery. Manual shopping requests retain a literal optional note and an independently localized priority per source, with exact original-command recovery and later-draft retention.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery. Manual shopping requests retain a literal optional note and an independently localized priority per source, with exact original-command recovery and later-draft retention. Shopping has its own localized destination; Inventory retains products and stock. Both reuse the existing command and original-operation recovery owner.",
   "actualProductFiles": {
-    ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+    "index.html": "8470da65089af054428a2d82e16355a94251e8712e5706848031805e238f118f",
+    ".vite/manifest.json": "76344cb4588d48fc631b9bf5edc4b3b3b083e08105f1a2184c1a41b2e8f93e5f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
-    "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+    "assets/index-eQtqrWRl.js": "06df87c3c49ccdce9d589d01b55d9b462bb5cdbb088896909702b02ff1ea4410"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -1580,5 +1580,56 @@
       "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46"
     },
     "scope": "Historical76sameUI acceptednativeandcleaned; fullreviewrequiredisolatedsurrogatefix."
+  },
+  "preShoppingWorkspaceNavigation": {
+    "actualProductFiles": {
+      ".vite/manifest.json": "efae3f51bb022e45dabd5fd635bf3d60528c41591b86866df02e0f9adae40f71",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CrsaPHfT.js": "030bba44134f41c325d79fe4fde621574a49066fc679fd26fdebb06d45046a46",
+      "index.html": "55b70e95cc2b236a0c1798bc3a82daf836ec3f3d3213bc4cb43b89c296965942"
+    },
+    "qualification": "Accepted Edge.77 before #162; original runtime and package records remain in shopping-manual-annotations.json"
+  },
+  "preShoppingViewportCorrection": {
+    "version": "0.0.0-edge.78",
+    "sourceCommit": "bfc59504ffa370e14b859d692ba350e22750109a",
+    "actualProductFiles": {
+      "index.html": "013ae970ff918ccf2efcdcef4ece16297432b4bdbdc17c527f70e96a427a3289",
+      ".vite/manifest.json": "46513918f848c3371e3d53f7766d8141340a4e586921b699f0103d701f7fc79f",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-dGTRiM6Z.js": "f28e34132dc0f130a5f302a9f5e4df44476390b2d363f6197600e8a17d664747"
+    }
+  },
+  "preDurableShoppingOwnerCorrection": {
+    "version": "0.0.0-edge.79",
+    "sourceCommit": "8ff8bf2d037b6726c00d9bce5a79f7f4086b3077",
+    "actualProductFiles": {
+      "index.html": "661dff66a369e7834f1f9509298da00e754bcf18a92a17df31ea9fd0fc7c3424",
+      ".vite/manifest.json": "c6b942b02d3a8323b00313b9a276edb96ff52a28b1be575fcede7ccd70051dc2",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DnaPqERy.js": "08a0708a2dc587faa7c9b042fdd693e262a580cb8bce5baa8b860acc17561e89"
+    }
+  },
+  "prePartialHouseholdFactCorrection": {
+    "version": "0.0.0-edge.80",
+    "sourceCommit": "a5f74c2829a7a273adef7a459978bbc43474716a",
+    "actualProductFiles": {
+      "index.html": "3468a9311ff2ad2cd5480be6efab6dcef0852693ee269cd5b420e60e97b6d060",
+      ".vite/manifest.json": "e144c8550e1333557351d9ad9dbd64ab538d30bab0db995d25847fe18da911da",
+      "assets/index-BJhKKO99.js": "db6d2367aa3e53cee327ce3956df8c5e2d6331bd6c9c75c29d90fb26e0ee2f16",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+    }
+  },
+  "preShoppingActiveRefreshCorrection": {
+    "index.html": "05146fd7dbeec5654d996289e0abf26b6bbd321dbe1a09737f5f6260d91101a9",
+    ".vite/manifest.json": "56ad5688285421eb8857a69666069eb03ab1344e1fbaa842913ae3c96e6ab7e1",
+    "assets/index-BzSz5xDX.js": "4849181649b810e7ed98f24e554bef490b4087eede92f672b3cddcb29a903b34",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+  },
+  "preShoppingQueuedNavigationRetirement": {
+    "index.html": "17e1a8540874a252db9e5621db7c270976616ebf037c40004b1e7f7d06ae7e3f",
+    ".vite/manifest.json": "9087108c39466ad9c3d01c0e721a36458f59a45578bb8c148660ca89e3b1dfed",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-CpDS3NEI.js": "756d38120e68e43a988219105fa94da0ac89ca22bfd24499652f502937e1b466"
   }
 }

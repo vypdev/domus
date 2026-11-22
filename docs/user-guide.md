@@ -1,6 +1,6 @@
 # Intended household journey
 
-The verified Edge preview includes Overview, Tasks, Calendar, Inventory with Shopping, Family and
+The Edge preview includes Overview, Tasks, Calendar, Family, Shopping, Inventory and
 Household administration. This guide covers those workflows and the intended first integrated
 release. See the [installation guide](installation-home-assistant.md) for the current preview and
 the [roadmap](roadmap.md) for remaining work.
@@ -14,10 +14,25 @@ During explicit setup, choose how administration maps from HA: all HA administra
 ## Household navigation
 
 Once household access is verified, **Overview** jumps to your current household status and
-**Tasks** opens the task workspace. **Household** opens administration. The same links work in Home Assistant Ingress and
+**Tasks** opens the task workspace. **Shopping** opens the shared shopping list, purchases,
+store sessions and receipts. **Inventory** opens products, stock and locations.
+**Household** opens administration. The same links work in Home Assistant Ingress and
 standalone. Use Tab and Enter or the browser's Back and Forward actions. Moving between
 sections keeps an unsent draft in the current page; reload verifies access again and does
 not restore an unsent administration draft.
+
+Switching between Shopping and Inventory keeps your current forms, literal notes,
+priority and selected work for the same verified household and participant. Use
+**Refresh Shopping** for a fresh read. If a read fails, the last loaded information
+and draft remain visible with an explanation; Shopping changes wait for a successful
+refresh. Denied access hides private facts. **Check original operation** recovers an
+uncertain request using its original identity. It does not clear an unrelated draft.
+Signing out or changing household or participant retires protected work. In Spanish,
+these controls are **Compras**, **Actualizar Compras** and **Consultar operación original**.
+
+`#shopping` opens Shopping directly. Previously shared `#inventory-shopping/…`
+item links still open and focus the matching Shopping row. Unknown or malformed
+fragments show Overview without submitting a request.
 
 ### Task summary on Overview
 
@@ -232,13 +247,13 @@ request**.
 
 In **Overview**, **Items to buy** shows the exact number of outstanding items
 and the first 25 in shared-list order, with their quantities and units.
-Select an item to open **Inventory** and focus that row in the shared list.
-If the item has been covered or removed, Inventory opens the current list.
+Select an item to open **Shopping** and focus that row in the shared list.
+If the item has been covered or removed, Shopping opens the current list with an explanation.
 After a load failure, use **Retry shopping summary** to refresh the count.
 In Spanish, these controls are **Artículos por comprar** and
 **Volver a cargar el resumen de compras**.
 
-In **Inventory**, choose **Show shared shopping list** in the Shopping card.
+Open **Shopping** to see the shared list. Use **Refresh Shopping** to read it again.
 Each Pantry product shows the amount to buy and the contribution from Pantry,
 Tasks and manual extras. Choose **Show shopping sources** to see the Task
 material plans, matched reservations, available stock and incoming purchases
@@ -249,7 +264,7 @@ name and a whole number of pieces. Free-text requests stay separate even when
 their names match a Pantry product. A shopping manager can clear an untracked
 extra from the list or a tracked extra from its source details. Changes to
 stock, reservations and purchases recalculate automatic needs. Extras stay on
-the list until a manager clears them. Use **Recover original request** if an
+the list until a manager clears them. Use **Check original operation** if an
 add or clear response is lost.
 
 Each manual request can include **Note (optional)** and a **Priority**: Low,
@@ -283,12 +298,12 @@ arrival, cancel the outstanding balance, or post a receipt to Pantry with the
 required access. Manage manual extras
 using their existing clear controls.
 
-If the session response is lost, choose **Recover original request** and then
+If the session response is lost, choose **Check original operation** and then
 **Show recorded session** to open the saved trip.
 
 ### Shopping and physical receipts
 
-In **Inventory**, choose **Show purchases** in the Shopping card. With shopping
+In **Shopping**, choose **Show purchases**. With shopping
 management access, select a Pantry product or enter an untracked item and record
 the quantity bought. Tracked purchases use the product's base unit. Untracked
 items use whole pieces. A product can have one open purchase while some units
@@ -302,7 +317,7 @@ this point. For a tracked item, an inventory manager chooses **Post to Pantry**
 on each physical receipt. The receipt then shows the linked stock movement.
 
 If Pantry cannot accept the full receipt, make space and post that saved receipt
-again. If a response is lost, choose **Recover original request**. After a
+again. If a response is lost, choose **Check original operation**. After a
 snapshot restoration, check the current receipt and stock before making a new
 request.
 
@@ -316,7 +331,7 @@ The original receipt stays in history with the reason, shopper and time of
 the void. Its quantity returns to **Still due**. Use **Record physical
 receipt** to enter the amount that actually arrived. An inventory manager can
 then post the new receipt to Pantry. If the void response is lost, choose
-**Recover original request**.
+**Check original operation**.
 
 ### Correcting a receipt already posted to Pantry
 
@@ -330,8 +345,8 @@ actual arrival.
 The receipt history shows both movement identifiers, the reason, author and
 time. Inventory shows the original entry and its compensating movement.
 Review active reservations and any other open purchase for the product if a
-correction is rejected. If the response is lost, choose **Recover original
-request**.
+correction is rejected. If the response is lost, choose **Check original
+operation**.
 
 A previous reversal made directly in Inventory is labeled separately in
 receipt history. Its original operation remains available for recovery.
@@ -349,8 +364,8 @@ link to the original intake. The shared list uses the resulting stock when
 calculating replenishment.
 
 Review active reservations if a return is rejected. A receipt already
-corrected or returned has its history available for review. Choose **Recover
-original request** when a return response is lost.
+corrected or returned has its history available for review. Choose **Check
+original operation** when a return response is lost.
 
 ### Cancelling an outstanding purchase balance
 
@@ -362,8 +377,8 @@ The item keeps its purchased quantity and receipt history. Its details show
 the cancelled quantity, reason, shopper and time. Inventory managers can still
 post any physical receipts that were already recorded. Cancelling the balance
 removes that quantity from incoming supply so unmet Pantry and Task demand
-can return to the shared list. If the response is lost, choose **Recover
-original request**.
+can return to the shared list. If the response is lost, choose **Check
+original operation**.
 
 ### Subsequent supplies workflows
 

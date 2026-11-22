@@ -3,6 +3,20 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.85 reveals the Inventory heading when you return from Shopping work further down the page. Reopening the Inventory tab also brings its heading into view. Drafts and original operations stay intact.
+
+Edge.84 keeps Inventory available when you leave Shopping while it is refreshing. Returning opens the current Shopping work. Drafts and original operations stay intact.
+
+Edge.83 keeps Inventory available when you switch to it while Shopping is waiting for product information. Return to Shopping to read its current list. Drafts and original requests are preserved.
+
+Edge.82 refreshes retained Shopping work only after returning from Inventory. A Stock refresh does not repeat a hidden Shopping read. Denied operations explain the relevant Shopping, Inventory or combined access, while purchase drafts remain available for correction and retry. Saved notes, stock, selections and original receipts are preserved.
+
+Edge.81 keeps Inventory and Shopping available when general household details cannot load but current access is independently verified. **Refresh status** retries those details. Existing permissions still control every action; saved notes, stock and receipts are preserved.
+
+Edge.80 keeps each interrupted Shopping or stock request with its verified household and member after reload. An older pending browser request that cannot establish its owner is retired without resending it; review the current records before making another change. Existing server receipts and schema-37 data are preserved.
+
+Edge.79 opens **Shopping / Compras** directly, keeps its heading and selected items visible below navigation, and returns item links to the general shared list. Inventory keeps products and stock. Switching between these two destinations preserves drafts and original-operation recovery. Failed reads retain entered work and offer **Refresh Shopping**; denied access hides private information. This update preserves schema-37 notes, priorities, stock and receipts.
+
 Edge.75 rejects unsupported control characters in a shopping note while preserving
 the accepted text for correction and retry.
 

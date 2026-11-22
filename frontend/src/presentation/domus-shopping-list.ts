@@ -86,7 +86,11 @@ export class DomusShoppingList extends LitElement {
       const selector = shoppingFocus.found
         ? '[data-shopping-item="' + CSS.escape(shoppingFocus.key) + '"]'
         : '#shopping-list-title';
-      this.renderRoot.querySelector<HTMLElement>(selector)?.focus();
+      const target = this.renderRoot.querySelector<HTMLElement>(selector);
+      target?.focus();
+      // Nested shared controls finish layout before the next frame. A later
+      // user focus must win over this continuation of the requested item entry.
+      requestAnimationFrame(() => {if (target?.matches(':focus')) target.scrollIntoView({block:'center'});});
     }
     if (shoppingSources && shoppingSources.item.productId !== previous?.shoppingSources?.item.productId)
       this.renderRoot.querySelector<HTMLElement>('#shopping-sources-title')?.focus();
@@ -313,7 +317,7 @@ export class DomusShoppingList extends LitElement {
       ${item.productId === null ? this.annotation(item.annotation) : nothing}
       ${mayClear ? this.button('addToSession', blocked || !this.canSelect(shoppingItemKey(item)), () => this.addToSession(item)) : nothing}
       ${item.productId !== null
-        ? this.button('showSources', this.view.busy, {type:'shopping-sources', productId:item.productId})
+        ? this.button('showSources', this.view.busy || this.view.retainedReport != null, {type:'shopping-sources', productId:item.productId})
         : mayClear ? this.clearButton(item.extraId!, blocked) : nothing}
     </li>`;
   }
@@ -336,7 +340,8 @@ export class DomusShoppingList extends LitElement {
   }
 
   protected render() {
-    const {report, shoppingList, shoppingSources, busy, pending, scope} = this.view;
+    const {report, shoppingList, shoppingSources, pending, scope} = this.view;
+    const busy = this.view.busy || this.view.retainedReport != null;
     const blocked = busy || pending || scope.readOnly;
     const mayClear = report!.mayShop && !scope.readOnly;
     return html`<section aria-labelledby="shopping-list-title">

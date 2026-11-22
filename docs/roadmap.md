@@ -12,8 +12,10 @@ The following milestones are internal integration steps, not proposals to drop l
 | M4 — Automation and HA surface | One durable engine, simple/default and optional advanced editors, entities and response services across domains | Replay/restart/loop/partial-run cases plus disposable-HA contracts in both deployment targets |
 | M5 — Integrated acceptance | Complete household overview, cross-domain UX/accessibility, access control, Stable/Edge packaging | Full CI Check; local Google Chrome dogfooding and recorded cleanup |
 
-The shared navigation connects Overview, Tasks and Household. Additional destinations become
-available as their workflows are ready.
+The shared navigation connects Overview, Tasks, Calendar, Family, Shopping, Inventory and
+Household. The bounded [Shopping destination](../specs/shopping-workspace-navigation.md)
+separates shared-list and purchase work from products and stock; its
+[qualification](evidence/shopping-workspace-navigation-qualification.md) records the current gates.
 The product is not considered first-release complete at M2 or M3.
 Tests, user documentation and recovery accompany each usable workflow.
 

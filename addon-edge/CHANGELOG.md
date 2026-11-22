@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.0.0-edge.85
+
+- Reveal the Inventory heading when returning from Shopping work further down the page.
+- Keep repeated Inventory entry clear on mobile touch and desktop keyboard layouts.
+- Preserve drafts, schema-37 notes, priorities, stock and original receipts.
+
+## 0.0.0-edge.84
+
+- Keep Inventory available when leaving Shopping during its own refresh or item lookup.
+- Open current Shopping work when returning, preserving drafts and the original operation.
+- Preserve schema-37 notes, priorities, stock and receipts.
+
+## 0.0.0-edge.83
+
+- Retire Shopping navigation queued before a section change, including while the product catalog is loading.
+- Keep the destination you opened responsible for its reads and status; a later Shopping entry still refreshes its current list.
+- Preserve drafts, original requests, schema-37 notes, priorities, stock and receipts.
+
+## 0.0.0-edge.82
+
+- Keep Stock usable when a former Shopping item read is denied; refresh retained Shopping work only after returning to its current destination.
+- Explain the current Shopping, Inventory or combined permissions needed by each rejected operation, while preserving purchase drafts for correction and retry.
+- Preserve schema-37 notes, priorities, selections and original-operation identity.
+
+## 0.0.0-edge.81
+
+- Keep Inventory and Shopping available when general household details cannot load but current household/member access remains independently verified.
+- Keep the same verified household identity for pending requests and current permission revisions.
+- Preserve schema-37 data, literal notes, original receipts and current server permissions.
+
+## 0.0.0-edge.80
+
+- Keep an interrupted Shopping or stock request bound to the verified household and member after reload.
+- Preserve the matching owner's exact original request; retire older ownerless or unmatched browser packets without resending them. Committed server receipts remain available.
+- Preserve schema-37 notes, priorities, stock and the existing packet format.
+
+## 0.0.0-edge.79
+
+- Keep Shopping headings and selected items visible below fixed navigation after keyboard, touch and history entry.
+- Let a later user focus win over a pending item scroll and use Shopping-specific loading guidance.
+- Disable source actions on retained data and return from item links to the general shared list.
+- Preserve Edge.78 schema-37 records, literal notes, priorities, ledger and original receipts.
+
+## 0.0.0-edge.78
+
+- Open Shopping directly from the localized household tabs, Overview item links and existing shared shopping fragments.
+- Keep Inventory for products, stock, locations and materials while preserving same-participant drafts and one original-operation recovery owner.
+- Retain last-loaded Shopping information after failed reads, distinguish denied access and restore contextual focus during rapid history navigation.
+- Preserve schema 37, the stock ledger, original receipts and the published shared component cohort.
+
 ## 0.0.0-edge.76
 
 - Publish the same shopping note character restrictions enforced by the command, including allowed tabs and line breaks.

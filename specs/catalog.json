@@ -832,7 +832,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item\u2019s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }
@@ -946,10 +946,11 @@
       "status": "proposed",
       "scope": "A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.; combined native/standalone browser CI uses a bounded complete-suite deadline with protected candidate workflow qualification",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-08",
+      "lastVerified": "2026-11-22",
       "specs": [
         "specs/application-experience.md",
-        "specs/household-entry-interface.md"
+        "specs/household-entry-interface.md",
+        "specs/shopping-workspace-navigation.md"
       ],
       "workflows": [
         ".github/workflows/ci_check.yml"
@@ -968,7 +969,13 @@
         "frontend/src/composition/entry-runtime.ts",
         "frontend/src/presentation/domus-app.ts",
         "frontend/src/presentation/messages.ts",
-        "frontend/src/presentation/styles.ts"
+        "frontend/src/presentation/styles.ts",
+        "frontend/src/presentation/domus-shopping-workspace.ts",
+        "frontend/src/presentation/inventory-operation-feedback.ts",
+        "frontend/src/presentation/domus-shopping.ts",
+        "frontend/src/presentation/domus-shopping-list.ts",
+        "frontend/src/application/inventory-controller.ts",
+        "frontend/src/composition/entry-page.ts"
       ],
       "tests": [
         "frontend/tests/domain.test.ts",
@@ -986,7 +993,13 @@
         "frontend/tests/runtime.test.ts",
         "frontend/tests/component.test.ts",
         "frontend/tests/language.test.ts",
-        "frontend/tests/e2e/catalog.spec.ts"
+        "frontend/tests/e2e/catalog.spec.ts",
+        "frontend/tests/shopping-workspace.test.ts",
+        "frontend/tests/inventory.test.ts",
+        "frontend/tests/page.test.ts",
+        "frontend/tests/e2e/shopping-workspace-navigation.spec.ts",
+        "frontend/tests/e2e/workspace-navigation.spec.ts",
+        "frontend/tests/e2e/shopping-annotations.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -995,11 +1008,13 @@
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
         "docs/household-entry-interface.md",
-        "docs/evidence/household-entry-interface.json"
+        "docs/evidence/household-entry-interface.json",
+        "docs/evidence/shopping-workspace-navigation-qualification.md",
+        "docs/evidence/shopping-workspace-navigation.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial entry UI/controller/journal/HTTP and browser lifecycle composition: 490 Chromium cases, all four metrics at 100% on twelve runtime modules. Fourteen fictional Storybook states and eighteen built-catalog browser cases cover both locales/deployments, keyboard, focus and narrow light/dark layouts. Product entrypoint/static delivery, actual backend browser journeys, full acceptance and owner adoption remain incomplete.",
+        "implementationEvidence": "Partial entry UI/controller/journal/HTTP and browser lifecycle composition: 490 Chromium cases, all four metrics at 100% on twelve runtime modules. Fourteen fictional Storybook states and eighteen built-catalog browser cases cover both locales/deployments, keyboard, focus and narrow light/dark layouts. Product entrypoint/static delivery, actual backend browser journeys, full acceptance and owner adoption remain incomplete. Issue #162 adds direct Shopping navigation with one existing command/recovery owner. The owning Shopping qualification record reports the current executed frontend inventory with all four coverage metrics at 100% globally and per file; twelve new browser variants, 68 catalog cases and retained Shopping/Stock regressions pass. The current source qualification includes active-entry retirement after an admitted refresh, with fourteen controller regressions and all twelve new browser variants passing once without retries. Full same-head source and actual CPU-image jobs remain required; immutable installed Edge acceptance is recorded separately. The six-case delta remains owned by application-experience.md; shopping-workspace-navigation.md is its implementation map.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }
