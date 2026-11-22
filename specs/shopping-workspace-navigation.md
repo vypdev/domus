@@ -61,6 +61,12 @@ incompatible-scope retirement without a lookup, resend or replacement request.
 Previously committed server receipts are unaffected. Failed retirement keeps
 recovery and writes blocked rather than adopting the old request.
 
+When household display facts are temporarily unavailable, the independently
+verified administration capabilities can still establish the household identity.
+That same resolved identity scopes both the request owner and permission revision
+binding. Without verified household/member identity, Inventory and Shopping do
+not obtain a catalog. These reads retain their existing server authorization.
+
 ## Compatibility, configuration and limits
 
 There is no backend, API, SQLite schema, ledger or receipt-format change.

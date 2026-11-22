@@ -823,7 +823,7 @@ test('Shopping obtains no catalog before the current household can be verified',
   const f = fixture(); f.phase('active'); f.page.location.href += '#shopping';
   const original = f.fetch.getMockImplementation()!;
   f.fetch.mockImplementation(async (path, init) => {
-    if (path.endsWith('/api/v1/household') && init.method === 'GET') {
+    if ((path.endsWith('/api/v1/household') || path.endsWith('/api/v1/administration/capabilities')) && init.method === 'GET') {
       const response = new Response(JSON.stringify({state:'blocked',code:'unavailable',message:'Unavailable.',action_required:'Retry.',correlation_id:'cor_home'}),
         {status:503, headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
       Object.defineProperty(response, 'url', {value:new URL(path, f.page.location.href).href}); return response;
@@ -832,7 +832,29 @@ test('Shopping obtains no catalog before the current household can be verified',
   });
   const {app} = await f.open();
   expect(app.view?.household).toBeNull(); expect(app.inventory).toBeNull();
+  expect(app.administration?.capabilities).toBeNull();
   expect(f.fetch.mock.calls.some(([path]) => path.includes('/api/v1/inventory?'))).toBe(false);
+});
+
+test.each(['inventory','shopping'] as const)('the verified %s workspace survives an unavailable household fact read', async destination => {
+  const f = fixture(); f.phase('active'); f.page.location.href += '#'+destination;
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (path.endsWith('/api/v1/household') && init.method === 'GET') {
+      const reply = new Response(JSON.stringify({state:'blocked',code:'unavailable',message:'Unavailable.',
+        action_required:'Retry current household facts.',correlation_id:'cor_partial_home'}),
+        {status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(reply,'url',{value:new URL(path,f.page.location.href).href}); return reply;
+    }
+    return original(path,init);
+  });
+  const {app} = await f.open();
+  expect(app.view).toMatchObject({phase:'ready',household:null,decision:{householdReadable:true}});
+  expect(app.administration?.capabilities?.householdId).toBe('home');
+  await vi.waitFor(() => expect(app.inventory?.report).toMatchObject({mayManage:true}));
+  if (destination === 'shopping') await vi.waitFor(() => expect(app.inventory?.shoppingList?.cursor).toBe('more-list'));
+  expect(f.fetch.mock.calls.some(([path])=>path.includes('/api/v1/inventory?'))).toBe(true);
+  expect(f.fetch.mock.calls.some(([path,init])=>path.includes('/inventory/requests/')||init.method==='POST')).toBe(false);
 });
 
 test('a member replacement retires unsent Shopping text without changing unrelated browser state', async () => {

@@ -491,7 +491,7 @@ export function mountEntry(page: EntryPage): PageMount {
           && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session) {
         const context = entry.session.context;
         const authority = element.administration?.access;
-        const home = entry.household?.householdId, member = authority?.member;
+        const home = entry.household?.householdId ?? element.administration?.capabilities?.householdId, member = authority?.member;
         if (!home || !member || authority?.state !== 'active') {
           clearShoppingNavigation(); shoppingNavigationScope = null; shoppingNavigationRoute = null;
           inventoryController.bind(null); return;
@@ -511,7 +511,7 @@ export function mountEntry(page: EntryPage): PageMount {
           }
         }
         inventoryOwner = {identity, key};
-        const authorityKey = JSON.stringify([entry.household?.householdId, authority?.member?.memberId,
+        const authorityKey = JSON.stringify([home, authority?.member?.memberId,
           authority?.member?.revision, authority?.policyRevision]);
         inventoryController.bind({key, context, readOnly:entry.decision.readOnly, authorityKey});
         const scope = element.inventory!.scope;

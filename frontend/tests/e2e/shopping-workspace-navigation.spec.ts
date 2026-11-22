@@ -206,6 +206,18 @@ for (const mode of ['native','standalone'] as const) {
   test(`inventory1-C04 (#162): current reader, requester and shopper grants with stale and denied reads in ${mode}`, async ({page,context,browser,request}) => {
     test.setTimeout(90_000);
     const {origin,base,tabs,shop} = await create(page,context,request,mode);
+    const homePath = new URL(base+'api/v1/household').pathname;
+    const householdFacts = (url: URL) => url.pathname === homePath;
+    const partialWrites:string[] = [];
+    page.on('request',item=>{if(item.url().startsWith(base+'api/v1/')&&item.method()!=='GET')partialWrites.push(item.url());});
+    await page.route(householdFacts,route=>route.fulfill({status:503,headers:{'Cache-Control':'no-store'},
+      json:{state:'blocked',code:'unavailable',message:'Facts unavailable.',action_required:'Retry household facts.',correlation_id:'cor_partial_household'}}));
+    await page.reload();
+    await tabs.getByRole('link',{name:'Shopping',exact:true}).click();
+    await expect(shop.getByRole('textbox',{name:'Note (optional)',exact:true})).toBeEnabled();
+    await expect(shop.getByRole('button',{name:'Refresh Shopping',exact:true})).toBeEnabled();
+    expect(partialWrites).toEqual([]);
+    await page.unroute(householdFacts); await page.reload();
     await tabs.getByRole('link',{name:'Shopping',exact:true}).click();
     const note = shop.getByRole('textbox',{name:'Note (optional)',exact:true}); await note.fill('Retain through outage');
     const catalogPath = new URL(base + 'api/v1/inventory').pathname;
