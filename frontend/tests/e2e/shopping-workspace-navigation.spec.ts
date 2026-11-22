@@ -219,9 +219,17 @@ for (const mode of ['native','standalone'] as const) {
     await tabs.getByRole('link',{name:'Shopping',exact:true}).click();
     expect(await page.evaluate(() => sessionStorage.getItem('domus.inventory.v1'))).toBe(pending);
     await expect(note).toHaveValue(literal); expect(posts).toHaveLength(1);
-    const original = page.waitForResponse(base + 'api/v1/inventory/requests/shopping.purchase/' + key).then(async receipt =>
-      ({status:receipt.status(),body:await receipt.body()}));
-    await recover.press('Enter'); const receipt = await original;
+    const recoveryUrl = base + 'api/v1/inventory/requests/shopping.purchase/' + key;
+    const originals:{status:number;body:Buffer}[] = [];
+    // Retain the real HTTP bytes before delivery; Chromium can retire its response-body handle.
+    await page.route(recoveryUrl,async route => {
+      const upstream = await route.fetch({maxRetries:0,maxRedirects:0}), body = await upstream.body();
+      originals.push({status:upstream.status(),body});
+      await route.fulfill({response:upstream,body});
+    });
+    const original = page.waitForResponse(recoveryUrl);
+    await recover.press('Enter'); expect((await original).status()).toBe(200);
+    expect(originals).toHaveLength(1); const receipt = originals[0];
     expect(receipt.status).toBe(200); expect(JSON.parse(receipt.body.toString())).toMatchObject({operation_id:operation});
     await expect(shop.getByText('Purchase recorded.',{exact:true})).toBeVisible();
     // Recovery of a different command cannot clear this still-unsubmitted extra/session draft.
@@ -231,6 +239,7 @@ for (const mode of ['native','standalone'] as const) {
     expect(posts).toHaveLength(1); expect(await page.evaluate(() => sessionStorage.getItem('domus.inventory.v1'))).toBeNull();
     const after = await stats(); for(const table of ['receipts','audit','outbox']) expect(after.counts[table]).toBe(before.counts[table]+1);
     await info.attach('shopping-original-receipt',{body:receipt.body,contentType:'application/json'});
+    await page.unroute(recoveryUrl);
   });
 
   test(`inventory1-C04 (#162): current reader, requester and shopper grants with stale and denied reads in ${mode}`, async ({page,context,browser,request}) => {
