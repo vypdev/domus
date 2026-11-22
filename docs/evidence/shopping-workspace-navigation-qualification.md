@@ -96,20 +96,57 @@ unchanged retry. Both historical actual CPU jobs qualified 62 container and 86
 browser cases, plus all ten native HA modules at 100%; none is rebound to this
 changed runtime or final packaging head.
 
-## Installed and final acceptance still required
+## Installed acceptance and remaining final checks
 
-Update the same independent synthetic app to 85 through public Home Assistant UI,
-verify Supervisor version and matching DOM-backed module basename, and repeat
-wide English light keyboard and narrow Spanish dark touch journeys. Check deep
-Shopping-to-Stock heading entry, repeated tabs, Stock refresh/reentry, both drafts,
-visible contextual item focus, exact saved notes/priorities/quantities, zero stock
-and empty movement/purchase/session history through a real public stop/start.
-Do not inject private HA state, faults or clocks. The deterministic adversarial
-races belong to owned actual-browser fixtures; normal native acceptance and exact
-source/image identity complement them.
+The same independent synthetic app was updated from 84 to 85 without a backup or
+new household records. Supervisor version 85 and DOM-backed module
+`index-eQtqrWRl.js` match the qualified payload. Wide English light keyboard and
+narrow Spanish dark actual-touch journeys pass, including deep Shopping-to-Stock
+heading entry, repeated tabs, Stock refresh/reentry, retained drafts and literal
+notes, and actual-touch Overview item entry. The focused item is uniquely
+identified and visible below sticky navigation. Representative original native
+screenshots were visually reviewed for legibility and clipping.
+
+A user-reported independent HA interruption coincided with unavailable reads and
+automatic app remount during the first mobile pass. The original observation is
+retained; fresh post-reconnect navigation and drafts pass. No source cause or
+zero-interruption native claim is inferred. A real public app Stop/Start then
+retains Tea two/Urgent and Bags one/Low with both exact LF/HT/emoji notes and
+literal markup-looking text, with zero HTML children. Recorded/reserved/available
+stock remain zero; movement history, purchases and sessions are empty. The app
+is stopped again and temporary viewport/media/touch overrides are reset. Native
+acceptance and final same-head CI remain distinct.
+
+### Bounded-busy race verification
+
+The e9 CI reported 6,031 passes and one `StorageBusy` in the unchanged purchase
+balance arrival race during schema inspection. Its raw coverage still reaches
+100% on all 250 modules; the CI coverage-audit step did not run after pytest
+failed. Original log and coverage are retained. Original lock-holder duration and
+scheduling were not logged, so no runner or HA restart cause is asserted.
+
+Both this race and the earlier opposite-edge regression assumed that contention
+always resolved inside the fixed 250ms writer budget. Eight controlled variants
+hold a real SQLite writer until its contender reports bounded busy, covering both
+winner orientations for same-key/cancel/arrival and opposite edges. All eight fail
+before correction, while the four natural-race variants pass. The corrected test
+clients explicitly retry only that identical request once after both contenders
+finish; keys, payloads and expected revisions are unchanged. All earlier balance,
+receipt, no-cycle and audit/outbox assertions remain. Independent receipt/audit/
+outbox counts prove that busy leaves no partial evidence and replay adds no
+second effect. All twelve variants pass in 3.69s, and all 107 affected/storage tests
+pass in 11.95s. Ruff passes; formatting preserves identical ASTs. The full backend
+inventory now contains 6,040 tests, including eight additional deterministic
+variants; this is not a full local 6,040-pass claim.
+
+Only verification code changes. All 250 Python modules and four compiled UI files
+remain byte-identical to installed85, so no new Edge candidate is inferred or
+needed. The native six-case inventory and eleven requirements remain unchanged.
+A new complete current-head CI/review is required; no unchanged CI retry was
+launched, and no product timeout, assertion or automatic retry policy is relaxed.
 
 Require the final packaging head's complete applicable CI, Branch Sync and
-substantive review in green, with no valid findings. CI must qualify all 6,032
+substantive review in green, with no valid findings. CI must qualify all 6,040
 backend cases/250 authored modules, 2,212 frontend cases/121 authored modules,
 all four required coverage metrics globally and per file, all 141 source and 68
 catalog variants, and 62 container plus86 actual-browser journeys per CPU with

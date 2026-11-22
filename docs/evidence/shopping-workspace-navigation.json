@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 162,
-  "status": "Edge85 packaging snapshot: immutable source/wheel and six actual ARM64 checks PASS18.92s;17packagechecks PASS0.15s; source2212/allfourcoverage100 and12actualvariants32.8s PASS. Native85 and finalsameheadchecks required in linkedPR.",
+  "status": "Installed Edge85 native acceptance PASS; application payload unchanged by validation-only bounded-busy race corrections. Current source2212/allfour100 and12browservariants32.8s pass. Targeted107backend/storage cases pass; full6040/current-head CI and review remain required.",
   "owner": "specs/application-experience.md#proposed-change-open-shopping-as-a-direct-household-workspace",
   "nativeSpecificationCommit": "a67ee381043a8e34ca9fec02b811c9cd9d330078",
   "acceptedBase": "7770b1e560800fa4bb78d36b0583b2c1beb784d7",
@@ -119,9 +119,22 @@
     "statusAtPackaging": "No installed85 claim yet. Prior84 partial native qualification found Stock heading offscreen and is not accepted; final85 native observations belong to linkedPR.",
     "qualificationRecord": "https://github.com/vypdev/domus/pull/163",
     "appSlug": "abb0c2fd_domus_edge",
-    "newRecordsPlanned": 0
+    "newRecordsPlanned": 0,
+    "currentQualification": {
+      "status": "PASS native installed85; stopped, no permanent deletion",
+      "sourceCommit": "1826444e659ad9fe5a7827ee448efd80ee8d6452",
+      "packagingHeadObserved": "e9ea697bbff9e0dad160c15c05d1f283fd0dba16",
+      "moduleBasename": "index-eQtqrWRl.js",
+      "desktop": "English1120light keyboard; deep Stock heading, refresh/reentry andbothdrafts pass.",
+      "mobile": "Spanish390dark actualtouch overflow, deep/repeatedStock heading, Stockrefresh/Shopping reentry, retainednote andOverview item focus pass.",
+      "publicRestart": "ActualStop->Detenido thenStart->En ejecuci\u00f3n; freshentry verifies2extras/notes/quantities/priorities, zero stock/movements andempty purchases/sessions.",
+      "newHouseholdRecords": 0,
+      "backupCreated": false,
+      "interruptionLimit": "Unavailable reads and automatic remount coincided with an independently reported HA interruption. Original observation retained; fresh post-reconnect flow passes. No source cause inferred.",
+      "finalState": "Observed85Detenido; temporaryoverridesreset, ownQA tabclosed."
+    }
   },
-  "finalSameHeadChecks": "Required after immutable84 packaging: current source141/catalog68, eachCPU62+86, all global/perfile coverage and substantive review. Historical B5/e48 results are not current runtime acceptance.",
+  "finalSameHeadChecks": "Required new validation-only head: backend6040/all250coverage100; frontend2212/all121four100; source141/catalog68; eachCPU62+86 andnativeHA10all100. Earlier e9 results are historical, not rebound.",
   "mergeAndDestination": "PENDING",
   "compiledProductFiles": {
     "index.html": "8470da65089af054428a2d82e16355a94251e8712e5706848031805e238f118f",
@@ -142,7 +155,7 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-eQtqrWRl.js": "06df87c3c49ccdce9d589d01b55d9b462bb5cdbb088896909702b02ff1ea4410"
     },
-    "status": "Immutable source/wheel and six actual ARM64 checks qualified. Native85 and final samehead CI/review remain required in linkedPR."
+    "status": "Immutable source/wheel, six actual local ARM64 and installed85 native acceptance pass. Final validation-only head CI/review remain required."
   },
   "sourceArchiveQualification": {
     "trackedFiles": 1025,
@@ -799,5 +812,27 @@
     "nativeQualification": "Partial: exact installed module index-CUfMikor.js; EN keyboard and drafts/literal notes pass. ES390 touch return from deep Shopping leaves Inventory heading above viewport. App stopped; overrides reset; no new household records or backup.",
     "publicFinding": "https://github.com/vypdev/domus/pull/163#issuecomment-7081605813",
     "redEvidence": "Both actual compiled84 C01 deployments fail the heading-visibility assertion before correction; original traces/screenshots/context retained."
+  },
+  "backendRaceQualification": {
+    "at": "2026-11-22T16:51:44.668036+00:00",
+    "headBeforeCommit": "e9ea697bbff9e0dad160c15c05d1f283fd0dba16",
+    "originalCIFailure": {
+      "run": 45041176913,
+      "job": 137265757690,
+      "test": "test_balance_races_and_original_retry[arrival]",
+      "result": "6031 passed/1 failed in1563.10sec",
+      "error": "StorageBusy during schema inspection; original holder duration/scheduling not logged",
+      "receipt": "/private/tmp/domus-162-edge85-final-evidence/backend-failed/diagnostic-receipt.json"
+    },
+    "controlledBeforeFix": "8 real bounded-busy failures/4 natural-race passes,4.89sec",
+    "controlledAfterFix": "12 PASS3.69sec",
+    "affectedAndSQLiteCampaign": "107 PASS11.95sec",
+    "fullBackendCollected": 6040,
+    "productionBusyBudgetMs": 250,
+    "sameOriginalRequestRetry": "Exactly one explicit client retry after both contenders finish. Same key/payload/revision; no new key, automatic rebase, loop or workflow retry.",
+    "assertions": "All previous balance, receipt, no-cycle and audit/outbox assertions retained. Independent receipt/audit/outbox row counts checked before/after busy recovery and original receipt replay; no partial or duplicate effects.",
+    "runtimePayload": "All250 Python+4compiledUI byte-identical to installed85; no new Edge required.",
+    "newNativeCaseIDs": 0,
+    "remaining": "New same-head complete CI/review and destination acceptance. No unchanged CI retry launched."
   }
 }
