@@ -1,10 +1,11 @@
 # Installation and operation
 
-Edge 0.0.0-edge.74 packages the immutable runtime declared in
+Edge 0.0.0-edge.75 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Inventory, open the shared shopping list and
 add a manual extra for a product or a free-text item. Its optional note accepts
-up to 1,000 Unicode characters and multiple lines; choose Low, Normal, High or
-Urgent priority, with Normal as the default. Source details show each manual
+up to 1,000 Unicode characters, multiple lines and tabs. Unsupported control
+characters are rejected while retaining the accepted text for correction. Choose
+Low, Normal, High or Urgent priority, with Normal as the default. Source details show each manual
 request's own note, priority and requested quantity. Validation keeps entered
 values for correction. After an interrupted response, **Recover original
 request** checks that same operation; checking an earlier request preserves a

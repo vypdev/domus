@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from domus.application.inventory import CatalogAction, InventoryCommands
-from domus.domain.errors import Conflict
+from domus.domain.errors import Conflict, InvalidInput
 from domus.domain.identity import HumanIdentity
 from domus.domain.shopping_annotations import ShoppingAnnotation, ShoppingPriority
 from domus.domain.task_material_values import MaterialQuantity
@@ -104,6 +104,36 @@ def exercise(fixtures, version):
                     for row in db.execute("SELECT note,priority FROM shopping_extras")
                 )
             commands = service(store)
+            effect_tables = (
+                "shopping_extras",
+                "receipts",
+                "audit",
+                "outbox",
+                "inventory_movements",
+            )
+            with store._connection() as db:
+                counts = {
+                    table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+                    for table in effect_tables
+                }
+            for code in range(0x80, 0xA0):
+                try:
+                    commands.add_extra(
+                        "invalid-c1-" + str(code),
+                        None,
+                        "Rejected request",
+                        MaterialQuantity("1"),
+                        annotation=ShoppingAnnotation(chr(code)),
+                    )
+                except InvalidInput as error:
+                    assert str(error) == "invalid_shopping_note"
+                else:
+                    raise AssertionError("A packaged C1 control created a shopping request")
+            with store._connection() as db:
+                assert {
+                    table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+                    for table in effect_tables
+                } == counts
             if version == 36:
                 provenance = json.loads(
                     (fixtures / "v36-shopping-annotations-source.provenance.json").read_text()

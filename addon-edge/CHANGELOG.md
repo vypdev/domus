@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.75
+
+- Reject unsupported C1 controls in shopping notes, retain accepted text and allow a corrected retry with the original request key.
+- Keep existing schema-37 annotations and original receipts unchanged.
+
 ## 0.0.0-edge.74
 
 - Keep shopping note and priority labels in the household interface's font with a generic fallback.

@@ -168,8 +168,9 @@ reopen and actual snapshot activation; schema headers are never relabelled.
 `shopping.add-extra` accepts optional `note` and `priority` fields. Omission
 keeps the original legacy command fingerprint; explicitly changing an
 annotation under the same key conflicts. Notes allow up to 1,000 Unicode
-codepoints, tab, LF and CR, and reject malformed Unicode, other C0 controls
-and DEL. Priorities are `low`, `normal`, `high` and `urgent`. The extra,
+codepoints, tab, LF and CR, and reject malformed Unicode, other C0 controls,
+DEL and every C1 control (`U+0080`–`U+009F`). Priorities are `low`, `normal`,
+`high` and `urgent`. The extra,
 original receipt, audit and outbox commit together with current request
 authority. Read access and task-detail redaction retain their existing rules.
 

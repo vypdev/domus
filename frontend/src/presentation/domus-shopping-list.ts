@@ -13,7 +13,7 @@ import {registerSelect} from '@vypdev/ha-ui/select';
 import type {SelectValueEvent} from '@vypdev/ha-ui/select';
 import {selectState, selectValueDetail} from '@vypdev/ha-ui/select-contracts';
 import type {InventoryState} from '../application/inventory-controller';
-import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MAX_SHOPPING_NOTE_CODEPOINTS, SHOPPING_PRIORITIES, intakeQuantity, purchaseStoreName, shoppingItemKey, shoppingPriority, shoppingNote} from '../domain/inventory';
+import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MAX_SHOPPING_NOTE_CODEPOINTS, SHOPPING_PRIORITIES, intakeQuantity, purchaseStoreName, shoppingItemKey, shoppingPriority, shoppingNote, shoppingNoteCharacters} from '../domain/inventory';
 import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingAnnotation, ShoppingItem, ShoppingPriority, ShoppingSource} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
@@ -117,7 +117,7 @@ export class DomusShoppingList extends LitElement {
     if (blocked) return;
     const inserted = event.data ?? event.dataTransfer?.getData('text/plain') ?? null;
     if (inserted === null) return;
-    try {textAreaValue(inserted);}
+    try {shoppingNoteCharacters(textAreaValue(inserted));}
     catch {event.preventDefault(); this.error = 'invalid_shopping_note';}
   }
 
@@ -195,7 +195,7 @@ export class DomusShoppingList extends LitElement {
         @input=${(event: InputEvent) => this.noteInsertion(event, blocked)}
         @ha-value-request=${(event: TextAreaValueEvent) => {
           if (blocked) return;
-          try {this.extraNote = textAreaValueDetail(event.detail).value;}
+          try {this.extraNote = shoppingNoteCharacters(textAreaValueDetail(event.detail).value);}
           catch {this.error = 'invalid_shopping_note'; return;}
           this.extraRevision++;
           // Reveal the domain error before blur can shift the touch submit target.

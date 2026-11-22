@@ -213,7 +213,7 @@ def capture(root: Path, destination: Path, wheel: Path | None) -> None:
         proof["completedProducerRetirement"] = {
             "files": len(files),
             "allocatedBytes": allocation,
-            "filesystemFreeChange": shutil.disk_usage(destination).free - free_before,
+            "filesystemFreeChange": shutil.disk_usage(work.parent).free - free_before,
         }
         manifest.write_text(json.dumps(proof, indent=2) + "\n")
         print(json.dumps({"fixture": str(target), "sha256": proof["fixtureSHA256"]}))

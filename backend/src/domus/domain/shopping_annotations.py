@@ -17,7 +17,7 @@ class ShoppingPriority(StrEnum):
 
 
 def shopping_note(value: object) -> str:
-    if not isinstance(value, str):
+    if not isinstance(value, str) or any("\x80" <= char <= "\x9f" for char in value):
         raise InvalidInput("invalid_shopping_note")
     try:
         validate_task_text(value, MAX_SHOPPING_NOTE, required=False, multiline=True)

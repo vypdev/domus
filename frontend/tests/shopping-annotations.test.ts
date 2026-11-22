@@ -37,12 +37,17 @@ function server(): InventoryServer {
 }
 
 test('manual annotation values preserve literal codepoints without changing legacy or purchase commands', () => {
-  for (const value of ['', '  ', '\t\r\n', '😀'.repeat(1000), annotated.note]) expect(shoppingNote(value)).toBe(value);
+  for (const value of ['', '  ', '\t\r\n', '~\u00a0 text', '😀'.repeat(1000), annotated.note]) expect(shoppingNote(value)).toBe(value);
   for (const value of SHOPPING_PRIORITIES) expect(shoppingPriority(value)).toBe(value);
   for (const value of [null, 0, {}, [], '😀'.repeat(1001), '\ud800', '\udfff', 'ok\u007f'])
     expect(() => shoppingNote(value)).toThrow('invalid_shopping_note');
   for (let code = 0; code < 32; code++) if (![9,10,13].includes(code))
     expect(() => shoppingNote('a'+String.fromCharCode(code))).toThrow('invalid_shopping_note');
+  for (let code=0x80;code<=0x9f;code++) {
+    const note='before'+String.fromCharCode(code)+'after';
+    expect(()=>shoppingNote(note)).toThrow('invalid_shopping_note');
+    expect(()=>inventoryCommand({...legacy,note})).toThrow('invalid_shopping_note');
+  }
   for (const value of [undefined, null, 1, [], {}, '', 'HIGH', ' normal ', 'red'])
     expect(() => shoppingPriority(value)).toThrow('invalid_shopping_priority');
   expect(inventoryCommand(legacy)).toEqual(legacy);
@@ -377,7 +382,8 @@ test('the published multiline note keeps literal codepoints, localized help and 
   expect(intents).toHaveBeenCalledTimes(submitted);
   expect(note.state.error).toContain('1,000');expect(node.shadowRoot!.activeElement).toBe(note);
   expect(name.value).toBe('Literal request');expect(quantity.value).toBe('2');
-  for (const value of ['\u0000','\u0001','\u007f','\ud800',null]) {
+  for (const value of ['\u0000','\u0001','\u007f','\ud800',null,
+    ...Array.from({length:32},(_,index)=>String.fromCharCode(0x80+index))]) {
     await edit(value);expect(note.value).toBe('😀'.repeat(1001));
     expect(note.state.error).toContain('unsupported control characters');
   }
@@ -455,6 +461,17 @@ test('prohibited native insertion keeps the accepted note and explains how to co
   await node.updateComplete;await note.updateComplete;
   expect(note.value).toBe('Keep\n😀');expect(native.value).toBe('Keep\n😀');
   expect(note.state.error).toContain('unsupported control characters');
+  for(let code=0x80;code<=0x9f;code++){
+    const inserted='bad'+String.fromCharCode(code);
+    const blocked=new InputEvent('beforeinput',{inputType:'insertText',data:inserted,bubbles:true,composed:true,cancelable:true});
+    native.dispatchEvent(blocked);await node.updateComplete;await note.updateComplete;
+    expect(blocked.defaultPrevented).toBe(true);expect(note.value).toBe('Keep\n😀');
+    native.value='Keep\n😀'+inserted;
+    native.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:inserted,bubbles:true,composed:true}));
+    await node.updateComplete;await note.updateComplete;
+    expect(note.value).toBe('Keep\n😀');expect(native.value).toBe('Keep\n😀');
+    expect(note.state.error).toContain('unsupported control characters');
+  }
   const removal=new InputEvent('beforeinput',{inputType:'deleteContentBackward',bubbles:true,composed:true,cancelable:true});
   native.dispatchEvent(removal);expect(removal.defaultPrevented).toBe(false);
   const transfer=new DataTransfer();transfer.setData('text/plain','bad\u0001');

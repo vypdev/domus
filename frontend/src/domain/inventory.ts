@@ -19,12 +19,19 @@ export const SHOPPING_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
 export type ShoppingPriority = typeof SHOPPING_PRIORITIES[number];
 export interface ShoppingAnnotation {readonly note: string; readonly priority: ShoppingPriority;}
 
-/** Literal request notes preserve whitespace and count Unicode codepoints, not UTF-16 units. */
-export function shoppingNote(value: unknown): string {
-  if (typeof value !== 'string' || !value.isWellFormed() || Array.from(value).length > MAX_SHOPPING_NOTE_CODEPOINTS
-      || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value))
+/** Character admission is shared by input interception and the bounded command. */
+export function shoppingNoteCharacters(value: unknown): string {
+  if (typeof value !== 'string' || !value.isWellFormed()
+      || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(value))
     throw new Error('invalid_shopping_note');
   return value;
+}
+
+/** Literal request notes preserve whitespace and count Unicode codepoints, not UTF-16 units. */
+export function shoppingNote(value: unknown): string {
+  const note = shoppingNoteCharacters(value);
+  if (Array.from(note).length > MAX_SHOPPING_NOTE_CODEPOINTS) throw new Error('invalid_shopping_note');
+  return note;
 }
 
 export function shoppingPriority(value: unknown): ShoppingPriority {

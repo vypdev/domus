@@ -37,7 +37,9 @@ M = MaterialQuantity
 FIXTURES = Path(__file__).parents[1] / "fixtures/sqlite"
 
 
-@pytest.mark.parametrize("note", ["", " \t\r\n ", "<script>alert(1)</script>", "😀" * 1000])
+@pytest.mark.parametrize(
+    "note", ["", " \t\r\n ", "~\u00a0 text", "<script>alert(1)</script>", "😀" * 1000]
+)
 @pytest.mark.parametrize("priority", tuple(ShoppingPriority))
 def test_literal_values_are_bounded_by_unicode_codepoints_and_immutable(note, priority):
     annotation = ShoppingAnnotation(shopping_note(note), shopping_priority(priority.value))
@@ -47,7 +49,9 @@ def test_literal_values_are_bounded_by_unicode_codepoints_and_immutable(note, pr
 
 
 @pytest.mark.parametrize(
-    "note", [None, 1, True, "x" * 1001, "😀" * 1001, "\0", "\x1f", "\x7f", "\ud800"]
+    "note",
+    [None, 1, True, "x" * 1001, "😀" * 1001, "\0", "\x1f", "\x7f", "\ud800"]
+    + [chr(code) for code in range(0x80, 0xA0)],
 )
 def test_bad_notes_cannot_enter_an_annotation(note):
     with pytest.raises(InvalidInput, match="invalid_shopping_note"):

@@ -96,5 +96,6 @@
     "files": 2,
     "allocatedBytes": 1736704,
     "filesystemFreeChange": 0
-  }
+  },
+  "recipeSourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091"
 }

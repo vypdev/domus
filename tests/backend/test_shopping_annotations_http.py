@@ -84,12 +84,21 @@ def test_new_annotations_preserve_independent_sources_and_the_legacy_read_contra
         ("note", 123, "invalid_shopping_note"),
         ("priority", "fast", "invalid_shopping_priority"),
         ("priority", True, "invalid_shopping_priority"),
+        *[
+            pytest.param(
+                "note", "unsafe" + chr(code) + "text", "invalid_shopping_note", id=f"C1-{code:04x}"
+            )
+            for code in range(0x80, 0xA0)
+        ],
     ],
 )
 def test_invalid_annotation_identifies_the_field_and_creates_no_receipt(api, field, value, code):
     api.user(USER, True)
     with closing(sqlite3.connect(api.store.path)) as db:
-        before = db.execute("SELECT COUNT(*) FROM receipts").fetchone()
+        before = {
+            table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+            for table in ("shopping_extras", "receipts", "audit", "outbox", "inventory_movements")
+        }
     response = command(
         api, "invalid", "add-extra", product_id=None, name="Fruit", quantity="1", **{field: value}
     )
@@ -97,8 +106,30 @@ def test_invalid_annotation_identifies_the_field_and_creates_no_receipt(api, fie
     assert response.json()["code"] == code
     assert field in response.json()["action_required"].lower()
     with closing(sqlite3.connect(api.store.path)) as db:
-        assert db.execute("SELECT COUNT(*) FROM shopping_extras").fetchone() == (0,)
-        assert db.execute("SELECT COUNT(*) FROM receipts").fetchone() == before
+        assert {
+            table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0] for table in before
+        } == before
+    corrected = "Corrected\t\r\n note 😀"
+    retry = command(
+        api,
+        "invalid",
+        "add-extra",
+        product_id=None,
+        name="Fruit",
+        quantity="1",
+        note=corrected,
+        priority="normal",
+    )
+    assert retry.status_code == 200, retry.text
+    assert original(api, "invalid", "add-extra").json() == retry.json()
+    assert annotated(api).json()["items"][0]["annotation"] == {
+        "note": corrected,
+        "priority": "normal",
+    }
+    with closing(sqlite3.connect(api.store.path)) as db:
+        assert {
+            table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0] for table in before
+        } == {table: count + int(table != "inventory_movements") for table, count in before.items()}
 
 
 def test_annotation_reads_keep_current_authority_task_redaction_and_bound_cursors(api):

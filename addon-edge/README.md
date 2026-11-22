@@ -3,6 +3,9 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.75 rejects unsupported control characters in a shopping note while preserving
+the accepted text for correction and retry.
+
 Edge.74 keeps the note and priority labels aligned with the household interface's
 typography, including when a named font is unavailable.
 

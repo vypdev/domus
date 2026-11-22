@@ -51,9 +51,11 @@ for(const mode of ['native','standalone'] as const)for(const locale of ['en','es
     await note.fill('😀'.repeat(1001));await save.tap();
     await expect(shared.locator('#shopping-extra-error')).toContainText(text('1,000','1.000'));
     await expect(note).toHaveValue('😀'.repeat(1001));await expect(note).toBeFocused();expect(posts).toHaveLength(0);
-    await note.fill('Retained');await page.keyboard.insertText('bad\u0001');
-    await expect(shared.locator('#shopping-extra-error')).toContainText(text('unsupported control characters','caracteres de control no admitidos'));
-    await expect(note).toHaveValue('Retained');expect(posts).toHaveLength(0);
+    for(const control of ['\u0001',...Array.from({length:32},(_,index)=>String.fromCharCode(0x80+index))]){
+      await note.fill('Retained');await page.keyboard.insertText('bad'+control);
+      await expect(shared.locator('#shopping-extra-error')).toContainText(text('unsupported control characters','caracteres de control no admitidos'));
+      await expect(note).toHaveValue('Retained');expect(posts).toHaveLength(0);
+    }
     await note.fill('');await note.pressSequentially('First');await note.press('Enter');
     await note.pressSequentially('Second');await page.keyboard.insertText('\t😀 <b>literal</b>');
     const literal='First\nSecond\t😀 <b>literal</b>';

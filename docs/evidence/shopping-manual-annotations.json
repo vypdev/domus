@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "Immutable source/wheel74 qualified; current full entry, final CPU campaigns and native74 upgrade acceptance pending",
+  "status": "Shopping C1 and producer-metric review fixes source-qualified; full6019 backend, immutable75, finalCPU and installed74to75 gates pending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
@@ -22,15 +22,17 @@
       "statements": 19235,
       "branches": 5160,
       "globalAndPerFileCoverage": 100,
-      "scope": "Complete backend source suite, with the ten immutable app-package contracts qualified separately after pinning the new candidate."
+      "scope": "Complete backend source suite, with the ten immutable app-package contracts qualified separately after pinning the new candidate.",
+      "status": "Historical5919 green; currentfull6019 campaign running after required loopback permission was restored",
+      "expectedCurrentSourceTests": 6019
     },
     "frontend": {
       "tests": 2164,
       "runtimeFiles": 119,
-      "statements": 9384,
-      "branches": 8557,
-      "functions": 2009,
-      "lines": 6826,
+      "statements": 9388,
+      "branches": 8558,
+      "functions": 2010,
+      "lines": 6829,
       "allFourMetricsGlobalAndPerFile": 100
     },
     "catalog": {
@@ -70,7 +72,8 @@
       "originalCommittedReplyRecovery": true,
       "skipped": 0,
       "flaky": 0,
-      "retries": 0
+      "retries": 0,
+      "all32C1ControlsRejectedWithoutPOST": true
     },
     "nodePolicy": {
       "tests": 42,
@@ -96,13 +99,15 @@
     "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
   },
   "pendingGates": [
-    "Complete129-case source entry campaign in final-head CI; the local repeat stopped before any case because an active Actions fixture already owned the required ports.",
-    "All 62 container and 74 actual-image browser cases in each CPU architecture",
-    "Installed native Edge acceptance and scoped cleanup",
+    "Complete6019 backend source campaign with100% global/per-file statement and branch coverage",
+    "Immutable Edge75 archive/wheel/bundle pin and actual local image qualification",
+    "Complete129-case source entry campaign in final-head CI",
+    "All62 container and74 actual-image browser cases in each CPU architecture",
+    "Installed native74-to75 retention, control rejection, restart and specifically authorized cleanup",
     "Final PR same-head CI, review and Branch Sync; normal merge, destination checks and native issue closure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-21T23:11:58.690550+00:00",
+  "recordedAt": "2026-11-22T00:04:03.819532+00:00",
   "sourceCommit": "39790e871a7ee53e502e6ac891f5ada42ee6aa8e",
   "currentPackage": {
     "version": "0.0.0-edge.74",
@@ -196,5 +201,83 @@
     "deletionActor": "Not established. No attribution to Copilot.",
     "fix": "Use persistent per-user .cache/domus-ci lock files shared across runner instances; retain BSD -k and Linux flock, existing600-second waits, zero retries and complete inventories.",
     "localQualification": "Actual lockf holder blocked a second process with75, then released; same inode and one link persisted, and reacquisition succeeded. All48 workflow policy cases pass."
+  },
+  "priorCandidate74": {
+    "sourceCommit": "39790e871a7ee53e502e6ac891f5ada42ee6aa8e",
+    "package": {
+      "version": "0.0.0-edge.74",
+      "sourceArchiveSHA256": "d7d998681d659dd761581297d8280936ef990442e77138e14718b3bdcefc02a7",
+      "wheelSHA256": "dbc7c2f5520ac97d5c6e21c81aa62cd51ca1b4304644c0cbbc748fbaed5961e8",
+      "storageSchema": 37,
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "61074d02ad26af270347817f5f02b36e3d3fc535dfcdaa56806ddfc5b4657aff",
+        ".vite/manifest.json": "248c607d7318af6d9de2d3a73d2e6d0491ec6c688baa6c9c19684b55c5207e54",
+        "assets/index-BCQLqeBf.js": "aed08b45049fce52b1c8524acb9291393dd530d9bab4aad7d9dbef5c2ffd40e3",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      }
+    },
+    "sourceArchiveQualification": {
+      "trackedFiles": 1018,
+      "allTrackedGitBlobsMatch": true,
+      "all250WheelRuntimeFilesMatchArchive": true,
+      "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/39790e871a7ee53e502e6ac891f5ada42ee6aa8e"
+    },
+    "localArm64Image": {
+      "imageId": "sha256:8d4060b81f0563631772b8355a7f6ebf68f3d8f2a2efe01de2d08537b8014db3",
+      "selectedTests": 9,
+      "sourceSchemas": [
+        20,
+        36
+      ],
+      "all250PythonAndFourUIFilesMatchWheel": true,
+      "actualEdge72CheckpointRollback": true
+    },
+    "installedAcceptance": {
+      "app": "09730007_domus_edge",
+      "household": "Domus QA 157 Edge73",
+      "coldUpdate73to74": true,
+      "independentManualRequests": 3,
+      "urgentProductQuantity": "2",
+      "lowProductQuantity": "1",
+      "normalFreeTextQuantity": "1",
+      "literalMultilineTabEmojiPreserved": true,
+      "supplementaryNote1000CodepointsAccepted": true,
+      "invalid1001RetainsValueAndFocus": true,
+      "actual390TouchBothThemes": true,
+      "englishAndSpanish": true,
+      "bothControlsUseDomusFontWithGenericFallback": true,
+      "darkErrorHelpContrast": [
+        11.045,
+        9.493
+      ],
+      "lightErrorHelpContrast": [
+        8.063,
+        7.31
+      ],
+      "publicRestartRetainsAllThree": true,
+      "stockUnchanged": 0,
+      "stopped": true,
+      "limits": "Historical74 native acceptance. Current review requires stronger C1 admission; new75 acceptance and specific cleanup consent remain pending."
+    }
+  },
+  "reviewCorrections": {
+    "c1Controls": {
+      "finding": "https://github.com/vypdev/domus/pull/158#discussion_r4655564660",
+      "valid": true,
+      "red": "Both protected HTTP modes accepted C1 controls with200; three frontend regression cases failed.",
+      "fix": "Shopping-specific C1 guard in domain and public input/value admission. The reusable textarea contract is unchanged.",
+      "green": "All32 controls rejected in both protected HTTP modes with no new extra/receipt/audit/outbox/movement; correction with the same key commits once. All2164 frontend tests,68 catalog and4 compiled HTTP cases pass.",
+      "actualImageQualification": "Both genuine20/36 image cases now exercise all32 rejected controls before annotation writes; newimage execution stillrequired."
+    },
+    "producerMetric": {
+      "finding": "https://github.com/vypdev/domus/pull/158#discussion_r4655458239",
+      "valid": true,
+      "fix": "Sample both free-space observations on the producer filesystem, using its remaining parent after retirement.",
+      "frozenSQLUnchanged": true,
+      "historicalRecipeSource": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
+      "historicalRecipeBytesMatchRecordedSHA256": true,
+      "limits": "Historical fixture was not regenerated; no new capture or free-space result claimed."
+    }
   }
 }
