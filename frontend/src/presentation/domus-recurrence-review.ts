@@ -18,16 +18,43 @@ export type ReviewIntent = Readonly<{type: 'open' | 'close' | 'apply'}>
 
 export class DomusRecurrenceReview extends LitElement {
   static properties = {view: {attribute: false}, language: {attribute: false}, action: {state: true}};
-  static styles = [styles, css`vyp-ha-textarea {--vyp-ha-danger:var(--warning);
+  static styles = [styles, css`:host {min-height:0;background:transparent}
+    vyp-ha-textarea {--vyp-ha-danger:var(--warning);
     --vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}`];
   declare view: ReviewView | null;
   declare language: Language;
   private declare action: ReviewKind | null;
+  private focusFollowing: AbortController | null = null;
 
   constructor() {super(); this.view = null; this.language = 'en'; this.action = null;}
+  private stopFollowingFocus(): void {this.focusFollowing?.abort(); this.focusFollowing = null;}
+  disconnectedCallback(): void {this.stopFollowingFocus(); super.disconnectedCallback();}
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('view') && changed.get('view')?.target !== this.view?.target) {
       this.action = this.view?.target?.actions[0] ?? null;
+    }
+  }
+  protected updated(changed: PropertyValues<this>): void {
+    const result = this.view?.result;
+    if (changed.has('view') && (result !== changed.get('view')?.result || this.view?.notice === 'tasks_unavailable'))
+      this.stopFollowingFocus();
+    if (changed.has('view') && result && result !== changed.get('view')?.result
+        && result.receipt.preview === null && this.view?.notice !== 'tasks_unavailable') {
+      const heading = this.renderRoot.querySelector<HTMLElement>('#recurrence-result');
+      if (heading === null) return;
+      heading.focus();
+      const reveal = () => heading.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
+      reveal();
+      // Dependent task settings can expand after the receipt. A later user action always wins.
+      const follow = new AbortController(), root = this.renderRoot as ShadowRoot;
+      const observer = new ResizeObserver(() => {
+        if (!follow.signal.aborted && root.activeElement === heading) reveal();
+      });
+      follow.signal.addEventListener('abort', () => observer.disconnect(), {once:true});
+      for (const type of ['keydown', 'pointerdown', 'wheel'])
+        this.ownerDocument.addEventListener(type, () => follow.abort(), {capture:true, once:true, signal:follow.signal});
+      this.focusFollowing = follow;
+      observer.observe(this.parentElement ?? this);
     }
   }
   private text(key: ReviewMessage): string {return reviewMessage(key, this.language);}
@@ -105,7 +132,7 @@ export class DomusRecurrenceReview extends LitElement {
     const selection = record.command.selection;
     const body = selection.body;
     return html`<section aria-labelledby="recurrence-result">
-      <h3 id="recurrence-result">${this.text(receipt.historical ? 'historical' : plan === null ? 'approved' : 'review')}</h3>
+      <h3 id="recurrence-result" tabindex="-1">${this.text(receipt.historical ? 'historical' : plan === null ? 'approved' : 'review')}</h3>
       <p>${this.text(selection.kind)}</p>
       ${plan !== null && !receipt.historical ? html`
         ${'target' in body ? html`<p>${this.text(body.target === 'paused' ? 'pause' : 'resume')}</p>` : nothing}

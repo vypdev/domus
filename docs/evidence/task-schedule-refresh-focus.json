@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/vypdev/domus/issues/171",
+  "pullRequest": "https://github.com/vypdev/domus/pull/172",
+  "status": "Frozen source and local ARM64 package qualification; installed and complete final-commit results are reported separately in PR172.",
+  "scope": "Keep the current saved schedule receipt visible through a late task-settings layout change, without overriding later input. Existing recurrence-calendar-R5/C31; no new owning cases.",
+  "immutableCandidate": {
+    "version": "0.0.0-edge.88",
+    "sourceCommit": "82eacbd10218154ca1eb38f1f03d51d768dd3aff",
+    "sourceArchiveSHA256": "58847bcee7498d4278d02316f857e83bb77a8e56c74c783536df30419a1f6fb5",
+    "wheelSHA256": "3ff809eaf8c8fc4ced16b506cac872a420d1e7206a8e9507757d53e8d45b0284",
+    "storageSchema": 37,
+    "pythonProductFilesUnchanged": 250,
+    "actualProductFiles": {
+      "index.html": "c1433b641b4f8eb81cf433c7f12abacef46e11ea21b3e6ba5cea160c30df13e0",
+      ".vite/manifest.json": "f86ff2e2644e8f9d66c8df8bd7ff9ad830ba09d6a72588603b63c184da753872",
+      "assets/index-CKGnGtq-.js": "4381c5e8053950c1e574b36355c1a481ad79ad61f1fc67077306e919a27d1e2c",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+    }
+  },
+  "dependencyCohort": "0.1.0-next.5",
+  "installedFinding": {
+    "previousVersion": "0.0.0-edge.87",
+    "qualification": "Functional apply, original-GET recovery and restart passed; mobile result visibility failed.",
+    "viewportWidth": 390,
+    "viewportHeight": 844,
+    "ingressHeight": 804,
+    "savedHeadingYAfterDependentRead": 849.1328125,
+    "headingFocused": true,
+    "privateReceiptSHA256": "3efc05b49b125cf134ca57c4146bf9d5de4df6ea52ec5b04df312005735b92e7"
+  },
+  "executedSource": {
+    "unitTests": 2242,
+    "runtimeFiles": 121,
+    "fullyCoveredNonemptyFiles": 114,
+    "emptyFiles": 7,
+    "coverage": {
+      "lines": {
+        "total": 7039,
+        "covered": 7039,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 9675,
+        "covered": 9675,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2047,
+        "covered": 2047,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 8879,
+        "covered": 8879,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "deterministicViewportRegression": "The held allocation-settings response reproduced viewport ratio0 before the correction and passes afterward.",
+    "fullEntryVariants": 153,
+    "catalogVariants": 68,
+    "scenarios": [
+      "A late parent-layout resize reveals the result only while that receipt still owns focus.",
+      "A newer focus or keyboard, pointer or wheel input wins over the visibility continuation.",
+      "Result replacement, hidden or failed-read states, removal and queued retired callbacks cannot restore old focus.",
+      "The embedded review does not reserve a full viewport of blank space."
+    ],
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "actualImage": {
+    "localARM64Checks": {
+      "passed": 4,
+      "imageID": "sha256:abe026243f5ef5283470d8382853773426ed29b71ed3d969d3e029e5d00220cd",
+      "scope": "All250 Python/4 UI file identities, native launcher/storage/restart, pinned standalone delivery and corrected generic current-image delivery."
+    },
+    "requiredBrowserVariantsPerArchitecture": 98,
+    "exactFinalHeadMatrix": "Reported separately in PR172; required before merge.",
+    "localARM64Browser": {
+      "expected": 12,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "sourceCommit": "82eacbd10218154ca1eb38f1f03d51d768dd3aff",
+      "scope": "All save/recovery/read-failure variants run on the pinned image; save includes the held late-settings response and complete viewport assertion."
+    }
+  },
+  "installed": {
+    "includedInThisSourceReceipt": false,
+    "requiredBeforeMerge": true,
+    "evidenceLocation": "https://github.com/vypdev/domus/pull/172",
+    "privateOriginalSnapshotsRetainedLocally": true,
+    "distributionAuthorized": false
+  },
+  "validationCorrection": {
+    "previousCI": "https://github.com/vypdev/domus/actions/runs/45138072645/job/137569028846",
+    "cause": "The generic current-image delivery test still compared against the immutable historical Edge86 Unicode bundle. The actual Edge87 files matched its new pin; 61 other container cases passed.",
+    "correction": "Read the current reviewed addon-edge/artifact.json UI map, preserving the independent byte and protected-delivery assertions and the historical Unicode receipt.",
+    "newExpectedReference": "addon-edge/artifact.json:uiFiles"
+  },
+  "historicalEvidencePreserved": [
+    "task-schedule-refresh.json",
+    "unicode-text-limits.json",
+    "recurrence-edge86-installed.json"
+  ],
+  "newOwningCasesCreated": 0,
+  "limitations": [
+    "No full M2, owner, cross-domain ledger/reservation or HA entity acceptance is claimed.",
+    "Complete product CI on the final PR commit and substantive review remain required."
+  ]
+}

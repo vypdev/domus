@@ -828,7 +828,11 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
 
 for (const mode of ['native', 'standalone'] as const) {
   for (const locale of ['en', 'es'] as const) {
-    test(`protected calendar and fixed batch review use actual stored work in ${mode} ${locale}`, async ({page, context, request}) => {
+    test.describe(`fixed review ${mode} ${locale}`, () => {
+    test.use({hasTouch: locale === 'es'});
+    for (const outcome of ['save', 'recovery', 'read failure', 'scope failure'] as const) {
+    test(`protected calendar and fixed batch review ${outcome} use actual stored work in ${mode} ${locale}`, async ({page, context, request}) => {
+      const responseLost = outcome === 'recovery';
       expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
       const tasks = await open(page, context, mode);
       const response = await request.post(origin(mode) + '/__fixture__/calendar-review');
@@ -836,7 +840,8 @@ for (const mode of ['native', 'standalone'] as const) {
       const {title, completed, started, future, first, new_date: newDate} = await response.json();
       const t = (english: string, spanish: string) => locale === 'en' ? english : spanish;
       if (locale === 'es') await page.getByLabel('Language', {exact: true}).selectOption('es');
-      await page.setViewportSize({width: 320, height: 720});
+      await page.setViewportSize({width: locale === 'en' ? 1120 : 390, height: 844});
+      await page.emulateMedia({colorScheme: locale === 'en' ? 'dark' : 'light'});
       const tab = page.getByRole('link', {name: t('Calendar', 'Calendario'), exact: true});
       await tab.focus();
       await page.keyboard.press('Enter');
@@ -879,25 +884,91 @@ for (const mode of ['native', 'standalone'] as const) {
       await expect(review.locator('img,script')).toHaveCount(0);
       const retained = review.getByRole('list', {name: t('Existing work retained', 'Trabajo existente que se conserva')});
       await expect(retained.getByRole('listitem')).not.toHaveCount(0);
+      const activate = async (control: Locator) => {
+        if (locale === 'es') await control.tap();
+        else {await control.focus(); await control.press('Enter');}
+      };
+      const draftTitle = tasks.getByRole('textbox', {name: t('Title', 'Título'), exact: true});
+      if (!await draftTitle.isVisible()) await tasks.getByRole('heading', {name: t('New task', 'Nueva tarea'), exact: true}).locator('..').click();
+      await draftTitle.fill('Keep my unrelated creation draft');
       let applies = 0;
       let originalKey = '';
+      let originalRead = false;
+      const settingsGate = Promise.withResolvers<void>();
+      let delayedSettings = false;
+      await page.route(base(mode) + '/api/v1/family/allocation?**', async route => {
+        if (outcome === 'save' && applies > 0) {
+          delayedSettings = true;
+          await settingsGate.promise;
+        }
+        await route.continue();
+      });
+      page.on('request', item => {
+        if (item.method() === 'GET' && item.url().includes('/tasks/recurrence/reviews/requests/recurrence.review.apply/')) originalRead = true;
+      });
+      await page.route(base(mode) + '/api/v1/tasks/access', route => {
+        if (applies > 0 && outcome === 'scope failure') return route.abort('failed');
+        return route.continue();
+      });
+      await page.route(endpoint + '?limit=25', async route => {
+        if (applies > 0 && outcome === 'read failure') return route.abort('failed');
+        // Recovery must update facts already read before the explicit GET, rather than rely on reload.
+        if (applies > 0 && responseLost && !originalRead) return route.fulfill({json: {items: before, next_cursor: null}});
+        return route.continue();
+      });
       await page.route(base(mode) + '/api/v1/tasks/recurrence/reviews/fixed-replacement/apply', async route => {
         applies++;
         originalKey = route.request().headers()['idempotency-key'];
         const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
         expect(committed.status()).toBe(200);
-        await route.abort('connectionreset');
+        if (responseLost) await route.abort('connectionreset');
+        else await route.fulfill({response: committed});
       });
-      await review.getByRole('button', {name: t('Apply reviewed change', 'Aplicar cambio revisado'), exact: true}).click();
+      await activate(review.getByRole('button', {name: t('Apply reviewed change', 'Aplicar cambio revisado'), exact: true}));
+      if (responseLost) {
       await expect(review.getByRole('alert')).toContainText(t('The result is unconfirmed', 'El resultado no está confirmado'));
       await page.reload();
       await expect(review.getByRole('button', {name: 'Check original schedule request', exact: true}).last()).toBeVisible();
       if (locale === 'es') await page.getByLabel('Language', {exact: true}).selectOption('es');
       await expect(page.locator('html')).toHaveAttribute('lang', locale);
       const recovered = page.waitForResponse(item => item.request().method() === 'GET' && item.url().endsWith('/' + originalKey));
-      await review.getByRole('button', {name: t('Check original schedule request', 'Consultar solicitud de programación original'), exact: true}).last().click();
+      await activate(review.getByRole('button', {name: t('Check original schedule request', 'Consultar solicitud de programación original'), exact: true}).last());
       expect((await recovered).ok()).toBe(true);
+      }
+      if (outcome === 'scope failure') {
+        await expect(page.locator('domus-app #tasks > [role="alert"]')).toContainText(
+          t('The schedule change was saved', 'El cambio de programación está guardado'));
+        await expect(review.getByRole('heading', {name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toHaveCount(0);
+        await expect(review.getByRole('button', {name:t('Check original schedule request','Consultar solicitud de programación original'),exact:true})).toHaveCount(0);
+        await expect(tasks.locator('.task-list li')).toHaveCount(0);
+        await expect(tasks.locator('#selected-task-title')).toHaveCount(0);
+        await expect(tasks.getByRole('button', {name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeFocused();
+        await page.unroute(base(mode) + '/api/v1/tasks/access');
+        await activate(tasks.getByRole('button', {name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      }
       await expect(review.getByRole('heading', {name: t('Schedule change saved', 'Cambio de programación guardado'), exact: true})).toBeVisible();
+      if (outcome === 'read failure') {
+        await expect(review.getByRole('alert')).toContainText(t('Current tasks could not be loaded', 'No se han podido cargar las tareas actuales'));
+        await expect(tasks.getByRole('button', {name: t('Refresh tasks', 'Actualizar tareas'), exact: true})).toBeFocused();
+        await expect(tasks.locator('.task-list li')).toHaveCount(0);
+        await expect(tasks.locator('#selected-task-title')).toHaveCount(0);
+        await expect(draftTitle).toHaveValue('Keep my unrelated creation draft');
+        await page.unroute(endpoint + '?limit=25');
+        await activate(tasks.getByRole('button', {name: t('Refresh tasks', 'Actualizar tareas'), exact: true}));
+      }
+      await expect(tasks.locator('.task-list li').filter({hasText: title}).filter({hasText: t('Cancelled', 'Cancelada')})).toHaveCount(1);
+      await expect(review.getByRole('heading', {name: t('Schedule change saved', 'Cambio de programación guardado'), exact: true})).toBeFocused();
+      if (outcome === 'save') {
+        await expect.poll(() => delayedSettings).toBe(true);
+        settingsGate.resolve();
+        await expect(tasks.getByRole('button', {name:t('Save policy','Guardar política'),exact:true})).toBeVisible();
+        await expect(review.getByRole('heading', {name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toBeInViewport({ratio:1});
+      }
+      if (!responseLost) await expect(draftTitle).toHaveValue('Keep my unrelated creation draft');
+      if (!responseLost) {
+        await expect(tasks.locator('#selected-task-title').locator('..')).toContainText(t('Cancelled', 'Cancelada'));
+        await expect(tasks.getByRole('button', {name: t('Claim task', 'Quedarme esta tarea'), exact: true})).toHaveCount(0);
+      }
       expect(applies).toBe(1);
       const after = (await (await page.request.get(endpoint)).json()).items;
       expect(after).toEqual(expect.arrayContaining([
@@ -905,6 +976,8 @@ for (const mode of ['native', 'standalone'] as const) {
         expect.objectContaining({occurrence_id: started, state: 'in_progress'}),
         expect.objectContaining({occurrence_id: future, state: 'cancelled'}),
       ]));
+    });
+    }
     });
   }
 }

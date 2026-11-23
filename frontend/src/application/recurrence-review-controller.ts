@@ -37,12 +37,17 @@ export interface ReviewServer {
   send(context: JournalContext, request: ReviewRecord): EntryRead<ReviewReceipt>;
   original(context: JournalContext, request: ReviewRecord): EntryRead<ReviewReceipt>;
 }
-export type ReviewNotice = 'invalid' | 'unavailable' | 'uncertain' | 'expired' | 'rejected' | 'journal';
+export type ReviewNotice = 'invalid' | 'unavailable' | 'uncertain' | 'expired' | 'rejected' | 'journal' | 'tasks_unavailable';
 export interface ReviewView {
   readonly open: boolean; readonly busy: boolean; readonly readOnly: boolean;
   readonly selected: boolean; readonly target: ReviewTarget | null; readonly records: readonly ReviewRecord[];
   readonly result: Readonly<{record: ReviewRecord; receipt: ReviewReceipt}> | null;
   readonly notice: ReviewNotice | null;
+}
+/** A confirmed current effect, retained only while its owning workspace reconciles task facts. */
+export interface ConfirmedReview {
+  readonly scopeKey: string; readonly occurrenceId: string | null;
+  readonly result: NonNullable<ReviewView['result']>; readonly notice: ReviewNotice | null;
 }
 const EMPTY: ReviewView = Object.freeze({open: false, busy: false, readOnly: true, selected: false,
   target: null, records: [], result: null, notice: null});
@@ -110,34 +115,42 @@ export class RecurrenceReviewController {
     catch {this.set({notice: 'invalid', result: null}); return;}
     await this.submit(scope, command);
   }
-  async apply(): Promise<void> {
+  async apply(): Promise<ConfirmedReview | null> {
     const scope = this.current(), outcome = this.state.result;
-    if (scope === null || scope.readOnly || outcome === null || !this.journalAvailable) return;
+    if (scope === null || scope.readOnly || outcome === null || !this.journalAvailable) return null;
     const {receipt, record} = outcome;
     if (receipt.preview === null || receipt.historical || this.clock.now() >= receipt.preview.expiresAt) {
-      this.set({notice: 'expired', result: null}); return;
+      this.set({notice: 'expired', result: null}); return null;
     }
     if (this.state.records.some(item => item.command.step === 'apply' && item.command.previewKey === record.key)) {
-      this.set({notice: 'uncertain'}); return;
+      this.set({notice: 'uncertain'}); return null;
     }
-    await this.submit(scope, {step: 'apply', selection: record.command.selection, previewKey: record.key, fingerprint: receipt.preview.fingerprint});
+    return this.submit(scope, {step: 'apply', selection: record.command.selection, previewKey: record.key, fingerprint: receipt.preview.fingerprint});
   }
-  private async submit(scope: ReviewScope, command: ReviewCommand): Promise<void> {
-    if (this.state.records.some(item => item.status === 'pending')) {this.set({notice: 'uncertain'}); return;}
+  private async submit(scope: ReviewScope, command: ReviewCommand): Promise<ConfirmedReview | null> {
+    if (this.state.records.some(item => item.status === 'pending')) {this.set({notice: 'uncertain'}); return null;}
     let record: ReviewRecord;
     try {
       record = {key: this.entropy.requestKey(), command, createdAt: this.clock.now(), status: 'pending', operationId: null};
       this.persist(scope, [...this.state.records, record]);
-    } catch {this.set({notice: 'journal'}); return;}
-    await this.receive(scope, record, true);
+    } catch {this.set({notice: 'journal'}); return null;}
+    return this.receive(scope, record, true);
   }
   private persist(scope: ReviewScope, records: readonly ReviewRecord[]): void {
     this.set({records: this.journal.save(scope.key, this.clock.now(), records)});
   }
-  async recover(key: string): Promise<void> {
+  async recover(key: string): Promise<ConfirmedReview | null> {
     const scope = this.current(), record = this.state.records.find(item => item.key === key);
-    if (scope === null || record === undefined) return;
-    this.set({open: true}); await this.receive(scope, record, false);
+    if (scope === null || record === undefined) return null;
+    this.set({open: true}); return this.receive(scope, record, false);
+  }
+  /** Fresh authorization may reveal a saved receipt, never the old task target or commands. */
+  restore(confirmed: ConfirmedReview, tasksAvailable: boolean): void {
+    const scope = this.current();
+    if (scope === null || scope.key !== confirmed.scopeKey
+        || scope.occurrenceId !== null && scope.occurrenceId !== confirmed.occurrenceId) return;
+    this.set({open: true, target: null, result: confirmed.result,
+      notice: tasksAvailable ? confirmed.notice : 'tasks_unavailable'});
   }
   forget(key: string): void {
     const scope = this.current(), record = this.state.records.find(item => item.key === key);
@@ -147,15 +160,19 @@ export class RecurrenceReviewController {
       if (this.state.result?.record.key === key) this.set({result: null});
     } catch {this.set({notice: 'journal'});}
   }
-  private async receive(scope: ReviewScope, record: ReviewRecord, send: boolean): Promise<void> {
+  private async receive(scope: ReviewScope, record: ReviewRecord, send: boolean): Promise<ConfirmedReview | null> {
     this.set({result: null, notice: null});
+    let confirmed: ConfirmedReview | null = null;
     const request = send ? this.server.send(scope.context, record) : this.server.original(scope.context, record);
     await this.run(request, receipt => {
       if (record.operationId !== null && record.operationId !== receipt.operationId) throw new EntryReadError('invalid_response');
       const updated: ReviewRecord = {...record, status: 'received', operationId: receipt.operationId};
       try {this.persist(scope, this.state.records.map(item => item.key === updated.key ? updated : item));}
-      catch {this.set({notice: 'journal'}); return;}
-      this.set({result: {record: updated, receipt}});
+      catch {this.set({notice: 'journal'});}
+      const result = {record: updated, receipt};
+      this.set({result});
+      if (record.command.step === 'apply' && !receipt.historical)
+        confirmed = {scopeKey: scope.key, occurrenceId: scope.occurrenceId, result, notice: this.state.notice};
     }, error => {
       if (send && error instanceof ReviewRejected) {
         try {this.persist(scope, this.state.records.filter(item => item.key !== record.key));}
@@ -164,6 +181,7 @@ export class RecurrenceReviewController {
       }
       return 'uncertain';
     });
+    return confirmed;
   }
   private async run<T>(request: EntryRead<T>, completed: (value: T) => void, failure: (error: unknown) => ReviewNotice): Promise<void> {
     this.pending = request; this.set({busy: true});

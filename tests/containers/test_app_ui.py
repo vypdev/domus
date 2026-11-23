@@ -70,6 +70,6 @@ def exercise_packaged_ui_delivery(image, data_volume, expected):
 
 def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_volume):
     expected = json.loads(
-        (Path(__file__).resolve().parents[2] / "docs/evidence/unicode-text-limits.json").read_text()
-    )["immutableCandidate"]["actualProductFiles"]
+        (Path(__file__).resolve().parents[2] / "addon-edge/artifact.json").read_text()
+    )["uiFiles"]
     exercise_packaged_ui_delivery(image, data_volume, expected)

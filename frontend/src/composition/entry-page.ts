@@ -53,6 +53,7 @@ import {HttpRecurrenceServer} from '../adapters/recurrence-http';
 import {RECURRENCE_JOURNAL_KEY, RecurrenceSessionJournal} from '../adapters/recurrence-journal';
 import {BrowserEntropy, ServerClock} from '../adapters/browser-capabilities';
 import {RecurrenceReviewController} from '../application/recurrence-review-controller';
+import type {ConfirmedReview} from '../application/recurrence-review-controller';
 import {reviewDraft} from '../domain/recurrence-review';
 import type {ReviewIntent} from '../presentation/domus-recurrence-review';
 import {HttpCalendarPreferences} from '../adapters/calendar-preference-http';
@@ -399,8 +400,27 @@ export function mountEntry(page: EntryPage): PageMount {
         setItem: (key, value) => browser.storage().setItem(key, value)}), new ServerClock(browser.elapsed), new BrowserEntropy(browser.random),
       view => {element.recurrenceReview = view;});
     review = reviews;
+    let reviewEpoch = 0, savedReview: ConfirmedReview | null = null;
+    const retireReviewRefresh = () => {reviewEpoch++; savedReview = null; element.scheduleReadPending = false;};
+    const reviewOwner = () => {
+      const entry = element.view, administration = element.administration;
+      const context = entry?.session?.context, member = administration?.access?.member;
+      const home = administration?.capabilities?.householdId ?? entry?.household?.householdId;
+      return entry?.phase === 'ready' && entry.decision?.state === 'active' && entry.notice !== 'context_changed'
+        && administration?.access?.state === 'active' && context && member && home
+        ? JSON.stringify([context.installationId, context.channel, context.subject, home, member.memberId]) : null;
+    };
     const syncReview = () => {
       const entry = element.view, tasks = element.tasks;
+      const owner = reviewOwner();
+      if (savedReview !== null && (tasks?.scopeKey && tasks.scopeKey !== savedReview.scopeKey
+          || owner !== null && owner !== savedReview.scopeKey || tasks?.notice === 'forbidden'
+          || tasks?.notice === 'authentication_required' || tasks?.access && !tasks.access.canReviewSchedule)) retireReviewRefresh();
+      // Without task proof, acknowledge only the saved effect for its independently verified owner.
+      // Private receipt details and every schedule command remain hidden until matching task proof returns.
+      element.scheduleReadPending = savedReview !== null && owner === savedReview.scopeKey
+        && tasks?.phase === 'ready' && tasks.scopeKey === null
+        && (tasks.notice === 'unavailable' || tasks.notice === 'invalid_response');
       if (element.workspaceDestination === 'tasks' && entry?.phase === 'ready'
           && entry.decision?.state === 'active'
           && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey && tasks.access?.canReviewSchedule) {
@@ -734,6 +754,7 @@ export function mountEntry(page: EntryPage): PageMount {
     }, {signal: widget.signal});
     const syncWorkspace = (event?: Event) => {
       if (event?.type === 'hashchange') {
+        retireReviewRefresh();
         element.requestWorkspaceFocus();
         clearShoppingNavigation();
         inventoryController.retireShoppingNavigation();
@@ -755,6 +776,7 @@ export function mountEntry(page: EntryPage): PageMount {
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
       const retired=view.phase==='closed'||view.notice==='context_changed'||(view.phase==='ready'&&view.decision?.state!=='active');
+      if (retired && savedReview !== null) retireReviewRefresh();
       if(retired||(administration!==null&&owner===null)) {
         const entryContext=view.session?.context;
         const entryKey=entryContext?JSON.stringify([entryContext.installationId,entryContext.channel,entryContext.subject]):null;
@@ -779,12 +801,33 @@ export function mountEntry(page: EntryPage): PageMount {
       }
       doc.documentElement.lang=element.language;
     }, fail); runtime = active;
+    const refreshReviewTasks = async (confirmed: ConfirmedReview, epoch: number) => {
+      const current = () => !stopped && !widget.signal.aborted && epoch === reviewEpoch
+        && element.workspaceDestination === 'tasks' && reviewOwner() === confirmed.scopeKey
+        && (element.tasks?.scopeKey == null || element.tasks.scopeKey === confirmed.scopeKey);
+      if (!current()) return;
+      savedReview = confirmed;
+      await active.taskWork(async controller => {
+        await controller.refresh();
+        const tasks = controller.view;
+        // A failed prior read may have retired the selection. Restore it only after matching fresh proof.
+        if (epoch === reviewEpoch && element.workspaceDestination === 'tasks'
+            && tasks.scopeKey === confirmed.scopeKey && tasks.page !== null && tasks.detail === null
+            && confirmed.occurrenceId !== null) await controller.select(confirmed.occurrenceId);
+      });
+      if (!current()) return;
+      const tasks = element.tasks!;
+      if (tasks?.scopeKey !== confirmed.scopeKey) return;
+      reviews.restore(confirmed, tasks.page !== null
+        && (confirmed.occurrenceId === null || tasks.detail?.occurrenceId === confirmed.occurrenceId));
+    };
     element.addEventListener('domus-detached', dispose, {signal: widget.signal});
     element.addEventListener('domus-intent', async event => {
       if (event.target !== element) return;
       try {
         const intent = decodeIntent((event as CustomEvent<unknown>).detail);
         if (intent === null) return;
+        if (intent.type !== 'language') retireReviewRefresh();
         switch (intent.type) {
           case 'language': {
             element.language=intent.language;doc.documentElement.lang=intent.language;temporaryLanguage=true;
@@ -818,6 +861,7 @@ export function mountEntry(page: EntryPage): PageMount {
       if(event.target!==element)return;
       try {
         const intent=decodeAdministrationIntent((event as CustomEvent<unknown>).detail);if(intent===null)return;
+        retireReviewRefresh();
         switch(intent.type){
           case 'submit':await active.submitAdministration(intent.command);break;
           case 'recover':await active.recoverAdministration(intent.key);break;
@@ -845,6 +889,8 @@ export function mountEntry(page: EntryPage): PageMount {
       if (event.target !== element) return;
       try {
         const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail); if (intent === null) return;
+        const retry = savedReview;
+        retireReviewRefresh();
         switch (intent.type) {
           case 'materialHistory': await active.taskWork(controller => controller.materialHistory(intent.more)); break;
           case 'materialPlan':
@@ -853,7 +899,12 @@ export function mountEntry(page: EntryPage): PageMount {
             break;
           case 'settleMaterial': await active.taskWork(controller => controller.settleMaterial(
             intent.occurrenceId, intent.intentId, intent.cycleId, intent.revision, intent.quantity, intent.reason)); break;
-          case 'refresh': await active.refresh(); break;
+          case 'refresh':
+            if (retry !== null && element.workspaceDestination === 'tasks' && reviewOwner() === retry.scopeKey
+                && (element.tasks?.scopeKey == null || element.tasks.scopeKey === retry.scopeKey))
+              await refreshReviewTasks(retry, reviewEpoch);
+            else await active.refresh();
+            break;
           case 'more': await active.taskWork(controller => controller.more()); break;
           case 'select': await active.taskWork(controller => controller.select(intent.occurrenceId)); break;
           case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority,
@@ -886,16 +937,28 @@ export function mountEntry(page: EntryPage): PageMount {
     }, {signal: widget.signal});
     element.addEventListener('domus-review-intent', async event => {
       if (event.target !== element) return;
-      const intent = decodeReviewIntent((event as CustomEvent<unknown>).detail);
-      if (intent === null) return;
-      switch (intent.type) {
-        case 'open': await reviews.open(); break;
-        case 'close': reviews.close(); break;
-        case 'preview': await reviews.preview(intent.draft); break;
-        case 'apply': await reviews.apply(); break;
-        case 'recover': await reviews.recover(intent.key); break;
-        case 'forget': reviews.forget(intent.key); break;
-      }
+      try {
+        const intent = decodeReviewIntent((event as CustomEvent<unknown>).detail);
+        if (intent === null) return;
+        retireReviewRefresh();
+        const epoch = reviewEpoch;
+        switch (intent.type) {
+          case 'open': await reviews.open(); break;
+          case 'close': reviews.close(); break;
+          case 'preview': await reviews.preview(intent.draft); break;
+          case 'apply': {
+            const confirmed = await reviews.apply();
+            if (confirmed !== null) await refreshReviewTasks(confirmed, epoch);
+            break;
+          }
+          case 'recover': {
+            const confirmed = await reviews.recover(intent.key);
+            if (confirmed !== null) await refreshReviewTasks(confirmed, epoch);
+            break;
+          }
+          case 'forget': reviews.forget(intent.key); break;
+        }
+      } catch {fail();}
     }, {signal: widget.signal});
     roots[0].replaceChildren(element);
     ready = active.start().catch(() => {fail();});

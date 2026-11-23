@@ -44,6 +44,7 @@ import type {FamilyOverviewView, FamilyView} from '../application/family-control
 import type {CalendarPreferenceView} from '../application/calendar-preferences';
 import './domus-recurrence-review';
 import type {ReviewView} from '../application/recurrence-review-controller';
+import {reviewMessage} from './recurrence-messages';
 import type {CalendarView} from '../application/calendar-controller';
 import {DATE_MIN} from '../domain/calendar';
 import type {AdministrationView} from '../application/administration-controller';
@@ -65,7 +66,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 export class DomusApp extends LitElement {
   static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     taskOverview: {attribute: false}, automationPreview: {attribute: false}, automationDrafts: {attribute: false}, automationExecution: {attribute: false}, automationRunHistory: {attribute: false}, automationSchedulePreview: {attribute: false}, automationDaily: {attribute: false}, automationDailyHistory: {attribute: false}, stockAttention: {attribute: false}, shoppingAttention: {attribute: false}, familyOverview: {attribute: false},
-    workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
+    scheduleReadPending: {attribute: false}, workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
   declare administration:AdministrationView|null;
@@ -89,6 +90,7 @@ export class DomusApp extends LitElement {
   declare familyScopeKey: string | null;
   declare familyToday: string;
   declare recurrenceReview: ReviewView | null;
+  declare scheduleReadPending: boolean;
   declare calendarPreference: CalendarPreferenceView | null;
   declare calendarScopeKey: string | null;
   declare calendarToday: string;
@@ -103,7 +105,7 @@ export class DomusApp extends LitElement {
   private authenticationFocus = false;
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
-    this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
+    this.recurrenceReview = null; this.scheduleReadPending = false; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.taskOverview = null; this.automationPreview = null; this.nameDraft = ''; this.zoneDraft = '';
     this.automationDrafts = null; this.automationExecution = null; this.automationRunHistory = null; this.automationSchedulePreview = null;
@@ -288,6 +290,7 @@ export class DomusApp extends LitElement {
         <domus-tasks .view=${this.tasks} .language=${this.language} .participantNames=${taskNames} .administration=${this.administration}
           .allocation=${this.workspaceDestination === 'tasks' ? this.allocation : null}
           .retired=${closed || view?.notice === 'context_changed' || view?.phase === 'ready' && decision?.state !== 'active'}></domus-tasks>
+        ${this.scheduleReadPending ? html`<p role="alert">${reviewMessage('tasks_unavailable', this.language)}</p>` : nothing}
         <domus-recurrence-review .view=${this.recurrenceReview} .language=${this.language}></domus-recurrence-review>
       </section>
       <section id="calendar" tabindex="-1" aria-label=${this.text('navigationCalendar')}

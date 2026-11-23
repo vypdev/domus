@@ -37,6 +37,7 @@ const en = {
   expired: 'The review expired. Preview the change again before applying it.',
   rejected: 'The server rejected the change. Refresh the task and review its current schedule.',
   journal: 'Saved schedule requests are unavailable. The browser could not confirm safe request storage.',
+  tasks_unavailable: 'The schedule change was saved. Current tasks could not be loaded. Use Refresh tasks to read them without repeating the change.',
 };
 const es: Record<keyof typeof en, string> = {
   title: 'Revisiones de programación', open: 'Revisar programación', close: 'Cerrar revisión de programación',
@@ -75,6 +76,7 @@ const es: Record<keyof typeof en, string> = {
   expired: 'La revisión caducó. Previsualiza el cambio de nuevo antes de aplicarlo.',
   rejected: 'El servidor rechazó el cambio. Actualiza la tarea y revisa su programación actual.',
   journal: 'Las solicitudes guardadas no están disponibles. El navegador no pudo confirmar su almacenamiento.',
+  tasks_unavailable: 'El cambio de programación está guardado. No se han podido cargar las tareas actuales. Usa Actualizar tareas para consultarlas sin repetir el cambio.',
 };
 export type ReviewMessage = keyof typeof en;
 export function reviewMessage(key: ReviewMessage, language: Language): string {return (language === 'es' ? es : en)[key];}

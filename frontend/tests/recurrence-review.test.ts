@@ -198,6 +198,44 @@ function application() {
   return {controller,server,clock,views,store, at:(value:number)=>{at=value;},
     view:()=>views.mock.calls.at(-1)?.[0]};
 }
+test('only a confirmed current apply can reconcile task facts, including an in-memory receipt after storage failure', async () => {
+  const f = application(), c = f.controller;
+  c.bind(scope); await c.open(); await c.preview(input);
+  expect(await c.recover('missing')).toBeNull();
+  expect(await c.recover('key-1')).toBeNull();
+  f.server.original.mockReturnValueOnce(owned(plan)); await c.recover('key-1');
+  f.server.send.mockImplementationOnce(() => {
+    f.store.provider.setItem.mockImplementationOnce(() => {throw new Error('Receipt storage failed');});
+    return owned(storedEffect);
+  });
+  const confirmed = (await c.apply())!;
+  expect(confirmed).toMatchObject({scopeKey: scope.key, occurrenceId: work.occurrenceId,
+    result: {receipt: storedEffect}, notice: 'journal'});
+  expect(f.view()?.result?.receipt).toEqual(storedEffect);
+  c.bind(null); c.restore(confirmed, true); expect(f.view()).toBeNull();
+  c.bind({...scope, key:'other'}); c.restore(confirmed, true); expect(f.view()?.result).toBeNull();
+  c.bind({...scope, occurrenceId:'other'}); c.restore(confirmed, true); expect(f.view()?.result).toBeNull();
+  c.bind({...scope, occurrenceId:null}); c.restore(confirmed, false);
+  expect(f.view()).toMatchObject({open:true,target:null,result:confirmed.result,notice:'tasks_unavailable'});
+  c.bind(scope); c.restore(confirmed, true);
+  expect(f.view()).toMatchObject({open:true,target:null,result:confirmed.result,notice:'journal'});
+  f.at(scope.expiresAt); c.restore(confirmed, false);
+  expect(f.view()?.notice).toBe('journal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+});
+
+test('recovered previews and historical applies do not request current task reconciliation', async () => {
+  const f = application(), c = f.controller;
+  c.bind(scope); await c.open(); await c.preview(input);
+  f.server.original.mockReturnValueOnce(owned(plan));
+  expect(await c.recover('key-1')).toBeNull();
+  f.server.send.mockReturnValueOnce(owned(storedEffect));
+  expect(await c.apply()).not.toBeNull();
+  f.server.original.mockReturnValueOnce(owned({...storedEffect, historical:true}));
+  expect(await c.recover('key-2')).toBeNull();
+  expect(f.view()?.result?.receipt.historical).toBe(true);
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+});
 test('controller fences scope and explicitly recovers the original apply after response loss', async () => {
   const f = application(), c = f.controller;
   c.bind(null); c.close(); await c.open(); await c.preview(input); await c.apply(); await c.recover('missing'); c.forget('missing');
@@ -263,6 +301,53 @@ test('controller handles expiry, blocked authority, unavailable storage and call
 
 const mounted: HTMLElement[] = [];
 afterEach(() => {for (const node of mounted.splice(0)) node.remove();});
+
+test('saved receipt follows a late layout change until a newer focus, input, result or removal retires it', async () => {
+  const observers: {callback: ResizeObserverCallback; target: Element | null; disconnected: boolean}[] = [];
+  vi.stubGlobal('ResizeObserver', class {
+    readonly state: typeof observers[number];
+    constructor(callback: ResizeObserverCallback) {this.state={callback,target:null,disconnected:false};observers.push(this.state);}
+    observe(target: Element) {this.state.target=target;}
+    disconnect() {this.state.disconnected=true;}
+  });
+  const reveal = vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => {});
+  const parent=document.createElement('div'), widget=document.createElement('domus-recurrence-review'), later=document.createElement('button');
+  later.textContent='Newer action';parent.append(widget,later);document.body.append(parent);mounted.push(parent);
+  const received: ReviewRecord={...intent,status:'received',operationId:'apply-op',
+    command:{step:'apply',selection:attachment,previewKey:intent.key,fingerprint}};
+  const value: ReviewView={open:true,busy:false,readOnly:false,selected:true,target:null,records:[received],
+    result:{record:received,receipt:storedEffect},notice:null};
+  const latest=()=>observers.filter(observer=>observer.target===parent).at(-1)!;
+  const deliver=(observer:typeof observers[number])=>observer.callback([],{} as ResizeObserver);
+  const saved=async()=>{widget.view={...value,result:{...value.result!}};await widget.updateComplete;return latest();};
+  try {
+    const first=await saved(), heading=widget.shadowRoot!.querySelector<HTMLElement>('#recurrence-result')!;
+    expect(widget.shadowRoot!.activeElement).toBe(heading);expect(getComputedStyle(widget).minHeight).toBe('0px');
+    let before=reveal.mock.calls.length;deliver(first);expect(reveal).toHaveBeenCalledTimes(before+1);
+    later.focus();before=reveal.mock.calls.length;deliver(first);
+    expect(document.activeElement).toBe(later);expect(reveal).toHaveBeenCalledTimes(before);
+    for (const type of ['keydown','pointerdown','wheel']) {
+      const current=await saved();document.dispatchEvent(new Event(type));before=reveal.mock.calls.length;
+      deliver(current);expect(current.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+    }
+    const old=await saved();await saved();before=reveal.mock.calls.length;deliver(old);
+    expect(old.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+    const current=latest();widget.view=null;await widget.updateComplete;before=reveal.mock.calls.length;deliver(current);
+    expect(current.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+    const removed=await saved();widget.remove();before=reveal.mock.calls.length;deliver(removed);
+    expect(removed.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+  } finally {widget.remove();reveal.mockRestore();vi.unstubAllGlobals();}
+});
+
+test('closed receipts never focus hidden content and a component can follow layout inside a shadow root', async () => {
+  const host=document.createElement('div'), root=host.attachShadow({mode:'open'}), widget=document.createElement('domus-recurrence-review');
+  document.body.append(host);mounted.push(host);root.append(widget);
+  const value: ReviewView={open:false,busy:false,readOnly:false,selected:true,target:null,records:[intent],
+    result:{record:intent,receipt:storedEffect},notice:null};
+  widget.view=value;await widget.updateComplete;expect(widget.shadowRoot!.querySelector('#recurrence-result')).toBeNull();
+  widget.view={...value,open:true,result:{...value.result!}};await widget.updateComplete;
+  expect(widget.parentElement).toBeNull();expect(widget.shadowRoot!.activeElement?.id).toBe('recurrence-result');
+});
 
 test('review component shows bounded impacts, closed actions, literal content and original recovery in both languages', async () => {
   const widget = document.createElement('domus-recurrence-review'), dispatch = vi.fn();
