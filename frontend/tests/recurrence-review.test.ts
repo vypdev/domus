@@ -198,6 +198,44 @@ function application() {
   return {controller,server,clock,views,store, at:(value:number)=>{at=value;},
     view:()=>views.mock.calls.at(-1)?.[0]};
 }
+test('only a confirmed current apply can reconcile task facts, including an in-memory receipt after storage failure', async () => {
+  const f = application(), c = f.controller;
+  c.bind(scope); await c.open(); await c.preview(input);
+  expect(await c.recover('missing')).toBeNull();
+  expect(await c.recover('key-1')).toBeNull();
+  f.server.original.mockReturnValueOnce(owned(plan)); await c.recover('key-1');
+  f.server.send.mockImplementationOnce(() => {
+    f.store.provider.setItem.mockImplementationOnce(() => {throw new Error('Receipt storage failed');});
+    return owned(storedEffect);
+  });
+  const confirmed = (await c.apply())!;
+  expect(confirmed).toMatchObject({scopeKey: scope.key, occurrenceId: work.occurrenceId,
+    result: {receipt: storedEffect}, notice: 'journal'});
+  expect(f.view()?.result?.receipt).toEqual(storedEffect);
+  c.bind(null); c.restore(confirmed, true); expect(f.view()).toBeNull();
+  c.bind({...scope, key:'other'}); c.restore(confirmed, true); expect(f.view()?.result).toBeNull();
+  c.bind({...scope, occurrenceId:'other'}); c.restore(confirmed, true); expect(f.view()?.result).toBeNull();
+  c.bind({...scope, occurrenceId:null}); c.restore(confirmed, false);
+  expect(f.view()).toMatchObject({open:true,target:null,result:confirmed.result,notice:'tasks_unavailable'});
+  c.bind(scope); c.restore(confirmed, true);
+  expect(f.view()).toMatchObject({open:true,target:null,result:confirmed.result,notice:'journal'});
+  f.at(scope.expiresAt); c.restore(confirmed, false);
+  expect(f.view()?.notice).toBe('journal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+});
+
+test('recovered previews and historical applies do not request current task reconciliation', async () => {
+  const f = application(), c = f.controller;
+  c.bind(scope); await c.open(); await c.preview(input);
+  f.server.original.mockReturnValueOnce(owned(plan));
+  expect(await c.recover('key-1')).toBeNull();
+  f.server.send.mockReturnValueOnce(owned(storedEffect));
+  expect(await c.apply()).not.toBeNull();
+  f.server.original.mockReturnValueOnce(owned({...storedEffect, historical:true}));
+  expect(await c.recover('key-2')).toBeNull();
+  expect(f.view()?.result?.receipt.historical).toBe(true);
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+});
 test('controller fences scope and explicitly recovers the original apply after response loss', async () => {
   const f = application(), c = f.controller;
   c.bind(null); c.close(); await c.open(); await c.preview(input); await c.apply(); await c.recover('missing'); c.forget('missing');

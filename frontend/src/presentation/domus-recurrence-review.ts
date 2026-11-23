@@ -30,6 +30,15 @@ export class DomusRecurrenceReview extends LitElement {
       this.action = this.view?.target?.actions[0] ?? null;
     }
   }
+  protected updated(changed: PropertyValues<this>): void {
+    const result = this.view?.result;
+    if (changed.has('view') && result && result !== changed.get('view')?.result
+        && result.receipt.preview === null && this.view?.notice !== 'tasks_unavailable') {
+      const heading = this.renderRoot.querySelector<HTMLElement>('#recurrence-result');
+      heading?.focus();
+      heading?.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
+    }
+  }
   private text(key: ReviewMessage): string {return reviewMessage(key, this.language);}
   private intent(detail: ReviewIntent): void {
     this.dispatchEvent(new CustomEvent('domus-review-intent', {detail: Object.freeze(detail), bubbles: true, composed: true}));
@@ -105,7 +114,7 @@ export class DomusRecurrenceReview extends LitElement {
     const selection = record.command.selection;
     const body = selection.body;
     return html`<section aria-labelledby="recurrence-result">
-      <h3 id="recurrence-result">${this.text(receipt.historical ? 'historical' : plan === null ? 'approved' : 'review')}</h3>
+      <h3 id="recurrence-result" tabindex="-1">${this.text(receipt.historical ? 'historical' : plan === null ? 'approved' : 'review')}</h3>
       <p>${this.text(selection.kind)}</p>
       ${plan !== null && !receipt.historical ? html`
         ${'target' in body ? html`<p>${this.text(body.target === 'paused' ? 'pause' : 'resume')}</p>` : nothing}
