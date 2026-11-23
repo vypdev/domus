@@ -34,14 +34,15 @@ async function mount(value: TaskView | null = view(), locale: 'en' | 'es' = 'en'
   return {element, root, intents, button, input, text: () => root.textContent!};
 }
 
-test.each(['en','es'] as const)('%s missing post-create facts focus recovery once and preserve later draft editing', async locale => {
-  const f=await mount(view({notice:'unavailable'}),locale);
+for (const notice of ['unavailable','invalid_response'] as const)
+test.each(['en','es'] as const)('%s missing post-create facts focus recovery once and preserve later draft editing ('+notice+')', async locale => {
+  const f=await mount(view({notice}),locale);
   expect(f.root.activeElement).toBe(f.button(locale==='en'?'Refresh tasks':'Actualizar tareas'));
   f.root.querySelector<HTMLElement>('details.new-task summary')!.click();
   await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));await f.element.updateComplete;
   await f.input('task-title','A new retained draft');
   const title=f.root.querySelector<HTMLInputElement>('#task-title')!;title.focus();
-  f.element.view=view({notice:'unavailable'});await f.element.updateComplete;
+  f.element.view=view({notice});await f.element.updateComplete;
   expect(f.root.activeElement).toBe(title);expect(title.value).toBe('A new retained draft');
 });
 

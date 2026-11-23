@@ -401,10 +401,26 @@ export function mountEntry(page: EntryPage): PageMount {
       view => {element.recurrenceReview = view;});
     review = reviews;
     let reviewEpoch = 0, savedReview: ConfirmedReview | null = null;
-    const retireReviewRefresh = () => {reviewEpoch++; savedReview = null;};
+    const retireReviewRefresh = () => {reviewEpoch++; savedReview = null; element.scheduleReadPending = false;};
+    const reviewOwner = () => {
+      const entry = element.view, administration = element.administration;
+      const context = entry?.session?.context, member = administration?.access?.member;
+      const home = administration?.capabilities?.householdId ?? entry?.household?.householdId;
+      return entry?.phase === 'ready' && entry.decision?.state === 'active' && entry.notice !== 'context_changed'
+        && administration?.access?.state === 'active' && context && member && home
+        ? JSON.stringify([context.installationId, context.channel, context.subject, home, member.memberId]) : null;
+    };
     const syncReview = () => {
       const entry = element.view, tasks = element.tasks;
-      if (savedReview !== null && tasks?.scopeKey && tasks.scopeKey !== savedReview.scopeKey) retireReviewRefresh();
+      const owner = reviewOwner();
+      if (savedReview !== null && (tasks?.scopeKey && tasks.scopeKey !== savedReview.scopeKey
+          || owner !== null && owner !== savedReview.scopeKey || tasks?.notice === 'forbidden'
+          || tasks?.notice === 'authentication_required' || tasks?.access && !tasks.access.canReviewSchedule)) retireReviewRefresh();
+      // Without task proof, acknowledge only the saved effect for its independently verified owner.
+      // Private receipt details and every schedule command remain hidden until matching task proof returns.
+      element.scheduleReadPending = savedReview !== null && owner === savedReview.scopeKey
+        && tasks?.phase === 'ready' && tasks.scopeKey === null
+        && (tasks.notice === 'unavailable' || tasks.notice === 'invalid_response');
       if (element.workspaceDestination === 'tasks' && entry?.phase === 'ready'
           && entry.decision?.state === 'active'
           && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey && tasks.access?.canReviewSchedule) {
@@ -787,7 +803,8 @@ export function mountEntry(page: EntryPage): PageMount {
     }, fail); runtime = active;
     const refreshReviewTasks = async (confirmed: ConfirmedReview, epoch: number) => {
       const current = () => !stopped && !widget.signal.aborted && epoch === reviewEpoch
-        && element.workspaceDestination === 'tasks' && element.tasks?.scopeKey === confirmed.scopeKey;
+        && element.workspaceDestination === 'tasks' && reviewOwner() === confirmed.scopeKey
+        && (element.tasks?.scopeKey == null || element.tasks.scopeKey === confirmed.scopeKey);
       if (!current()) return;
       savedReview = confirmed;
       await active.taskWork(async controller => {
@@ -800,6 +817,7 @@ export function mountEntry(page: EntryPage): PageMount {
       });
       if (!current()) return;
       const tasks = element.tasks!;
+      if (tasks?.scopeKey !== confirmed.scopeKey) return;
       reviews.restore(confirmed, tasks.page !== null
         && (confirmed.occurrenceId === null || tasks.detail?.occurrenceId === confirmed.occurrenceId));
     };
@@ -882,7 +900,8 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'settleMaterial': await active.taskWork(controller => controller.settleMaterial(
             intent.occurrenceId, intent.intentId, intent.cycleId, intent.revision, intent.quantity, intent.reason)); break;
           case 'refresh':
-            if (retry !== null && element.workspaceDestination === 'tasks' && element.tasks?.scopeKey === retry.scopeKey)
+            if (retry !== null && element.workspaceDestination === 'tasks' && reviewOwner() === retry.scopeKey
+                && (element.tasks?.scopeKey == null || element.tasks.scopeKey === retry.scopeKey))
               await refreshReviewTasks(retry, reviewEpoch);
             else await active.refresh();
             break;

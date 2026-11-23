@@ -1040,6 +1040,9 @@ test('review composition accepts only closed events in the current task manager 
 function scheduleFixture() {
   const f = fixture('standalone', 'en', true), fallback = f.fetch.getMockImplementation()!;
   let listReads = 0, detailReads = 0, applies = 0, failList = false;
+  type FailedScope = 'session' | 'access' | 'invalid-access';
+  let failedScope: FailedScope | null = null;
+  let taskAccess: 'allowed' | 'denied' | 'no-review' = 'allowed';
   let holdApply: Promise<void> | null = null, holdList: Promise<void> | null = null;
   const originals = new Map<string, object>(), fingerprint = 'a'.repeat(64);
   const rules = {claim_allowed:true, eligible_roles:['administrator','adult','restricted'], verification:'role_default',
@@ -1062,6 +1065,20 @@ function scheduleFixture() {
   f.fetch.mockImplementation(async (path, init) => {
     const route = path.slice('api/v1/'.length + 1);
     let body: unknown;
+    if (failedScope !== null && route === (failedScope === 'session' ? 'session' : 'tasks/access')) {
+      const malformed = failedScope === 'invalid-access'; failedScope = null;
+      if (!malformed) throw new Error('Task scope unavailable');
+      const response = new Response('{}', {headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(response,'url',{value:corpus.standalone.endpoint.origin+path}); return response;
+    }
+    if (route === 'tasks/access' && taskAccess !== 'allowed') {
+      const raw = taskAccess === 'denied' ? {state:'blocked',code:'permission_denied',message:'Denied.',
+        action_required:'Review access.',correlation_id:'cor_test'}
+        : {...await (await fallback(path,init)).json(),can_review_schedule:false};
+      const response = new Response(JSON.stringify(raw), {status:taskAccess === 'denied' ? 403 : 200,
+        headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+      Object.defineProperty(response,'url',{value:corpus.standalone.endpoint.origin+path}); return response;
+    }
     if (route.startsWith('tasks/occurrences?')) {
       listReads++; if (holdList !== null) await holdList;
       if (failList) throw new Error('Task list unavailable');
@@ -1094,6 +1111,8 @@ function scheduleFixture() {
     return opened;
   };
   return {...f,open,navigate,send,reads:()=>listReads,details:()=>detailReads,applies:()=>applies,
+    failScope:(value:FailedScope)=>{failedScope=value;},
+    taskAccess:(value:typeof taskAccess)=>{taskAccess=value;},
     failList:(value:boolean)=>{failList=value;},holdApply:(value:Promise<void>)=>{holdApply=value;},holdList:(value:Promise<void>)=>{holdList=value;}};
 }
 
@@ -1123,6 +1142,42 @@ test('a failed post-save task read retains the receipt and retries the selected 
   await vi.waitFor(() => expect(app.recurrenceReview?.notice).toBeNull());
   expect(app.tasks?.detail?.occurrenceId).toBe('work-1'); expect(f.applies()).toBe(1);
   expect(app.recurrenceReview?.result?.receipt.operationId).toBe('apply-op');
+});
+
+test.each(['session','access','invalid-access'] as const)('a failed post-save %s scope read retains read-only recovery until fresh matching task proof', async failure => {
+  const f = scheduleFixture(), {app} = await f.open(); f.failScope(failure);
+  f.send(app,{type:'apply'});
+  await vi.waitFor(() => expect(app.tasks?.notice).toBe(failure === 'invalid-access' ? 'invalid_response' : 'unavailable'));
+  await vi.waitFor(() => expect(app.view?.busy).toBe(false));
+  expect(app.tasks?.scopeKey).toBeNull(); expect(app.tasks?.page).toBeNull(); expect(app.tasks?.detail).toBeNull();
+  expect(app.recurrenceReview?.result ?? null).toBeNull();
+  await app.updateComplete;
+  expect(app.shadowRoot!.querySelector('#tasks [role="alert"]')?.textContent ?? '').toContain('The schedule change was saved');
+  const tasks = app.shadowRoot!.querySelector('domus-tasks')!; await tasks.updateComplete;
+  expect(tasks.shadowRoot!.activeElement?.textContent).toContain('Refresh tasks');
+  expect(f.values.get(RECURRENCE_JOURNAL_KEY)).toContain('apply-op');
+  f.failScope(failure); f.send(app,{type:'refresh'},'domus-task-intent');
+  await vi.waitFor(() => expect(app.view?.busy).toBe(false));
+  expect(app.tasks?.scopeKey).toBeNull();
+  await app.updateComplete;
+  expect(app.shadowRoot!.querySelector('#tasks [role="alert"]')?.textContent ?? '').toContain('The schedule change was saved');
+  f.send(app,{type:'refresh'},'domus-task-intent');
+  await vi.waitFor(() => expect(app.recurrenceReview?.result?.receipt.operationId).toBe('apply-op'));
+  expect(app.tasks?.detail?.occurrenceId).toBe('work-1'); expect(f.applies()).toBe(1);
+});
+
+test.each(['navigation','member','denied','no-review'] as const)('a %s change retires the unbound schedule confirmation before any receipt can return', async change => {
+  const f = scheduleFixture(), {app} = await f.open(); f.failScope('access');
+  f.send(app,{type:'apply'});
+  await vi.waitFor(() => expect(app.scheduleReadPending).toBe(true));
+  if (change === 'navigation') {f.navigate('#household'); f.navigate('#tasks');}
+  else if (change === 'member') f.member('other');
+  else f.taskAccess(change);
+  f.send(app,{type:'refresh'},'domus-task-intent');
+  await vi.waitFor(() => expect(app.view?.busy).toBe(false));
+  expect(app.scheduleReadPending).toBe(false);
+  expect(app.recurrenceReview?.result ?? null).toBeNull(); expect(f.applies()).toBe(1);
+  expect(f.fetch.mock.calls.filter(([path])=>path.includes('/reviews/requests/recurrence.review.apply/'))).toHaveLength(0);
 });
 
 test.each(['navigation','member','dispose'] as const)('an applied reply retired by %s cannot refresh or restore its receipt', async change => {

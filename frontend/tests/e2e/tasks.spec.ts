@@ -830,7 +830,7 @@ for (const mode of ['native', 'standalone'] as const) {
   for (const locale of ['en', 'es'] as const) {
     test.describe(`fixed review ${mode} ${locale}`, () => {
     test.use({hasTouch: locale === 'es'});
-    for (const outcome of ['save', 'recovery', 'read failure'] as const) {
+    for (const outcome of ['save', 'recovery', 'read failure', 'scope failure'] as const) {
     test(`protected calendar and fixed batch review ${outcome} use actual stored work in ${mode} ${locale}`, async ({page, context, request}) => {
       const responseLost = outcome === 'recovery';
       expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
@@ -906,6 +906,10 @@ for (const mode of ['native', 'standalone'] as const) {
       page.on('request', item => {
         if (item.method() === 'GET' && item.url().includes('/tasks/recurrence/reviews/requests/recurrence.review.apply/')) originalRead = true;
       });
+      await page.route(base(mode) + '/api/v1/tasks/access', route => {
+        if (applies > 0 && outcome === 'scope failure') return route.abort('failed');
+        return route.continue();
+      });
       await page.route(endpoint + '?limit=25', async route => {
         if (applies > 0 && outcome === 'read failure') return route.abort('failed');
         // Recovery must update facts already read before the explicit GET, rather than rely on reload.
@@ -930,6 +934,17 @@ for (const mode of ['native', 'standalone'] as const) {
       const recovered = page.waitForResponse(item => item.request().method() === 'GET' && item.url().endsWith('/' + originalKey));
       await activate(review.getByRole('button', {name: t('Check original schedule request', 'Consultar solicitud de programación original'), exact: true}).last());
       expect((await recovered).ok()).toBe(true);
+      }
+      if (outcome === 'scope failure') {
+        await expect(page.locator('domus-app #tasks > [role="alert"]')).toContainText(
+          t('The schedule change was saved', 'El cambio de programación está guardado'));
+        await expect(review.getByRole('heading', {name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toHaveCount(0);
+        await expect(review.getByRole('button', {name:t('Check original schedule request','Consultar solicitud de programación original'),exact:true})).toHaveCount(0);
+        await expect(tasks.locator('.task-list li')).toHaveCount(0);
+        await expect(tasks.locator('#selected-task-title')).toHaveCount(0);
+        await expect(tasks.getByRole('button', {name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeFocused();
+        await page.unroute(base(mode) + '/api/v1/tasks/access');
+        await activate(tasks.getByRole('button', {name:t('Refresh tasks','Actualizar tareas'),exact:true}));
       }
       await expect(review.getByRole('heading', {name: t('Schedule change saved', 'Cambio de programación guardado'), exact: true})).toBeVisible();
       if (outcome === 'read failure') {

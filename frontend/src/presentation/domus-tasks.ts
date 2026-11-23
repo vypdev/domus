@@ -217,8 +217,9 @@ export class DomusTasks extends LitElement {
   protected updated(changed: PropertyValues): void {
     this.lang = language(this.language, 'en');
     const current = this.retired ? null : this.view;
-    if (changed.has('view') && current?.phase === 'ready' && current.notice === 'unavailable'
-        && current.detail === null && changed.get('view')?.notice !== 'unavailable') {
+    if (changed.has('view') && current?.phase === 'ready'
+        && (current.notice === 'unavailable' || current.notice === 'invalid_response')
+        && current.detail === null && changed.get('view')?.notice !== current.notice) {
       this.focusDetail = false; this.assignmentFocus = null; this.progressFocus = null; this.materialFocus = null;
       const recovery = this.renderRoot.querySelector<HTMLButtonElement>('.task-header button')!;
       recovery.focus();
