@@ -77,7 +77,8 @@ export class RecurrenceReviewController {
       try {this.journalAvailable = true; this.set({records: this.journal.open(scope.key, this.clock.now())});}
       catch {this.journalAvailable = false; this.set({notice: 'journal'});}
     } else if (previous.occurrenceId !== scope.occurrenceId || previous.readOnly !== scope.readOnly) {
-      this.cancel(); this.set({open: false, busy: false, readOnly: scope.readOnly, selected: scope.occurrenceId !== null, target: null, result: null});
+      this.cancel(); this.set({open: false, busy: false, readOnly: scope.readOnly, selected: scope.occurrenceId !== null,
+        target: null, result: null, notice: this.state.notice === 'overlap' ? null : this.state.notice});
     } else {
       const now = this.clock.now();
       const preview = this.state.result?.receipt.preview;

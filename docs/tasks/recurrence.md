@@ -188,7 +188,8 @@ When a preview's dates overlap retained work, the review explains that no change
 made and asks you to adjust the dates or recurrence pattern, then preview again. Your
 date, time, pattern and reason stay in the form. The notice receives focus unless you
 have already moved on to another control or action. A rejected preview offers no apply
-action. Other rejections and unconfirmed results keep their existing refresh or original
+action. Selecting another task or entering read-only access retires that proposal's
+overlap notice. Other rejections and unconfirmed results keep their existing refresh or original
 request recovery guidance.
 
 The rule revision, original cancellations, replacement work, new slots and continuation

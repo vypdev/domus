@@ -275,6 +275,15 @@ test('storage failure and retired ownership take precedence over overlap feedbac
   waiting.reject(new ReviewRejected('overlap')); await pending;
   expect(other.view()).toBeNull();
 });
+
+test.each(['selection','read-only'] as const)('%s changes retire overlap feedback belonging to the previous proposal', async boundary => {
+  const f=application(), c=f.controller;c.bind(scope);await c.open();
+  f.server.send.mockReturnValueOnce({result:Promise.reject(new ReviewRejected('overlap')),cancel:vi.fn()});
+  await c.preview(input);expect(f.view()?.notice).toBe('overlap');
+  c.bind(boundary==='selection'?{...scope,occurrenceId:'another-occurrence'}:{...scope,readOnly:true});
+  expect(f.view()).toMatchObject({open:false,target:null,result:null,notice:null,records:[]});
+  expect(f.server.send).toHaveBeenCalledTimes(1);
+});
 test('only a confirmed current apply can reconcile task facts, including an in-memory receipt after storage failure', async () => {
   const f = application(), c = f.controller;
   c.bind(scope); await c.open(); await c.preview(input);

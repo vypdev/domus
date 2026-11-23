@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.91
+
+- Retire proposal-specific overlap feedback when selecting another task or entering read-only access.
+- Preserve journal errors and original-request recovery across those changes.
+
 ## 0.0.0-edge.90
 
 - Explain recognized schedule-preview overlaps in English and Spanish and offer correction without losing the proposal.

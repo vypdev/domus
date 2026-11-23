@@ -894,6 +894,14 @@ for (const mode of ['native', 'standalone'] as const) {
         expect(applies).toBe(0);expect(await read()).toEqual(before);
       }
       await info.attach('occupied-date-feedback',{body:await page.screenshot(),contentType:'image/png'});
+      const completedIndex=candidates.findIndex((item:{occurrence_id:string})=>item.occurrence_id===completed);
+      expect(completedIndex).toBeGreaterThanOrEqual(0);
+      await activate(tasks.getByRole('button',{name:title,exact:true}).nth(completedIndex));
+      await expect(notice).toHaveCount(0);
+      await activate(tasks.getByRole('button',{name:title,exact:true}).nth(index));
+      await activate(review.getByRole('button',{name:t('Review scheduling','Revisar programación'),exact:true}));
+      await review.getByRole('combobox').first().selectOption('fixed-replacement');
+      await time.fill('07:00');await reason.fill(literal+' corrected after returning');
       await date.fill(newDate);await pattern.fill('FREQ=DAILY;COUNT=1');
       await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
       await expect(review.getByRole('heading',{name:t('Review the proposed change','Revisa el cambio propuesto'),exact:true})).toBeVisible();

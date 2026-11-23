@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.91 retires the previous overlap notice when you select another task or access becomes read-only. Returning to a task opens a fresh review; saved original requests keep their existing recovery.
+
 Edge.90 explains when proposed schedule dates overlap work that must be retained. Change the dates or pattern and preview again; the date, time, pattern and reason stay in the form. The focused notice remains visible unless newer input takes over. A rejected preview offers no apply action.
 
 Edge.89 keeps a saved-change notice when current task access cannot be read. Use **Refresh tasks** to retry without repeating the change. The saved result returns after your access is verified; task details and schedule controls stay hidden until then. Navigation, participant changes and lost permissions retire the previous continuation.
