@@ -883,6 +883,7 @@ for (const mode of ['native', 'standalone'] as const) {
         await reason.fill(literal+' '+count);
         await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
         await expect(notice).toContainText(t('No change was made.','No se ha cambiado nada.'));
+        await expect(notice).toContainText(t('would create overlapping scheduled work','solaparía trabajo programado'));
         expect(previewResponses).toHaveLength(count);
         expect(previewResponses.at(-1)).toEqual({status:409,code:'recurrence_reschedule_collision'});
         await expect(notice).toContainText(t('then preview again.','vuelve a previsualizar.'));

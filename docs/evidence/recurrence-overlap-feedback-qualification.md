@@ -19,6 +19,12 @@ time, pattern and reason remain available. A rejected preview has no apply
 action. Journal persistence failure takes precedence, and retired ownership
 cannot publish a late result.
 
+The shared collision code can also describe duplicate instants inside a proposed
+fixed-state or fixed-pattern backlog. The notice therefore says the proposed
+change would create overlapping scheduled work; it does not infer that retained
+work caused every rejection. The adapter matrix covers state, pattern, replacement
+and individual reschedule previews in both entry modes.
+
 A newly submitted collision receives focus and follows dependent layout changes
 only while it owns focus. Newer keyboard, pointer, wheel, input or focus changes
 take over. Closing, read-only access, detachment and removal retire the pending
@@ -27,7 +33,7 @@ the initiating preview's focus ownership.
 
 `frontend/tests/recurrence-review.test.ts` covers the strict transport matrix,
 application recovery and component draft/focus behavior. The complete frontend
-unit campaign passes 2,281 tests with all four coverage metrics at 100% globally
+unit campaign passes 2,287 tests with all four coverage metrics at 100% globally
 and in every nonempty runtime file: 114 nonempty files and seven empty files.
 Runtime/catalog type checks, 42 Node policy tests, 187 Python tooling tests,
 51 Python architecture tests and 68 catalog variants also pass.
@@ -77,3 +83,15 @@ and all four occupied-date browser variants, including task switching and
 original recovery after restart. All four metrics remain at 100% across the
 2,281-test frontend campaign. Complete final-head source/image CI, installed
 acceptance and substantive review remain required before merge.
+
+The final Edge.91 head `6edefcd` passes complete CI: 6,040 backend tests,
+161 source-entry journeys, 68 catalog variants, and 62 container checks plus
+106 image journeys on each architecture. Its installed EN keyboard/ES mobile
+touch acceptance also passes. Review finding
+[4667210389](https://github.com/vypdev/domus/pull/175#discussion_r4667210389)
+correctly identifies the shared-code wording assumption. Edge.92 uses the neutral
+notice above. Both language regression witnesses fail with the old wording and
+pass with the correction; the complete 2,287-test frontend campaign, four genuine
+source journeys and 68 catalog variants pass independently. The
+[Edge.91 receipt](recurrence-overlap-feedback-edge91.json) is frozen separately;
+Edge.92 still requires its own package/image, installed and final-head acceptance.

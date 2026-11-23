@@ -187,10 +187,14 @@ test('receipt projection handles optional plans and distinguishes definite rejec
   await expect(f.server.send(context,intent).result).rejects.not.toBeInstanceOf(ReviewRejected);
 });
 
-test.each(['native', 'standalone'] as const)('%s recognizes a validated collision only in a preview POST response', async mode => {
+test.each((['native', 'standalone'] as const).flatMap(mode =>
+  (['fixed-state', 'fixed-pattern', 'fixed-replacement', 'reschedule'] as const).map(kind => ({mode,kind}))))(
+  '$mode/$kind recognizes a validated preview collision without assuming which dates collided', async ({mode,kind}) => {
   const f = http(mode);
+  const selected = reviewSelection({...work,schedule:{...work.schedule!,state:'paused'}}, {...input,kind,time:'09:15'});
+  const request:ReviewRecord = {...intent,command:{step:'preview',selection:selected}};
   f.enqueue(token); f.enqueue({...rejected, code:'recurrence_reschedule_collision'}, 409);
-  await expect(f.server.send(context, intent).result).rejects.toMatchObject({reason:'overlap'});
+  await expect(f.server.send(context, request).result).rejects.toMatchObject({reason:'overlap'});
   expect(f.fetch.mock.calls.filter(([, request]) => request.method === 'POST')).toHaveLength(1);
 });
 
@@ -406,6 +410,7 @@ test.each(['en','es'] as const)('%s overlap feedback focuses a newly submitted r
   const notice=root.querySelector<HTMLElement>('#recurrence-notice')!;
   expect(root.activeElement).toBe(notice);expect(notice.getAttribute('role')).toBe('alert');
   expect(notice.textContent).toContain(language==='en'?'No change was made.':'No se ha cambiado nada.');
+  expect(notice.textContent).toContain(language==='en'?'would create overlapping scheduled work':'solaparía trabajo programado');
   expect(notice.textContent).toContain(language==='en'?'then preview again.':'vuelve a previsualizar.');
   for (const [name,text] of Object.entries(proposal)) expect(get(name).value).toBe(text);
   expect(reason.value).toBe('<img src=x> keep my reason');expect(root.querySelector('img')).toBeNull();

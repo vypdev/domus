@@ -23,7 +23,7 @@ schedule commands. **Refresh tasks** verifies current access and restores the
 result only for the same household and member. Losing access, changing the
 verified owner or leaving Tasks retires that continuation.
 
-If a schedule preview overlaps retained work, Domus explains that no change was
+If a schedule preview would create overlapping work, Domus explains that no change was
 made. Adjust the dates or pattern and preview again. The entered date, time,
 pattern and reason stay available, and a rejected preview offers no apply action.
 The notice receives focus unless newer input has taken over. Selecting another task

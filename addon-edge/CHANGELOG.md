@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.92
+
+- Explain schedule-preview collisions without assuming whether the conflicting dates belong to retained work or the proposal itself.
+- Keep the same proposal correction, focus ownership and original-request recovery.
+
 ## 0.0.0-edge.91
 
 - Retire proposal-specific overlap feedback when selecting another task or entering read-only access.
