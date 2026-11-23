@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.93
+
+- Offer reviewed skips only for currently eligible overdue work under the enabled missed-work policy.
+- Preserve current preview/apply fences, work history and original-request recovery.
+- Keep scheduling controls within their card on narrow screens.
+
 ## 0.0.0-edge.92
 
 - Explain schedule-preview collisions without assuming whether the conflicting dates belong to retained work or the proposal itself.

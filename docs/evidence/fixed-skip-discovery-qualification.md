@@ -60,3 +60,9 @@ Immutable package/image acceptance,
 installed Home Assistant observations and final-head CI/review remain separate open gates
 for this increment. Full M2, the remaining roadmap and Stable/distribution acceptance remain
 open independently.
+
+The prepared Edge.93 declaration pins runtime `72c241b`, schema 37 and the exact ha-ui
+`0.1.0-next.5` cohort. The official source archive matches all 1,039 tracked Git blobs.
+All 250 Python and four compiled UI wheel files match the verified source and current
+source-browser payload; only the three intended Python modules differ from Edge.92.
+This inventory proof does not substitute for actual pinned-image or installed acceptance.

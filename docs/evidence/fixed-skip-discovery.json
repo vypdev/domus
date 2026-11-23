@@ -102,9 +102,21 @@
     "actualImageBrowserPerArchitecture": 110,
     "collectionIsExecutionEvidence": false
   },
-  "candidate": null,
+  "candidate": {
+    "version": "0.0.0-edge.93",
+    "sourceCommit": "72c241bc56b64b53739953c8779cf3e750b4a7a4",
+    "sourceArchiveSHA256": "d76398826e5c83dfdcafa40e4322c439cc1948749f1549e9ab92b131f17a7e43",
+    "trackedArchiveFilesVerified": 1039,
+    "wheelSHA256": "04085aa37d0826be10d1b6e655b23e85aa128d11092ffaaa6ba17ef6d8ea2ab0",
+    "pythonFilesVerified": 250,
+    "uiFilesVerified": 4,
+    "unchangedPythonFiles": 247,
+    "declaration": "addon-edge/artifact.json",
+    "actualPinnedImage": "pending",
+    "installedHomeAssistant": "pending"
+  },
   "remainingGates": [
-    "Immutable runtime/source archive/wheel and image qualification",
+    "Actual pinned image and package execution",
     "Complete final-head CI including source165, catalog68, container62/image110 on amd64 andARM64",
     "Installed immutable Edge candidate in Home Assistant with EN keyboard and ES mobile touch",
     "Substantive same-head review and normal merge",

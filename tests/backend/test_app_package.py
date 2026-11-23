@@ -15,7 +15,7 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
     manifest = yaml.safe_load((ROOT / "addon-edge/config.yaml").read_text())
     assert repository["url"] == "https://github.com/vypdev/domus"
     assert manifest["slug"] == "domus_edge" and manifest["stage"] == "experimental"
-    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.92"
+    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.93"
     assert manifest["ingress"] is True and manifest["ingress_port"] == 8099
     assert manifest["panel_admin"] is False and manifest["homeassistant_api"] is True
     assert manifest["options"] == {"public_origins": []}
@@ -67,15 +67,15 @@ def test_build_pins_source_checksum_bases_lock_and_nonroot_native_entrypoint() -
     commits = re.findall(r"^ARG DOMUS_SOURCE_COMMIT=(\w+)$", source, re.MULTILINE)
     assert len(commits) == 2 and len(set(commits)) == 1
     assert re.fullmatch(r"[a-f0-9]{40}", commits[0])
-    assert commits[0] == "b37d5d0aceef832e2233b54d62cd7e755489c58d"
+    assert commits[0] == "72c241bc56b64b53739953c8779cf3e750b4a7a4"
     assert (
-        "DOMUS_SOURCE_SHA256=3c0b25d29a675ca48c97aca02b6fa7d4aa161c17bee071cfe0f0e61e87e47f33"
+        "DOMUS_SOURCE_SHA256=d76398826e5c83dfdcafa40e4322c439cc1948749f1549e9ab92b131f17a7e43"
         in source
     )
-    assert "ARG BUILD_VERSION=0.0.0-edge.92" in source
+    assert "ARG BUILD_VERSION=0.0.0-edge.93" in source
     candidate = json.loads((ROOT / "addon-edge/artifact.json").read_text())
     assert candidate["sourceCommit"] == commits[0]
-    assert candidate["version"] == "0.0.0-edge.92"
+    assert candidate["version"] == "0.0.0-edge.93"
     assert "DOMUS_SOURCE_SHA256=" + candidate["sourceArchiveSHA256"] in source
     assert re.search(r"^ARG DOMUS_SOURCE_SHA256=[a-f0-9]{64}$", source, re.MULTILINE)
     assert "sha256sum --check" in source
@@ -152,15 +152,15 @@ def test_edge_artifact_declares_exact_reviewed_runtime_without_rebinding_histori
         "pythonFiles",
         "uiFiles",
     }
-    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.92"
-    assert artifact["sourceCommit"] == "b37d5d0aceef832e2233b54d62cd7e755489c58d"
+    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.93"
+    assert artifact["sourceCommit"] == "72c241bc56b64b53739953c8779cf3e750b4a7a4"
     assert artifact["storageSchema"] == 37
     for field in ["sourceArchiveSHA256", "wheelSHA256"]:
         assert re.fullmatch("[a-f0-9]{64}", artifact[field])
     assert len(artifact["pythonFiles"]) == 250 and len(artifact["uiFiles"]) == 4
-    current_ui = json.loads((ROOT / "docs/evidence/recurrence-overlap-feedback.json").read_text())[
-        "immutableCandidate"
-    ]["actualProductFiles"]
+    current_ui = json.loads((ROOT / "docs/evidence/fixed-skip-discovery.json").read_text())[
+        "localVerification"
+    ]["sourceBrowser"]["compiledUI"]
     assert current_ui == artifact["uiFiles"]
     historical_ui = json.loads(
         (ROOT / "docs/evidence/shopping-workspace-navigation.json").read_text()
