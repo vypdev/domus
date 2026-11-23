@@ -1,0 +1,160 @@
+{
+  "issue": 174,
+  "requirements": [
+    "recurrence-calendar-R3",
+    "recurrence-calendar-R5"
+  ],
+  "owningCases": [
+    "recurrence-calendar-C30"
+  ],
+  "newOwningCases": 0,
+  "base": "698d746f5ddf921f2ba77b2cb4eff2f85f9543a7",
+  "scope": "Share existing fixed-skip applicability between discovery and preview/apply, preserving reasons, permissions, historical receipt recovery and schema37. Keep native scheduling controls inside the narrow Domus card.",
+  "implementation": {
+    "productFiles": [
+      "backend/src/domus/application/fixed_skip_review.py",
+      "backend/src/domus/application/recurrence_review_target.py",
+      "backend/src/domus/application/recurrence_review.py",
+      "frontend/src/presentation/domus-recurrence-review.ts"
+    ],
+    "storageSchema": 37,
+    "haUICohort": "0.1.0-next.5",
+    "wireFormatChanged": false
+  },
+  "localVerification": {
+    "backend": {
+      "tests": 6066,
+      "pythonFiles": 250,
+      "supportedLineAndBranchCoverageGlobalAndPerFile": 100,
+      "originalReportSHA256": "84e293913d126748e693a559fefc380f428faf3ac3dbf674e50daa6620eeabe0"
+    },
+    "frontend": {
+      "tests": 2287,
+      "runtimeFiles": 121,
+      "nonemptyFiles": 114,
+      "emptyFiles": 7,
+      "supportedStatementsBranchesFunctionsLinesGlobalAndPerFile": 100
+    },
+    "sourceBrowser": {
+      "test": "frontend/tests/e2e/tasks.spec.ts: skip discovery excludes protected work and retains one original skip",
+      "variants": [
+        {
+          "mode": "native",
+          "locale": "en",
+          "oneExplicitSkip": true,
+          "repeatAbsentBeforeAndAfterRestart": true,
+          "otherFourRecordsUnchanged": true,
+          "sameOriginalReceipt": true
+        },
+        {
+          "mode": "native",
+          "locale": "es",
+          "oneExplicitSkip": true,
+          "repeatAbsentBeforeAndAfterRestart": true,
+          "otherFourRecordsUnchanged": true,
+          "sameOriginalReceipt": true
+        },
+        {
+          "mode": "standalone",
+          "locale": "en",
+          "oneExplicitSkip": true,
+          "repeatAbsentBeforeAndAfterRestart": true,
+          "otherFourRecordsUnchanged": true,
+          "sameOriginalReceipt": true
+        },
+        {
+          "mode": "standalone",
+          "locale": "es",
+          "oneExplicitSkip": true,
+          "repeatAbsentBeforeAndAfterRestart": true,
+          "otherFourRecordsUnchanged": true,
+          "sameOriginalReceipt": true
+        }
+      ],
+      "expected": 4,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "originalReportSHA256": "fe7a024cf9156b5058aa6771e254807e34fc323f46ff995ec2c31d7ec96539db",
+      "allOtherFourTaskProjectionsUnchanged": true,
+      "oneExplicitSkipApplyPerVariant": true,
+      "originalReceiptRecoveredAfterRestart": true,
+      "compiledUI": {
+        "index.html": "6791c87843da963fa65c88af6843e22ba8d91314282e70f36a7cc592b05e2d33",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-BHodC-RC.js": "5529d9ce384eb1997029e8cf535f12b695ab98961f31eab21c8eff62651e3de8",
+        ".vite/manifest.json": "3d9fde61b021ecd6302861c12e4df5147e48b009c15ccd7443371375ea87db77"
+      }
+    },
+    "typing": "Backend250 files, frontend runtime/catalog and Node policy checks passed.",
+    "architectureAndPythonToolingTests": 238,
+    "importContracts": "Application import contracts passed.",
+    "workflowContractTests": 48,
+    "originals": "Raw local reports, coverage JSON/XML/lcov, browser PNGs and exact decoded proof attachments are retained outside the public repository."
+  },
+  "diagnostics": {
+    "backendLauncher": "The first full-suite invocation lacked its nested temporary-directory parent. It produced setup errors and partial coverage; the corrected unchanged product suite passed.",
+    "browserPreparation": "The first actual source run timed out opening the creation draft before the seeded task list settled. The incomplete run was stopped; its trace/PNG/log remain separate from subsequent four-variant passes. A stale preceding collection report is explicitly not execution evidence.",
+    "mobileLayout": "The first passing browser screenshots exposed native controls extending beyond the scheduling card. A zero-minimum Domus form column corrects this; all2287 unit tests and all four actual source variants pass with that correction.",
+    "pinnedImageLauncher": "The first selected local launch omitted the existing DOMUS_TEST_IMAGE fixture variable. One inventory check passed and two setup errors were retained separately. Supplying both required image variables passes all three contracts unchanged.",
+    "nativeEnvironment": "The initial unconfigured start correctly required public_origins. HA then restarted during startup; after recovery and explicit status refresh, the configured installation completed acceptance. A short observer deadline during the later public start was not treated as runtime failure or retried."
+  },
+  "collectedInventories": {
+    "fullSourceBrowser": 165,
+    "actualImageBrowserPerArchitecture": 110,
+    "collectionIsExecutionEvidence": false
+  },
+  "candidate": {
+    "version": "0.0.0-edge.93",
+    "sourceCommit": "72c241bc56b64b53739953c8779cf3e750b4a7a4",
+    "sourceArchiveSHA256": "d76398826e5c83dfdcafa40e4322c439cc1948749f1549e9ab92b131f17a7e43",
+    "trackedArchiveFilesVerified": 1039,
+    "wheelSHA256": "04085aa37d0826be10d1b6e655b23e85aa128d11092ffaaa6ba17ef6d8ea2ab0",
+    "pythonFilesVerified": 250,
+    "uiFilesVerified": 4,
+    "unchangedPythonFiles": 247,
+    "declaration": "addon-edge/artifact.json",
+    "actualPinnedImage": {
+      "architecture": "aarch64",
+      "productFilesMatchDeclaration": {
+        "python": 250,
+        "ui": 4
+      },
+      "selectedRuntimeContractsPassed": 3,
+      "selectedBrowserVariantsPassed": 4,
+      "browserReportSHA256": "0e4bfee96678eebe40ef996bfecf8abaee0ceae3625523e48334935583a2ac32",
+      "scope": "Exact immutable Edge93 image. Full CI image inventory on both CPU families remains a separate gate."
+    },
+    "installedHomeAssistant": {
+      "result": "passed",
+      "mode": "native Ingress",
+      "controls": [
+        "English desktop keyboard",
+        "Spanish390px mobile touch"
+      ],
+      "taskCount": 4,
+      "completedPerformedReopenedStartedAndFutureWorkExcludeSkip": true,
+      "oneExplicitSkip": true,
+      "otherThreeTaskProjectionsUnchanged": true,
+      "originalReceiptRecoveredBeforeAndAfterPublicStopStart": true,
+      "allFourTaskProjectionsPreservedAcrossRestart": true,
+      "unrelatedDraftPreservedBeforeReload": true,
+      "servedJSAndCSSMatchPin": true,
+      "finalStopped": true,
+      "optionalSwitches": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "observations": "Direct UI actions and captured production responses only; no native fixture/private API writes.",
+      "limits": "The HA shell reload evicted debugger events. Direct current reads and original receipts were retained after restart; this is not a gapless HTTP trace. Installed Python files are not claimed to have been individually hashed."
+    }
+  },
+  "remainingGates": [
+    "Complete final-head CI including source165, catalog68, container62/image110 on amd64 andARM64",
+    "Substantive same-head review and normal merge",
+    "Exact destination tree/ref, full destination CI, Branch Sync and native issue closure"
+  ],
+  "limits": "This is a bounded supplement to C30. Full M2, the remaining M0–M5 roadmap and Stable/distribution acceptance remain open."
+}

@@ -255,6 +255,11 @@ def test_protected_overdue_fixed_skip_recovers_original_exception(api):
     assert result.status_code == 200, result.text
     work = result.json()["result"]["work"]
     assert work["state"] == "skipped" and work["state_reason"] == "<em>away</em>"
+    settled = api.client.get(target, headers=CONTEXT)
+    assert settled.status_code == 200, settled.text
+    assert settled.json()["actions"] == [
+        action for action in current["actions"] if action != "fixed-skip"
+    ]
     original = api.client.get(
         f"{BASE}/requests/recurrence.review.apply/apply-skip", headers=CONTEXT
     )

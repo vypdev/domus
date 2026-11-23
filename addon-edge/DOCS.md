@@ -1,7 +1,14 @@
 # Installation and operation
 
-Edge 0.0.0-edge.92 packages the immutable runtime declared in
-[artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
+Edge 0.0.0-edge.93 packages the immutable runtime declared in
+[artifact.json](artifact.json).
+
+In **Tasks / Tareas**, an enabled reviewed-skip policy offers the action only for
+current unstarted overdue work. Reopening performed work does not make it eligible.
+Saved original requests retain their read-only recovery. See the
+[skip discovery qualification](../docs/evidence/fixed-skip-discovery-qualification.md).
+
+Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
 Overview item links and previously shared shopping fragments focus the same item

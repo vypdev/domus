@@ -936,6 +936,123 @@ for (const mode of ['native', 'standalone'] as const) {
       expect(original.ok()).toBe(true);expect(await original.json()).toEqual(receipt);expect(receipt.state).toBe('committed');expect(applies).toBe(1);
       await info.attach('overlap-recovery-proof',{body:Buffer.from(JSON.stringify({mode,locale,previews,applies,operation:receipt.operation_id,protected:[completed,started],before,after})),contentType:'application/json'});
     });
+    test(`skip discovery excludes protected work and retains one original skip in ${mode} ${locale}`, async ({page,context,request},info) => {
+      test.setTimeout(180_000);
+      expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
+      const tasks=await open(page,context,mode);
+      const fixture=await request.post(origin(mode)+'/__fixture__/calendar-review');
+      expect(fixture.ok()).toBe(true);
+      const {title,completed,started,future}=await fixture.json();
+      const t=(en:string,es:string)=>locale==='en'?en:es;
+      const activate=async(control:Locator)=>{
+        await expect(control).toBeVisible();await expect(control).toBeEnabled();
+        if(locale==='es')await control.tap();else{await control.focus();await control.press('Enter');}
+      };
+      if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+      await page.setViewportSize({width:locale==='es'?390:1120,height:844});
+      await page.emulateMedia({colorScheme:locale==='es'?'light':'dark'});
+      await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      type Work={occurrence_id:string;title:string;state:string;due_at:number|null};
+      await expect(tasks.getByRole('button',{name:title,exact:true})).toHaveCount(5);
+      await expect(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeEnabled();
+      const endpoint=base(mode)+'/api/v1/tasks/occurrences';
+      const read=async():Promise<Work[]>=>{
+        const response=await page.request.get(endpoint);expect(response.ok()).toBe(true);
+        return (await response.json()).items;
+      };
+      const before=await read();expect(before).toHaveLength(5);
+      const eligible=before.filter(item=>item.state==='available'&&item.due_at!==null)
+        .sort((a,b)=>a.due_at!-b.due_at!)[0];
+      expect(eligible).toBeTruthy();expect(eligible.due_at!).toBeLessThan(Date.now());
+      const draft=tasks.getByRole('textbox',{name:t('Title','Título'),exact:true});
+      if(!await draft.isVisible())await activate(tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..'));
+      await expect(draft).toBeVisible();
+      const draftText='Keep QA174 unrelated task draft';await draft.fill(draftText);
+      const review=page.locator('domus-recurrence-review');
+      const choose=async(id:string)=>{
+        const rows=(await read()).filter(item=>item.title===title);
+        const index=rows.findIndex(item=>item.occurrence_id===id);expect(index).toBeGreaterThanOrEqual(0);
+        await activate(tasks.getByRole('button',{name:title,exact:true}).nth(index));
+      };
+      const openReview=async(id:string)=>{
+        const close=review.getByRole('button',{name:t('Close schedule review','Cerrar revisión de programación'),exact:true});
+        if(await close.isVisible())await activate(close);
+        await choose(id);
+        const pending=page.waitForResponse(response=>response.request().method()==='GET'
+          &&response.url().endsWith('/tasks/recurrence/reviews/targets/'+id));
+        await activate(review.getByRole('button',{name:t('Review scheduling','Revisar programación'),exact:true}));
+        const response=await pending;expect(response.ok()).toBe(true);return response.json();
+      };
+      let previews=0,applies=0,policies=0,applyKey='',applyContext='';
+      page.on('request',value=>{
+        if(value.method()!=='POST')return;
+        if(value.url().endsWith('/fixed-skip/preview'))previews++;
+        if(value.url().endsWith('/fixed-missed-policy/apply'))policies++;
+        if(value.url().endsWith('/fixed-skip/apply')){
+          applies++;applyKey=value.headers()['idempotency-key'];applyContext=value.headers()['x-domus-context'];
+        }
+      });
+      await openReview(eligible.occurrence_id);
+      const action=review.getByRole('combobox',{name:t('Schedule change','Cambio de programación'),exact:true});
+      await expect(action.locator('option[value="fixed-skip"]')).toHaveCount(0);
+      await action.selectOption('fixed-missed-policy');
+      await review.locator('select[name=missedPolicy]').selectOption('skip_after_review');
+      await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
+      await activate(review.getByRole('button',{name:t('Apply reviewed change','Aplicar cambio revisado'),exact:true}));
+      const saved=review.getByRole('heading',{name:t('Schedule change saved','Cambio de programación guardado'),exact:true});
+      await expect(saved).toBeFocused();expect(policies).toBe(1);expect(applies).toBe(0);
+      const rejectedTargets=[];
+      for(const id of [completed,started,future]){
+        const target=await openReview(id);rejectedTargets.push(target);
+        expect(target.actions).not.toContain('fixed-skip');
+        await expect(action.locator('option[value="fixed-skip"]')).toHaveCount(0);
+        await expect(action.locator('option[value="fixed-missed-policy"]')).toHaveCount(1);
+        await expect(draft).toHaveValue(draftText);
+      }
+      const close=review.getByRole('button',{name:t('Close schedule review','Cerrar revisión de programación'),exact:true});
+      await activate(close);await choose(eligible.occurrence_id);
+      await activate(tasks.getByRole('button',{name:t('Claim task','Quedarme esta tarea'),exact:true}));
+      await expect(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true})).toBeEnabled();
+      expect((await read()).find(item=>item.occurrence_id===eligible.occurrence_id)!.state).toBe('assigned');
+      const allowed=await openReview(eligible.occurrence_id);expect(allowed.actions).toContain('fixed-skip');
+      await action.selectOption('fixed-skip');
+      await review.getByRole('textbox',{name:t('Reason for schedule change','Motivo del cambio de programación'),exact:true}).fill('QA174 deliberate overdue skip');
+      await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
+      await activate(review.getByRole('button',{name:t('Apply reviewed change','Aplicar cambio revisado'),exact:true}));
+      await expect(saved).toBeFocused();expect(previews).toBe(1);expect(applies).toBe(1);
+      const after=await read();expect(after).toHaveLength(5);
+      expect(after.find(item=>item.occurrence_id===eligible.occurrence_id)!.state).toBe('skipped');
+      for(const original of before.filter(item=>item.occurrence_id!==eligible.occurrence_id))
+        expect(after.find(item=>item.occurrence_id===original.occurrence_id)).toEqual(original);
+      const settled=await openReview(eligible.occurrence_id);expect(settled.actions).not.toContain('fixed-skip');
+      await expect(action.locator('option[value="fixed-skip"]')).toHaveCount(0);
+      await expect(draft).toHaveValue(draftText);
+      await info.attach('settled-skip-menu',{body:await page.screenshot(),contentType:'image/png'});
+      await activate(review.getByText(t('Saved schedule requests','Solicitudes de programación guardadas'),{exact:true}));
+      await activate(review.getByRole('button',{name:t('Check original schedule request','Consultar solicitud de programación original'),exact:true}).last());
+      await expect(saved).toBeFocused();expect(applies).toBe(1);expect(await read()).toEqual(after);
+      expect(applyKey).toBeTruthy();expect(applyContext).toBeTruthy();
+      const originalPath=base(mode)+'/api/v1/tasks/recurrence/reviews/requests/recurrence.review.apply/'+applyKey;
+      const headers={'X-Domus-Context':applyContext};
+      const original=await page.request.get(originalPath,{headers});expect(original.ok()).toBe(true);
+      const receipt=await original.json();expect(receipt.state).toBe('committed');
+      expect((await request.post(origin(mode)+'/__fixture__/operator',{data:{action:'restart'}})).ok()).toBe(true);
+      await page.reload();
+      if(mode==='standalone'){
+        await page.getByRole('button',{name:'Sign in with Home Assistant',exact:true}).click();
+        await page.getByRole('link',{name:'Continue as fixture user',exact:true}).click();
+      }
+      await page.getByRole('link',{name:'Tasks',exact:true}).click();
+      if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+      const restarted=await openReview(eligible.occurrence_id);
+      expect(restarted.actions).not.toContain('fixed-skip');
+      await expect(action.locator('option[value="fixed-skip"]')).toHaveCount(0);
+      expect(await read()).toEqual(after);expect(previews).toBe(1);expect(applies).toBe(1);
+      const recovered=await page.request.get(originalPath,{headers});
+      expect(recovered.ok()).toBe(true);expect(await recovered.json()).toEqual(receipt);
+      await info.attach('skip-eligibility-recovery-proof',{body:Buffer.from(JSON.stringify({mode,locale,previews,applies,policies,
+        rejectedTargets,allowed,settled,restarted,operation:receipt.operation_id,before,after})),contentType:'application/json'});
+    });
     for (const outcome of ['save', 'recovery', 'read failure', 'scope failure'] as const) {
     test(`protected calendar and fixed batch review ${outcome} use actual stored work in ${mode} ${locale}`, async ({page, context, request}) => {
       const responseLost = outcome === 'recovery';

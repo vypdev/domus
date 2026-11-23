@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.92",
-  "sourceCommit": "b37d5d0aceef832e2233b54d62cd7e755489c58d",
-  "sourceArchiveSHA256": "3c0b25d29a675ca48c97aca02b6fa7d4aa161c17bee071cfe0f0e61e87e47f33",
+  "version": "0.0.0-edge.93",
+  "sourceCommit": "72c241bc56b64b53739953c8779cf3e750b4a7a4",
+  "sourceArchiveSHA256": "d76398826e5c83dfdcafa40e4322c439cc1948749f1549e9ab92b131f17a7e43",
   "storageSchema": 37,
-  "wheelSHA256": "897333b203166deb24e5fb2050df45f19f2063e4c6cdc46a3ea5b2457a694b70",
+  "wheelSHA256": "04085aa37d0826be10d1b6e655b23e85aa128d11092ffaaa6ba17ef6d8ea2ab0",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -39,7 +39,7 @@
     "domus/application/fixed_missed_policy.py": "7998bf53064c43eee00103e480dd4d3beac4bd6b137d04f6d594524689f001bc",
     "domus/application/fixed_pattern_review.py": "5df3fe193a74a92cc571b23167d0c61c1179fd6a2f5bf25597088ce1ac73b502",
     "domus/application/fixed_recurrence.py": "da4c9458ef0b808c344a9a9793cb4628138d28e7a80096e0573edf711b3bc6a3",
-    "domus/application/fixed_skip_review.py": "670f4d6b0eabb6e465d02fed8673a4d68a4a7c40c60eabbf796535d6a35196be",
+    "domus/application/fixed_skip_review.py": "3ac711f469dd0f9b7e4cf656f1f896a3caeaff86dfe7e68c7415c640043135a9",
     "domus/application/fixed_state_review.py": "ec3a7d8e66c71f577fa784ccff45f89a5ddf22ba8afcc4f80ee0a9cca4f160ce",
     "domus/application/ha_calendar_projection.py": "fbd19801f1ce35def3566a5c46b95b8dd7ce08a27546f93af8c2f2fa2dc906e2",
     "domus/application/household_administration_queries.py": "05157644dd2e564d878b9cda38731f7eb7262f6669126ec114d57a5e24df224f",
@@ -64,8 +64,8 @@
     "domus/application/recovery_commands.py": "2b8c198cde97f0213ec1612ea32bce5e00637aab99862fe08b59418d3c64af49",
     "domus/application/recurrence_commands.py": "4d91c498ced40c335b8a081719a33dde97ab081a050ab352c3f1fac83e6f1447",
     "domus/application/recurrence_ports.py": "5f3703ce1c561ae810607a1fab2b0276e118ccba3ceca173bd12b12429eaf149",
-    "domus/application/recurrence_review.py": "c4d2a60551f774936662cb9244d227ea52a71a5e48fff0eadfbea4d1cc8b0e8b",
-    "domus/application/recurrence_review_target.py": "e3c25fd2f9462769817acf739742117c1fadf95927d4efc3360c2e9a168e2dc2",
+    "domus/application/recurrence_review.py": "e2238300c3c07bd93444413d40478a16aaf8c686183cb300be96df1a1790be48",
+    "domus/application/recurrence_review_target.py": "6358e70dc6b6ca64eac059ee2d71e8d80436a9dd46cecaf2c43b7e5263ba343d",
     "domus/application/recurrence_sources.py": "5371d858c52eb7d852e9471e0276a07a8db49f60494e7daadb3fc4fb8f9c0456",
     "domus/application/relative_attachment_review.py": "4039377deef5fd456ef8672ab7de40d6f8449c9f36a19c6aca0683dde50a9d8a",
     "domus/application/relative_lifecycle.py": "e52a3077da1dff9dd7577dd9847579e0f4c346632798c2081b1d043f8a291b69",
@@ -258,9 +258,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    "index.html": "2b098f0b281ce452dc8e871b6adfac0a24607e79f934deca3f013c1309a8dfc2",
-    ".vite/manifest.json": "db2947390c87cdafcd1624c887bf6a7d229af2909d643c6a61e66514e5042117",
-    "assets/index-BphRPb7d.js": "e04aa363a310a1f4bbf924f90712fb02cb20576114ac18ec876bab9154fe29ad",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+    ".vite/manifest.json": "3d9fde61b021ecd6302861c12e4df5147e48b009c15ccd7443371375ea87db77",
+    "assets/index-BHodC-RC.js": "5529d9ce384eb1997029e8cf535f12b695ab98961f31eab21c8eff62651e3de8",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "index.html": "6791c87843da963fa65c88af6843e22ba8d91314282e70f36a7cc592b05e2d33"
   }
 }

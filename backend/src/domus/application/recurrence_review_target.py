@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from typing import Literal
 
 from domus.application.fixed_materialization import MaintenanceScope
-from domus.application.ports import UnitOfWork
+from domus.application.fixed_skip_review import FixedSkipSelection, fixed_skip_available
+from domus.application.ports import Clock, UnitOfWork
+from domus.application.recurrence_ports import RecurrenceTimes
 from domus.application.task_authorization import TaskAccess
 from domus.domain.errors import Forbidden, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission
@@ -61,7 +63,12 @@ class ReviewTarget:
 
 
 def review_target(
-    unit: UnitOfWork, scope: MaintenanceScope, human: HumanIdentity, occurrence_id: str
+    unit: UnitOfWork,
+    scope: MaintenanceScope,
+    human: HumanIdentity,
+    occurrence_id: str,
+    times: RecurrenceTimes,
+    clock: Clock,
 ) -> ReviewTarget:
     home = scope.household(unit)
     if home is None:
@@ -98,7 +105,15 @@ def review_target(
         )
         if slot_key is not None:
             actions += ("reschedule",)
-            if settings.policy is MissedOccurrencePolicy.SKIP_AFTER_REVIEW:
+            if settings.policy is MissedOccurrencePolicy.SKIP_AFTER_REVIEW and fixed_skip_available(
+                unit,
+                scope,
+                FixedSkipSelection(
+                    schedule_id, fixed.revision, slot_key, occurrence_id, work.revision
+                ),
+                times,
+                clock,
+            ):
                 actions += ("fixed-skip",)
         return ReviewTarget(
             *common,
