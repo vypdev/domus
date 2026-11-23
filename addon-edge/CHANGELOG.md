@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.89
+
+- Keep a saved-change notice and explicit read retry when current task access cannot be loaded.
+- Reveal receipt details only after fresh access matches the same household and member.
+- Preserve the confirmation across repeated read failures; retire it on navigation, participant changes or lost permissions.
+- Focus read recovery for unavailable or invalid responses, preserving drafts and original operations.
+
 ## 0.0.0-edge.88
 
 - Keep the focused saved schedule result visible while later task settings expand above it.
