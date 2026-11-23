@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/vypdev/domus/issues/173",
+  "status": "Frozen source unit and local ARM64 package/occupied-date image qualification. Complete final-head CI, installed Edge and substantive review remain separate required gates.",
+  "scope": "Explain only validated409 recurrence_reschedule_collision preview rejection, retain the proposal and permit explicit correction. Existing recurrence-calendar-R5/C34; no new owning cases.",
+  "immutableCandidate": {
+    "version": "0.0.0-edge.90",
+    "sourceCommit": "145f60bb77464d2157e0522052639dd783b3c80f",
+    "sourceArchiveSHA256": "90ef21b4a0ad2b6abc377c60ae16898ee0f1f1495a360b8d8eed4c9930f936d7",
+    "wheelSHA256": "7abc1524af4b1f0f4465116a8cbb49e5fcd33c43567fa2727773089d35e58508",
+    "storageSchema": 37,
+    "pythonProductFilesUnchanged": 250,
+    "actualProductFiles": {
+      ".vite/manifest.json": "e0e75623fa0a81cbeb25094caa8159fbe5b9160204c7c7390aefa1d416b2b41a",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-KXgKjhkR.js": "8a1fbf3619784e6c8f440a8c45fd0a985c703db74ddb1242e5914760d6ec6303",
+      "index.html": "640074bb72430bf032a38530b3f6c1a8e00fc31c6c435507875e21e734da2b73"
+    }
+  },
+  "dependencyCohort": "0.1.0-next.5",
+  "executedSource": {
+    "unitTests": 2279,
+    "runtimeFiles": 121,
+    "fullyCoveredNonemptyFiles": 114,
+    "emptyFiles": 7,
+    "coverage": {
+      "lines": {
+        "total": 7066,
+        "covered": 7066,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 9713,
+        "covered": 9713,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2053,
+        "covered": 2053,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 8943,
+        "covered": 8943,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "nodeTests": 42,
+    "pythonToolingTests": 187,
+    "pythonArchitectureTests": 51,
+    "catalogVariants": 68,
+    "occupiedDateVariants": 4,
+    "occupiedDateUnexpected": 0,
+    "occupiedDateSkipped": 0,
+    "occupiedDateFlaky": 0,
+    "fullEntryVariants": null,
+    "fullEntryStatus": "Initial complete161 campaign:160 passed,1 new test could not read a Chromium DevTools response body. The observer was corrected to forward and inspect the actual upstream response once, with no synthetic response or retry. Complete final-head161 CI remains required.",
+    "initialCompleteEntryAttempt": {
+      "inventory": 161,
+      "expected": 160,
+      "unexpected": 1,
+      "skipped": 0,
+      "flaky": 0,
+      "diagnostic": "Network.getResponseBody: No data found for resource with given identifier",
+      "correction": "Read the actual upstream APIResponse once with maxRetries0/maxRedirects0 and forward its unmodified status/body/headers. Preserve assertions for real409 collision, failed proposals, no apply and unchanged stored work."
+    },
+    "requiredFullEntryVariants": 161
+  },
+  "actualImage": {
+    "requiredBrowserVariantsPerArchitecture": 106,
+    "localARM64Status": "3 package checks and4 genuine occupied-date image browser variants passed; full final-head matrix remains required",
+    "exactFinalHeadMatrix": "Required separately before merge.",
+    "localARM64PackageChecks": {
+      "passed": 3,
+      "deselected": 1,
+      "deselectedScope": "Only the existing actual Edge5 upgrade test; complete final-head62-container architecture CI remains required.",
+      "imageID": "sha256:2799ef07430009a504236ac01f9e92e78416eafe395e38d0cbbf05ab0348e9b2",
+      "scope": "Exact250 Python/4 UI file identities, native launcher/authority/storage/restart and standalone private-bundle delivery."
+    },
+    "localARM64BrowserVariants": {
+      "expected": 4,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "sourceCommit": "145f60bb77464d2157e0522052639dd783b3c80f",
+      "scope": "Actual immutable product image, no Docker network, test-only HA provider wrapper. Real409 overlaps, latest draft, one corrected apply, protected work and original receipt unchanged after restart; standalone reauthenticates. No retry/fake response/skip allowance."
+    }
+  },
+  "installed": {
+    "includedInThisSourceReceipt": false,
+    "requiredBeforeMerge": true,
+    "privateOriginalSnapshotsRetainedLocally": true,
+    "distributionAuthorized": false
+  },
+  "newOwningCasesCreated": 0,
+  "limitations": [
+    "No change to domain collision eligibility, schema, authorization, receipt replay or retained work.",
+    "No full M2, owner, cross-domain ledger/reservation or HA entity acceptance is claimed.",
+    "Complete final-head product CI on both architectures, installed Edge acceptance and substantive review remain required."
+  ],
+  "historicalEvidencePreserved": [
+    "task-schedule-refresh-scope.json",
+    "task-schedule-refresh-focus.json",
+    "task-schedule-refresh.json",
+    "unicode-text-limits.json",
+    "recurrence-edge86-installed.json"
+  ]
+}

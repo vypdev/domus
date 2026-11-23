@@ -863,6 +863,13 @@ for (const mode of ['native', 'standalone'] as const) {
       await date.fill(occupiedDate);await time.fill('07:00');await pattern.fill('FREQ=DAILY;COUNT=1');
       const literal='<img src=x> retain this proposal';await reason.fill(literal);
       let previews=0,applies=0,applyKey='',applyContext='';
+      const previewResponses:{status:number;code:unknown}[]=[];
+      // Observe the real response once without relying on Chromium retaining its body for DevTools.
+      await page.route(base(mode)+'/api/v1/tasks/recurrence/reviews/fixed-replacement/preview',async route=>{
+        const upstream=await route.fetch({maxRetries:0,maxRedirects:0});
+        previewResponses.push({status:upstream.status(),code:upstream.status()===409?(await upstream.json()).code:null});
+        await route.fulfill({response:upstream});
+      });
       page.on('request',value=>{
         if(value.method()!=='POST')return;
         if(value.url().endsWith('/fixed-replacement/preview'))previews++;
@@ -874,11 +881,10 @@ for (const mode of ['native', 'standalone'] as const) {
       for(const count of [1,2]){
         await pattern.fill('FREQ=DAILY;COUNT='+count);
         await reason.fill(literal+' '+count);
-        const rejected=page.waitForResponse(value=>value.request().method()==='POST'&&value.url().endsWith('/fixed-replacement/preview'));
         await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
-        const response=await rejected;expect(response.status()).toBe(409);
-        expect((await response.json()).code).toBe('recurrence_reschedule_collision');
         await expect(notice).toContainText(t('No change was made.','No se ha cambiado nada.'));
+        expect(previewResponses).toHaveLength(count);
+        expect(previewResponses.at(-1)).toEqual({status:409,code:'recurrence_reschedule_collision'});
         await expect(notice).toContainText(t('then preview again.','vuelve a previsualizar.'));
         await expect(notice).toBeFocused();await expect(notice).toBeInViewport({ratio:1});
         await expect(date).toHaveValue(occupiedDate);await expect(time).toHaveValue('07:00');
@@ -891,6 +897,8 @@ for (const mode of ['native', 'standalone'] as const) {
       await date.fill(newDate);await pattern.fill('FREQ=DAILY;COUNT=1');
       await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
       await expect(review.getByRole('heading',{name:t('Review the proposed change','Revisa el cambio propuesto'),exact:true})).toBeVisible();
+      expect(previewResponses).toEqual([{status:409,code:'recurrence_reschedule_collision'},
+        {status:409,code:'recurrence_reschedule_collision'},{status:200,code:null}]);
       await expect(notice).toHaveCount(0);
       await activate(review.getByRole('button',{name:t('Apply reviewed change','Aplicar cambio revisado'),exact:true}));
       await expect(review.getByRole('heading',{name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toBeFocused();

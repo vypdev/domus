@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.89 packages the immutable runtime declared in
+Edge 0.0.0-edge.90 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
@@ -22,6 +22,12 @@ keeps the read retry available without revealing the receipt details or offering
 schedule commands. **Refresh tasks** verifies current access and restores the
 result only for the same household and member. Losing access, changing the
 verified owner or leaving Tasks retires that continuation.
+
+If a schedule preview overlaps retained work, Domus explains that no change was
+made. Adjust the dates or pattern and preview again. The entered date, time,
+pattern and reason stay available, and a rejected preview offers no apply action.
+The notice receives focus unless newer input has taken over. See the
+[overlap feedback qualification](../docs/evidence/recurrence-overlap-feedback-qualification.md).
 
 Switching between Shopping and Inventory keeps same-participant drafts, literal
 notes, priorities, selected work and interrupted-operation identity. Use
