@@ -144,6 +144,13 @@ When a daylight-saving change makes a scheduled time nonexistent, Domus keeps th
 When autumn repeats a local time, the task executes once at the first appearance by default. A household setting may select the second appearance; preview shows the resolved offset and preserves existing work.
 Use month/week/day/agenda and member/category/status/priority/type filters.
 Missed occurrences remain visibly pending by default. A per-task policy can change how missed work is handled; explicitly skipping work retains a skipped record and awards no completion points.
+With **Allow reviewed skips** enabled, **Skip this overdue occurrence** is offered only for
+available or assigned work that has never started and whose effective deadline has passed.
+A date-only deadline becomes overdue on the next local date. Moving an occurrence changes the
+deadline used for this decision. Completed, cancelled, already skipped and previously performed
+work cannot be skipped through this action, including a completed task that has been reopened.
+Open the scheduling review again to read current eligibility. Saved original requests remain
+available without repeating their effects. See the [skip discovery qualification](evidence/fixed-skip-discovery-qualification.md).
 Changing recurrence shows a preview of future changes. Only executions that have not started are updated; work underway and history remain. If someone starts a task after the preview, refresh the plan before applying it. Explicit exceptions and any overlaps remain visible for review.
 
 ## Supplies and shopping

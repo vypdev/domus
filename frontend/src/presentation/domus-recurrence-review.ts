@@ -19,6 +19,7 @@ export type ReviewIntent = Readonly<{type: 'open' | 'close' | 'apply'}>
 export class DomusRecurrenceReview extends LitElement {
   static properties = {view: {attribute: false}, language: {attribute: false}, action: {state: true}};
   static styles = [styles, css`:host {min-height:0;background:transparent}
+    form {grid-template-columns:minmax(0,1fr)}
     vyp-ha-textarea {--vyp-ha-danger:var(--warning);
     --vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}`];
   declare view: ReviewView | null;

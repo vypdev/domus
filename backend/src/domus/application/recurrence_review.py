@@ -174,7 +174,12 @@ class RecurrenceReview:
         human = self.read_actor()
         with self.transactions.read() as unit:
             return review_target(
-                unit, MaintenanceScope(self.installation, self.household_id), human, occurrence_id
+                unit,
+                MaintenanceScope(self.installation, self.household_id),
+                human,
+                occurrence_id,
+                self.planner.times,
+                self.clock,
             )
 
     def _authority(self, human: HumanIdentity, action: ReviewAction, key: str) -> _ReviewAuthority:

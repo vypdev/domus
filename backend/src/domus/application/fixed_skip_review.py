@@ -3,7 +3,7 @@
 from dataclasses import asdict, dataclass
 
 from domus.application.fixed_materialization import MaintenanceScope
-from domus.application.ports import UnitOfWork
+from domus.application.ports import Clock, UnitOfWork
 from domus.application.recurrence_ports import RecurrenceTimes
 from domus.application.relative_lifecycle import occurrence_work_history
 from domus.application.reschedule_review import EffectiveDeadline, effective_deadline
@@ -17,19 +17,28 @@ from domus.domain.task_values import MissedOccurrencePolicy, OccurrenceState, va
 
 
 @dataclass(frozen=True, slots=True)
-class FixedSkip:
+class FixedSkipSelection:
+    """Current work identity, independent of a member's proposed skip reason."""
+
     schedule_id: str
     schedule_revision: int
     slot_key: str
     occurrence_id: str
     occurrence_revision: int
-    reason: str
 
     def __post_init__(self) -> None:
         for identifier in (self.schedule_id, self.slot_key, self.occurrence_id):
             validate_identifier(identifier)
         validate_revision(self.schedule_revision)
         validate_revision(self.occurrence_revision)
+
+
+@dataclass(frozen=True, slots=True)
+class FixedSkip(FixedSkipSelection):
+    reason: str
+
+    def __post_init__(self) -> None:
+        FixedSkipSelection.__post_init__(self)
         validate_task_text(self.reason, 1000, required=True, multiline=True)
 
     def document(self) -> JsonDocument:
@@ -60,7 +69,7 @@ class FixedSkipPlan:
 
 
 def fixed_skip_plan(
-    unit: UnitOfWork, scope: MaintenanceScope, selection: FixedSkip
+    unit: UnitOfWork, scope: MaintenanceScope, selection: FixedSkipSelection
 ) -> FixedSkipPlan:
     home = scope.household_id
     rule = unit.recurrence.schedule(home, selection.schedule_id)
@@ -116,3 +125,26 @@ def fixed_skip_plan(
             }
         ),
     )
+
+
+def fixed_skip_available(
+    unit: UnitOfWork,
+    scope: MaintenanceScope,
+    selection: FixedSkipSelection,
+    times: RecurrenceTimes,
+    clock: Clock,
+) -> bool:
+    """Discover the existing action without manufacturing a reason or recording a preview."""
+    try:
+        plan = fixed_skip_plan(unit, scope, selection)
+        plan.require_overdue(times, clock.now())
+    except Conflict as error:
+        if error.code not in (
+            "recurrence_review_stale",
+            "recurrence_skip_incompatible",
+            "recurrence_skip_policy_required",
+            "recurrence_slot_not_overdue",
+        ):
+            raise
+        return False
+    return True
