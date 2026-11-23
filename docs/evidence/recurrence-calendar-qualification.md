@@ -1,6 +1,6 @@
 # Recurrence and calendar qualification
 
-The audited runtime is `449dc04c17a9c41d949d74cd341bf1e943a2fba9`.
+The historical automated audit below uses runtime `449dc04c17a9c41d949d74cd341bf1e943a2fba9`.
 Its [develop CI](https://github.com/vypdev/domus/actions/runs/42570153605) passed.
 The package qualification extends the calendar image test to the actual app
 launcher and four independent owned installations. Earlier receipts stay in
@@ -21,6 +21,29 @@ downstream work. The witnesses below cover the subsequent changes. The
 implementation separately. Owner review and the combined ledger journeys
 remain pending. The Points and Inventory consumers own their respective
 cross-domain acceptance.
+
+## Installed Edge.86 observations
+
+The [additional installed record](recurrence-edge86-installed.json) describes
+two bounded campaigns on 2026-11-23 against the existing immutable Edge.86
+runtime. English desktop keyboard and Spanish narrow-screen touch exercised
+fixed and relative creation, completion, the Domus Calendar and Agenda, and
+public app stop/start persistence. A later keyboard campaign reopened the
+relative source, observed cancellation of its unstarted successor, completed
+the source again and retained one new available successor after another restart.
+
+The record keeps exact source and receipt identities, observed dates and task
+states, retained snapshot hashes, input methods and limitations. The app ended
+deliberately stopped with its four optional switches off. An earlier provisional
+startup concern was superseded by a verified controlled restart; undated log
+warnings did not establish a current launcher defect.
+
+These observations supplement the historical witnesses below. They do not
+close every assertion of the referenced cases, the full 93-case installed M2
+inventory, restricted review, started-downstream races, restoration or native
+HA calendar entity qualification. They cover Domus through Ingress; standalone
+and cross-domain ledger acceptance retain their separate source/image evidence.
+Task-template editing, full owner acceptance and distribution gates remain open.
 
 
 ## Calendar owner

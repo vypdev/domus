@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "status": "partial-installed-observations",
+  "recordedDate": "2026-11-23",
+  "purpose": "Additional operator observations of the existing M2 recurrence journey, separate from the historical automated audit and full owner/distribution acceptance.",
+  "runtime": {
+    "edgeVersion": "0.0.0-edge.86",
+    "immutableSource": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+    "archiveSHA256": "a80f2f1201f2028c053a15f71f3b8b2d2c7896e38ea86cc17fa13c0c83d6e0ce",
+    "wheelSHA256": "45672f4c0b1ec1e683e9a4bd34369bff8d5223ec97b609122d10e4e150779867",
+    "packagingCommit": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+    "reviewedPRHead": "679e90ce14742a475e9e23b6c7b937f52ab6bc8a",
+    "acceptedDevelopMerge": "97d84741f8c0c4361d5b4f15688e509cf93510ef",
+    "schema": 37,
+    "priorImmutableInstalledReceiptSHA256": "5bcefaa1842e5a71b8085dee83d4d27c89629c26026f48e2f72d1d4e272f0267",
+    "sourceQualification": "The same installed version and owned app were used without an update. The additional campaigns did not repeat the earlier served-byte extraction.",
+    "exactHeadAutomation": "https://github.com/vypdev/domus/actions/runs/45086801793",
+    "acceptedDevelopCI": "https://github.com/vypdev/domus/actions/runs/45093333204",
+    "acceptedDevelopBranchSync": "https://github.com/vypdev/domus/actions/runs/45093333245"
+  },
+  "environment": {
+    "surface": "Public Home Assistant app controls and Domus through Ingress",
+    "data": "Disposable household Domus QA 165 Edge86; existing HA session; synthetic task names",
+    "householdTimeZone": "UTC",
+    "desktop": {
+      "width": 1120,
+      "height": 900,
+      "language": "English",
+      "theme": "dark"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "language": "Spanish",
+      "theme": "light",
+      "taskClientWidth": 390,
+      "taskScrollWidth": 390
+    },
+    "coreAndSupervisorVersions": "Not captured in these two additional campaigns; no retrospective platform-version claim."
+  },
+  "creationCalendarAndRestart": {
+    "observedAt": "2026-11-23T01:34:11.715727+00:00",
+    "originalRetainedReceipt": "native-m2-followup/acceptance.json",
+    "originalReceiptSHA256": "ef0ed51dd14cd3b2cdbeef96f720ee1ab303cf052efd1fca353044ea30766c09",
+    "fixed": {
+      "title": "QA M2 Edge86 Fixed",
+      "firstDate": "2026-11-23",
+      "rrule": "FREQ=DAILY;INTERVAL=1;COUNT=3",
+      "observedStates": [
+        "Available",
+        "Assigned",
+        "In progress",
+        "Done"
+      ],
+      "performedAt": "2026-11-23T01:18:48Z",
+      "futureDatesAfterCompletion": [
+        "2026-11-24",
+        "2026-11-25"
+      ],
+      "keyboard": "Native Tab reached Create task; native Return submitted creation. Claim, Start, Save progress and Mark done used Enter."
+    },
+    "relative": {
+      "title": "QA M2 Edge86 Relative",
+      "firstDate": "2026-11-23",
+      "intervalDays": 1,
+      "visibility": "When work is recorded",
+      "performedAt": "2026-11-23T01:23:13Z",
+      "nextDate": "2026-11-24"
+    },
+    "touchInput": "Actual CDP touchStart/touchEnd selected and completed the relative task and opened its Calendar/Agenda in Spanish. No DOM event injection or clock manipulation.",
+    "calendar": {
+      "allMonthEntries": 12,
+      "allMonthTasks": 5,
+      "relativeAgendaEntries": 5,
+      "relativeAgendaTasks": 2,
+      "observations": [
+        "Nov23 relative planned/due and actual completion 01:23:13.212000 UTC",
+        "Nov24 relative planned/due",
+        "Nov24 and Nov25 fixed planned/due remain after current fixed completion"
+      ]
+    },
+    "afterPublicStopStart": {
+      "method": "Public app Stop, observed stopped, public Start, observed running, fresh Open Web UI",
+      "taskRows": [
+        {
+          "title": "QA M2 Edge86 Fixed",
+          "date": "2026-11-25",
+          "state": "Available"
+        },
+        {
+          "title": "QA M2 Edge86 Relative",
+          "date": "2026-11-24",
+          "state": "Available"
+        },
+        {
+          "title": "QA M2 Edge86 Fixed",
+          "date": "2026-11-24",
+          "state": "Available"
+        },
+        {
+          "title": "QA M2 Edge86 Relative",
+          "date": "2026-11-23",
+          "state": "Done"
+        },
+        {
+          "title": "QA M2 Edge86 Fixed",
+          "date": "2026-11-23",
+          "state": "Done"
+        }
+      ],
+      "overview": {
+        "upcomingMaintenance": 3,
+        "unclaimed": 3,
+        "completedThisWeek": 2,
+        "earnedPoints": "0.00"
+      }
+    }
+  },
+  "reopenAndSecondCompletion": {
+    "observedAt": "2026-11-23T03:26:13.396Z",
+    "originalRetainedReceipt": "native-m2-reopen/followup-acceptance.json",
+    "originalReceiptSHA256": "eab49c4a277259d62d02781a72cac3896b7da357811c68f44f9e5f6c5625b0e5",
+    "input": "English desktop1120x900 dark; required reason and keyboard activation of Reopen task and Mark done now.",
+    "reopen": {
+      "reason": "QA M2 Edge86 reopen current cycle",
+      "observedAt": "2026-11-23T03:21:10.510Z",
+      "originalTask": "QA M2 Edge86 Relative",
+      "originalDate": "2026-11-23",
+      "state": "Available",
+      "unstartedSuccessorDate": "2026-11-24",
+      "successorStateAfterMaintenance": "Cancelled"
+    },
+    "secondCompletion": {
+      "performedAt": "2026-11-23T03:21:10Z",
+      "observedAt": "2026-11-23T03:21:36.352Z",
+      "state": "Done",
+      "approval": "No approval required"
+    },
+    "controlledRestart": {
+      "stoppedObservedAt": "2026-11-23T03:22:02.924Z",
+      "runningObservedAt": "2026-11-23T03:23:38.727Z",
+      "publicStartClickedOnce": true,
+      "uiOpened": true,
+      "persistedRows": [
+        [
+          "QA M2 Edge86 Fixed",
+          "Available",
+          "2026-11-25"
+        ],
+        [
+          "QA M2 Edge86 Relative",
+          "Available",
+          "2026-11-24"
+        ],
+        [
+          "QA M2 Edge86 Relative",
+          "Cancelled",
+          "2026-11-24"
+        ],
+        [
+          "QA M2 Edge86 Fixed",
+          "Available",
+          "2026-11-24"
+        ],
+        [
+          "QA M2 Edge86 Relative",
+          "Done",
+          "2026-11-23"
+        ],
+        [
+          "QA M2 Edge86 Fixed",
+          "Done",
+          "2026-11-23"
+        ]
+      ],
+      "activeRelativeSuccessorsForNov24": 1,
+      "cancelledRelativeSuccessorsForNov24": 1
+    },
+    "initialStartupInterpretation": "An earlier stopped/blocked observation and undated generic log warnings did not establish a current launcher defect. A later fresh info page showed running before another Start click, then explicit Stop/Start and Ingress entry were verified. Configuration, permissions and private ownership were unchanged."
+  },
+  "existingCaseObservationScope": [
+    {
+      "case": "recurrence-execution-C06",
+      "observed": "Fixed and relative scheduled creation through the installed UI; this does not claim every authorization/replay assertion of the owning case."
+    },
+    {
+      "case": "recurrence-calendar-C25",
+      "observed": "The one-day date-only relative example in UTC followed actual completion; no DST/fold/gap or whole-date boundary was exercised here."
+    },
+    {
+      "case": "recurrence-calendar-C05",
+      "observed": "Reopening cancelled one proven unstarted successor after maintenance; started downstream work was not created or raced in these campaigns."
+    },
+    {
+      "case": "recurrence-execution-C19",
+      "observed": "Public stop/start retained the visible synthetic task rows and one active relative successor. Original-key replay and restored databases retain separate automated qualification."
+    },
+    {
+      "case": "recurrence-lifecycle-calendar-C35",
+      "observed": "EN keyboard desktop and ES touch at390px; month and filtered Agenda show the recorded/planned dates. These observations do not cover every view or permission branch."
+    }
+  ],
+  "retainedOriginalEvidence": {
+    "location": "Operator-retained QA evidence; machine-specific private paths and HA session URLs are omitted.",
+    "receiptUse": "Receipt hashes identify the frozen source observations. They do not replace the recorded observations, original images or an independent execution result.",
+    "firstCampaignSnapshots": [
+      {
+        "file": "fixed-before-completion.jpg",
+        "sha256": "161fd75d6e9ad5d5e45d854254ce70354a565a63c152f173de13d90bab05e3ce",
+        "bytes": 87142
+      },
+      {
+        "file": "fixed-completed-desktop.jpg",
+        "sha256": "fd88b17368cff34e6c1ba607f1587c24c417cf453428e6ea073449af4063db7e",
+        "bytes": 96176
+      },
+      {
+        "file": "spanish-mobile-relative-selected.jpg",
+        "sha256": "0d71a3bb573a700f051ccc7063f2171577094dc319917405da8e9611dee97d17",
+        "bytes": 34448
+      },
+      {
+        "file": "relative-completed-mobile.jpg",
+        "sha256": "59197decf1dd6058bd3e4fa1187655ca28d275db7feb8813a255bde3d6850e59",
+        "bytes": 41254
+      },
+      {
+        "file": "relative-next-date-calendar-mobile.jpg",
+        "sha256": "3772aa6da92717212f8c5908ad6ce3dad82731d0be53b68c267977bf51a2fdc2",
+        "bytes": 43596
+      },
+      {
+        "file": "tasks-after-restart-desktop.jpg",
+        "sha256": "420b1df70e21f90768e4bcb13ca9d01a0a7610da90d4072687d72e35fbd03bae",
+        "bytes": 48471
+      },
+      {
+        "file": "edge86-final-stopped.jpg",
+        "sha256": "4e53be875d4fe4e4c2c9f91fb3269799242d574e9c986eb069f625fb3a062d80",
+        "bytes": 95217
+      }
+    ],
+    "secondCampaignSnapshots": [
+      {
+        "file": "reopened-with-cancelled-successor.jpg",
+        "sha256": "bcba889a52611a1952e19829c0950b654ad39dcdf0864b501c88009f2bae05e3",
+        "bytes": 88170
+      },
+      {
+        "file": "relative-completed-again.jpg",
+        "sha256": "5c3f44236c1786def60cbdb420f3f130ae84c46525c812a2f7c7d28fba05a2f1",
+        "bytes": 97433
+      },
+      {
+        "file": "controlled-start-running.jpg",
+        "sha256": "b103cdd936b5d83f881fc811fe193d6a2a2be03c8dc8f4350813af24139009eb",
+        "bytes": 75393
+      },
+      {
+        "file": "tasks-after-controlled-restart.jpg",
+        "sha256": "7d08e9b0ec6ef3b7b659c69e64d346d6d4ad867f52d37151e89d9741005d5bf5",
+        "bytes": 66916
+      },
+      {
+        "file": "edge86-final-stopped.jpg",
+        "sha256": "4e53be875d4fe4e4c2c9f91fb3269799242d574e9c986eb069f625fb3a062d80",
+        "bytes": 95217
+      }
+    ]
+  },
+  "cleanup": {
+    "finalAppState": "stopped",
+    "fourOptionalSwitches": "all off",
+    "ownedTemporaryTabs": "closed",
+    "temporaryViewport": "reset",
+    "businessData": "Identifiable current QA household and observations retained; no user household or unknown app/source was removed.",
+    "configurationOrPermissionChanges": false
+  },
+  "notEstablished": [
+    "Full93-case M2 installed acceptance; historical owning cases, refinements and aliases remain unchanged.",
+    "Native standalone execution in these campaigns; source/image campaigns qualify that composition separately.",
+    "Every recurrence boundary, restricted-member approval, current authorization rejection or a concurrent writer race.",
+    "Started/completed downstream preservation, cross-domain Points/Inventory compensation or independent restored-database behavior in installed HA.",
+    "HA calendar entity registration/projection; the observed Calendar is the Domus UI inside Ingress.",
+    "Task-template editing or the separate pending features90,154,159,164,167 and168.",
+    "Stable/distribution release or complete first-release acceptance.",
+    "A new runtime, changed schema, newly counted test cases or repeated JS/CSS/Python byte hashing."
+  ]
+}
