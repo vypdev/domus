@@ -324,6 +324,7 @@ class Fixture:
             "started": work[3],
             "future": work[4],
             "first": first.date().isoformat(),
+            "occupied_date": (first + timedelta(days=3)).date().isoformat(),
             "new_date": final.date().isoformat(),
         }
 

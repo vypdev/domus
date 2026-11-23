@@ -36,6 +36,7 @@ const en = {
   uncertain: 'The result is unconfirmed. Check the saved original request before requesting another change.',
   expired: 'The review expired. Preview the change again before applying it.',
   rejected: 'The server rejected the change. Refresh the task and review its current schedule.',
+  overlap: 'No change was made. The proposed change would create overlapping scheduled work. Change the dates or recurrence pattern, then preview again.',
   journal: 'Saved schedule requests are unavailable. The browser could not confirm safe request storage.',
   tasks_unavailable: 'The schedule change was saved. Current tasks could not be loaded. Use Refresh tasks to read them without repeating the change.',
 };
@@ -75,6 +76,7 @@ const es: Record<keyof typeof en, string> = {
   uncertain: 'El resultado no está confirmado. Consulta la solicitud original antes de pedir otro cambio.',
   expired: 'La revisión caducó. Previsualiza el cambio de nuevo antes de aplicarlo.',
   rejected: 'El servidor rechazó el cambio. Actualiza la tarea y revisa su programación actual.',
+  overlap: 'No se ha cambiado nada. El cambio propuesto solaparía trabajo programado. Cambia las fechas o el patrón y vuelve a previsualizar.',
   journal: 'Las solicitudes guardadas no están disponibles. El navegador no pudo confirmar su almacenamiento.',
   tasks_unavailable: 'El cambio de programación está guardado. No se han podido cargar las tareas actuales. Usa Actualizar tareas para consultarlas sin repetir el cambio.',
 };

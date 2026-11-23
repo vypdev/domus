@@ -187,6 +187,51 @@ test('receipt projection handles optional plans and distinguishes definite rejec
   await expect(f.server.send(context,intent).result).rejects.not.toBeInstanceOf(ReviewRejected);
 });
 
+test.each((['native', 'standalone'] as const).flatMap(mode =>
+  (['fixed-state', 'fixed-pattern', 'fixed-replacement', 'reschedule'] as const).map(kind => ({mode,kind}))))(
+  '$mode/$kind recognizes a validated preview collision without assuming which dates collided', async ({mode,kind}) => {
+  const f = http(mode);
+  const selected = reviewSelection({...work,schedule:{...work.schedule!,state:'paused'}}, {...input,kind,time:'09:15'});
+  const request:ReviewRecord = {...intent,command:{step:'preview',selection:selected}};
+  f.enqueue(token); f.enqueue({...rejected, code:'recurrence_reschedule_collision'}, 409);
+  await expect(f.server.send(context, request).result).rejects.toMatchObject({reason:'overlap'});
+  expect(f.fetch.mock.calls.filter(([, request]) => request.method === 'POST')).toHaveLength(1);
+});
+
+test.each([
+  {status:401, code:'recurrence_reschedule_collision', step:'preview'},
+  {status:403, code:'recurrence_reschedule_collision', step:'preview'},
+  {status:422, code:'recurrence_reschedule_collision', step:'preview'},
+  {status:409, code:'recurrence_review_stale', step:'preview'},
+  {status:409, code:'unrecognized_collision', step:'preview'},
+  {status:409, code:'recurrence_reschedule_collision', step:'apply'},
+] as const)('a $status/$code/$step rejection retains the generic recovery boundary', async ({status, code, step}) => {
+  const f = http();
+  const request:ReviewRecord = step === 'preview' ? intent : {...intent,
+    command:{step:'apply', selection:attachment, previewKey:intent.key, fingerprint}};
+  f.enqueue(token); f.enqueue({...rejected, code}, status);
+  await expect(f.server.send(context, request).result).rejects.toMatchObject({reason:'rejected'});
+});
+
+test.each([
+  {status:503, body:{...rejected, code:'recurrence_reschedule_collision'}},
+  {status:409, body:{...rejected, code:'recurrence_reschedule_collision', untrusted:true}},
+  {status:409, body:{...rejected, code:'recurrence_reschedule_collision', correlation_id:null}},
+  {status:409, body:{...rejected, code:'<img src=x>'}},
+] as const)('a malformed or uncertain $status response cannot claim a recognized overlap', async ({status, body}) => {
+  const f = http(); f.enqueue(token); f.enqueue(body, status);
+  await expect(f.server.send(context, intent).result).rejects.not.toBeInstanceOf(ReviewRejected);
+});
+
+test('CSRF rejection and original GET failures cannot become a preview-overlap notice', async () => {
+  const f = http(); const collision = {...rejected, code:'recurrence_reschedule_collision'};
+  f.enqueue(collision,409);
+  await expect(f.server.send(context,intent).result).rejects.toMatchObject({reason:'rejected'});
+  f.enqueue(collision,409);
+  await expect(f.server.original(context,intent).result).rejects.not.toBeInstanceOf(ReviewRejected);
+  expect(f.fetch.mock.calls.every(([, request]) => request.method === 'GET')).toBe(true);
+});
+
 function owned<T>(value: T) {return {result:Promise.resolve(value),cancel:vi.fn()};}
 function application() {
   const store = storage(), views = vi.fn<(value: ReviewView | null) => void>();
@@ -198,6 +243,51 @@ function application() {
   return {controller,server,clock,views,store, at:(value:number)=>{at=value;},
     view:()=>views.mock.calls.at(-1)?.[0]};
 }
+
+test('a rejected overlap retains the target, permits correction and never applies the failed preview', async () => {
+  const f = application(), c = f.controller;
+  c.bind(scope); await c.open();
+  f.server.send.mockReturnValueOnce({result:Promise.reject(new ReviewRejected('overlap')),cancel:vi.fn()});
+  await c.preview(input);
+  expect(f.view()).toMatchObject({target:work, notice:'overlap', result:null, records:[], busy:false});
+  expect(await c.apply()).toBeNull(); expect(f.server.send).toHaveBeenCalledTimes(1);
+  await c.preview({...input,date:'2026-12-02'});
+  expect(f.view()?.notice).toBeNull(); expect(f.view()?.result?.receipt).toEqual(plan);
+  f.server.send.mockReturnValueOnce(owned(storedEffect));
+  expect(await c.apply()).not.toBeNull(); expect(f.server.send).toHaveBeenCalledTimes(3);
+});
+
+test('apply and original-read errors retain their own recovery even if a server port mislabels them as overlap', async () => {
+  const f=application(), c=f.controller; c.bind(scope); await c.open(); await c.preview(input);
+  f.server.send.mockReturnValueOnce({result:Promise.reject(new ReviewRejected('overlap')),cancel:vi.fn()});
+  await c.apply(); expect(f.view()?.notice).toBe('rejected');
+  f.server.original.mockReturnValueOnce({result:Promise.reject(new ReviewRejected('overlap')),cancel:vi.fn()});
+  await c.recover('key-1'); expect(f.view()?.notice).toBe('uncertain');
+});
+
+test('storage failure and retired ownership take precedence over overlap feedback', async () => {
+  const f=application(), c=f.controller; c.bind(scope); await c.open();
+  f.server.send.mockImplementationOnce(() => {
+    f.store.provider.setItem.mockImplementationOnce(() => {throw new Error('Unavailable journal');});
+    return {result:Promise.reject(new ReviewRejected('overlap')),cancel:vi.fn()};
+  });
+  await c.preview(input); expect(f.view()?.notice).toBe('journal');
+  const other=application(), waiting=Promise.withResolvers<ReviewReceipt>();
+  other.controller.bind(scope); await other.controller.open();
+  other.server.send.mockReturnValueOnce({result:waiting.promise,cancel:vi.fn()});
+  const pending=other.controller.preview(input); other.controller.bind(null);
+  waiting.reject(new ReviewRejected('overlap')); await pending;
+  expect(other.view()).toBeNull();
+});
+
+test.each(['selection','read-only'] as const)('%s changes retire overlap feedback belonging to the previous proposal', async boundary => {
+  const f=application(), c=f.controller;c.bind(scope);await c.open();
+  f.server.send.mockReturnValueOnce({result:Promise.reject(new ReviewRejected('overlap')),cancel:vi.fn()});
+  await c.preview(input);expect(f.view()?.notice).toBe('overlap');
+  c.bind(boundary==='selection'?{...scope,occurrenceId:'another-occurrence'}:{...scope,readOnly:true});
+  expect(f.view()).toMatchObject({open:false,target:null,result:null,notice:null,records:[]});
+  expect(f.server.send).toHaveBeenCalledTimes(1);
+});
 test('only a confirmed current apply can reconcile task facts, including an in-memory receipt after storage failure', async () => {
   const f = application(), c = f.controller;
   c.bind(scope); await c.open(); await c.preview(input);
@@ -302,6 +392,66 @@ test('controller handles expiry, blocked authority, unavailable storage and call
 const mounted: HTMLElement[] = [];
 afterEach(() => {for (const node of mounted.splice(0)) node.remove();});
 
+test.each(['en','es'] as const)('%s overlap feedback focuses a newly submitted rejection and preserves the proposal for correction', async language => {
+  const widget=document.createElement('domus-recurrence-review'), dispatch=vi.fn();
+  widget.language=language; widget.addEventListener('domus-review-intent',dispatch);
+  document.body.append(widget);mounted.push(widget);
+  const value:ReviewView={open:true,busy:false,readOnly:false,selected:true,
+    target:{...work,actions:['fixed-replacement']},records:[],result:null,notice:null};
+  widget.view=value;await widget.updateComplete;
+  const root=widget.shadowRoot!, get=(name:string)=>root.querySelector<HTMLInputElement>('[name='+name+']')!;
+  const reason=root.querySelector('vyp-ha-textarea')!;
+  const proposal={date:'2026-12-02',time:'07:15',pattern:'FREQ=DAILY;COUNT=2'};
+  for (const [name,text] of Object.entries(proposal)) get(name).value=text;
+  reason.value='<img src=x> keep my reason';
+  const submit=()=>root.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
+  // A fast rejection can coalesce the busy and settled renders.
+  submit();widget.view={...value,busy:true};widget.view={...value,notice:'overlap'};await widget.updateComplete;
+  const notice=root.querySelector<HTMLElement>('#recurrence-notice')!;
+  expect(root.activeElement).toBe(notice);expect(notice.getAttribute('role')).toBe('alert');
+  expect(notice.textContent).toContain(language==='en'?'No change was made.':'No se ha cambiado nada.');
+  expect(notice.textContent).toContain(language==='en'?'would create overlapping scheduled work':'solaparía trabajo programado');
+  expect(notice.textContent).toContain(language==='en'?'then preview again.':'vuelve a previsualizar.');
+  for (const [name,text] of Object.entries(proposal)) expect(get(name).value).toBe(text);
+  expect(reason.value).toBe('<img src=x> keep my reason');expect(root.querySelector('img')).toBeNull();
+  expect([...root.querySelectorAll('button')].some(button=>button.textContent===(language==='en'?'Apply reviewed change':'Aplicar cambio revisado'))).toBe(false);
+  get('date').value='2026-12-03';submit();widget.view={...value,busy:true};await widget.updateComplete;
+  // Disabling a submitting control can leave focus on the document; it is not a newer user action.
+  document.body.dispatchEvent(new FocusEvent('focusin',{bubbles:true}));
+  document.documentElement.dispatchEvent(new FocusEvent('focusin',{bubbles:true}));
+  widget.view={...value,notice:'overlap'};await widget.updateComplete;
+  expect(root.activeElement).toBe(root.querySelector('#recurrence-notice'));expect(get('date').value).toBe('2026-12-03');
+  expect(dispatch.mock.calls.map(([event])=>event.detail.type)).toEqual(['preview','preview']);
+});
+
+test.each(['keydown','pointerdown','wheel','input','focusin'])('newer %s during a preview prevents late overlap autofocus', async type => {
+  const parent=document.createElement('div'), widget=document.createElement('domus-recurrence-review'), later=document.createElement('button');
+  parent.append(widget,later);document.body.append(parent);mounted.push(parent);
+  const value:ReviewView={open:true,busy:false,readOnly:false,selected:true,target:work,records:[],result:null,notice:null};
+  widget.view=value;await widget.updateComplete;
+  const root=widget.shadowRoot!;root.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
+  widget.view={...value,busy:true};await widget.updateComplete;
+  if (type==='focusin') later.focus(); else document.dispatchEvent(new Event(type));
+  widget.view={...value,notice:'overlap'};await widget.updateComplete;
+  expect(root.activeElement?.id).not.toBe('recurrence-notice');
+  if (type==='focusin') expect(document.activeElement).toBe(later);
+});
+
+test.each(['close','read-only','detach','remove','generic'] as const)('%s retires pending overlap focus ownership', async boundary => {
+  const widget=document.createElement('domus-recurrence-review');document.body.append(widget);mounted.push(widget);
+  const value:ReviewView={open:true,busy:false,readOnly:false,selected:true,target:work,records:[],result:null,notice:null};
+  widget.view=value;await widget.updateComplete;
+  widget.shadowRoot!.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
+  widget.view={...value,busy:true};await widget.updateComplete;
+  if (boundary==='remove') widget.remove();
+  else {
+    widget.view=boundary==='detach'?null:{...value,open:boundary!=='close',readOnly:boundary==='read-only',notice:'rejected'};
+    await widget.updateComplete;
+  }
+  widget.view={...value,notice:'overlap'};await widget.updateComplete;
+  expect(widget.shadowRoot!.activeElement?.id).not.toBe('recurrence-notice');
+});
+
 test('saved receipt follows a late layout change until a newer focus, input, result or removal retires it', async () => {
   const observers: {callback: ResizeObserverCallback; target: Element | null; disconnected: boolean}[] = [];
   vi.stubGlobal('ResizeObserver', class {
@@ -324,6 +474,8 @@ test('saved receipt follows a late layout change until a newer focus, input, res
     const first=await saved(), heading=widget.shadowRoot!.querySelector<HTMLElement>('#recurrence-result')!;
     expect(widget.shadowRoot!.activeElement).toBe(heading);expect(getComputedStyle(widget).minHeight).toBe('0px');
     let before=reveal.mock.calls.length;deliver(first);expect(reveal).toHaveBeenCalledTimes(before+1);
+    heading.blur();before=reveal.mock.calls.length;deliver(first);expect(reveal).toHaveBeenCalledTimes(before);
+    await saved();
     later.focus();before=reveal.mock.calls.length;deliver(first);
     expect(document.activeElement).toBe(later);expect(reveal).toHaveBeenCalledTimes(before);
     for (const type of ['keydown','pointerdown','wheel']) {

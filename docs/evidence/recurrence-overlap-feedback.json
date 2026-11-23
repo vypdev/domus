@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/vypdev/domus/issues/173",
+  "status": "Frozen Edge92 source qualification for accurate collision feedback. Local image, installed acceptance, complete final-head161 source/106-per-architecture image CI and substantive review remain required separately.",
+  "scope": "Explain only validated409 recurrence_reschedule_collision preview rejection without inferring whether retained work or proposed dates collided. Preserve explicit correction and ownership. Existing recurrence-calendar-R5/C34; no new owning cases.",
+  "immutableCandidate": {
+    "version": "0.0.0-edge.92",
+    "sourceCommit": "b37d5d0aceef832e2233b54d62cd7e755489c58d",
+    "sourceArchiveSHA256": "3c0b25d29a675ca48c97aca02b6fa7d4aa161c17bee071cfe0f0e61e87e47f33",
+    "wheelSHA256": "897333b203166deb24e5fb2050df45f19f2063e4c6cdc46a3ea5b2457a694b70",
+    "storageSchema": 37,
+    "pythonProductFilesUnchanged": 250,
+    "actualProductFiles": {
+      "index.html": "2b098f0b281ce452dc8e871b6adfac0a24607e79f934deca3f013c1309a8dfc2",
+      ".vite/manifest.json": "db2947390c87cdafcd1624c887bf6a7d229af2909d643c6a61e66514e5042117",
+      "assets/index-BphRPb7d.js": "e04aa363a310a1f4bbf924f90712fb02cb20576114ac18ec876bab9154fe29ad",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+    }
+  },
+  "dependencyCohort": "0.1.0-next.5",
+  "executedSource": {
+    "unitTests": 2287,
+    "runtimeFiles": 121,
+    "fullyCoveredNonemptyFiles": 114,
+    "emptyFiles": 7,
+    "coverage": {
+      "lines": {
+        "total": 7066,
+        "covered": 7066,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 9713,
+        "covered": 9713,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2053,
+        "covered": 2053,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 8945,
+        "covered": 8945,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "nodeTests": 42,
+    "pythonToolingTests": 187,
+    "pythonArchitectureTests": 51,
+    "catalogVariants": 68,
+    "occupiedDateVariants": 4,
+    "occupiedDateUnexpected": 0,
+    "occupiedDateSkipped": 0,
+    "occupiedDateFlaky": 0,
+    "fullEntryVariants": null,
+    "fullEntryStatus": "Complete final-head161 CI required for Edge92. Edge91 final head independently passed all161 source journeys and106 image journeys per architecture; frozen receipt and original CI evidence remain separate.",
+    "requiredFullEntryVariants": 161
+  },
+  "actualImage": {
+    "requiredBrowserVariantsPerArchitecture": 106,
+    "localARM64Status": "Pending for Edge92; prior Edge91 images are not substituted.",
+    "exactFinalHeadMatrix": "Required separately before merge."
+  },
+  "installed": {
+    "includedInThisSourceReceipt": false,
+    "requiredBeforeMerge": true,
+    "privateOriginalSnapshotsRetainedLocally": true,
+    "distributionAuthorized": false
+  },
+  "newOwningCasesCreated": 0,
+  "limitations": [
+    "No change to domain collision eligibility, schema, authorization, receipt replay or retained work.",
+    "No full M2, owner, cross-domain ledger/reservation or HA entity acceptance is claimed.",
+    "Complete final-head product CI on both architectures, installed Edge acceptance and substantive review remain required."
+  ],
+  "historicalEvidencePreserved": [
+    "task-schedule-refresh-scope.json",
+    "task-schedule-refresh-focus.json",
+    "task-schedule-refresh.json",
+    "unicode-text-limits.json",
+    "recurrence-edge86-installed.json",
+    "recurrence-overlap-feedback-edge90.json",
+    "recurrence-overlap-feedback-edge91.json"
+  ],
+  "historicalEdge90CompleteEntryAttempt": {
+    "inventory": 161,
+    "expected": 160,
+    "unexpected": 1,
+    "skipped": 0,
+    "flaky": 0,
+    "diagnostic": "Network.getResponseBody: No data found for resource with given identifier",
+    "correction": "Read the actual upstream APIResponse once with maxRetries0/maxRedirects0 and forward its unmodified status/body/headers. Preserve assertions for real409 collision, failed proposals, no apply and unchanged stored work."
+  },
+  "proposalOwnershipCorrection": {
+    "scope": "Only the overlap notice is retired when occurrence selection or readOnly changes; journal/other notices and original records remain unchanged.",
+    "redCases": 2,
+    "greenCases": 2,
+    "genuineSourceJourneys": 4,
+    "sourceJourneyBoundary": "After two real rejected previews, select another task, verify no stale notice, return and complete a fresh corrected preview/apply/restart recovery."
+  },
+  "infrastructureChecksUnchangedFromEdge90": true,
+  "sharedCollisionCodeCorrection": {
+    "finding": "https://github.com/vypdev/domus/pull/175#discussion_r4667210389",
+    "acceptedAsValid": true,
+    "cause": "Fixed-state/fixed-pattern proposed slots may collide with each other using the same409 code as retained-work collisions.",
+    "correction": "Neutral EN/ES notice explains the proposed change would create overlapping scheduled work.",
+    "redLanguageCases": 2,
+    "greenLanguageCases": 2,
+    "previewRouteVariants": 8,
+    "genuineSourceJourneys": 4,
+    "catalogVariants": 68,
+    "domainPolicyUnchanged": true
+  }
+}
