@@ -126,7 +126,7 @@ export class HttpRecurrenceServer implements ReviewServer {
       BASE + 'requests/recurrence.review.' + reviewCommand(request.command).step + '/' + identifier(request.key), context, signal), request));
   }
   send(context: JournalContext, request: ReviewRecord) {
-    let rejection = false, posted = false;
+    let rejection: ReviewRejected['reason'] | null = null, posted = false;
     const owned = this.network.owned(async signal => {
       const command = reviewCommand(request.command), key = identifier(request.key), payload = body(request);
       const token = csrf(await this.network.get('auth/csrf', context, signal));
@@ -135,11 +135,15 @@ export class HttpRecurrenceServer implements ReviewServer {
       const route = kind === 'fixed-exclude' || kind === 'fixed-add' ? 'fixed-exception' : kind;
       const response = await this.network.request(BASE + route + '/' + command.step, 'POST', context, payload, key, token, signal);
       if (response.status === 200) return receipt(response.value, request);
-      if ([401,403,409,422].includes(response.status)) {failure(response.value); rejection = true;}
+      if ([401,403,409,422].includes(response.status)) {
+        failure(response.value);
+        rejection = response.status === 409 && command.step === 'preview'
+          && object(response.value).code === 'recurrence_reschedule_collision' ? 'overlap' : 'rejected';
+      }
       throw new Error('review_unavailable');
     });
     return {cancel: owned.cancel, result: owned.result.catch(error => {
-      if (rejection || !posted) throw new ReviewRejected();
+      if (rejection !== null || !posted) throw new ReviewRejected(rejection ?? 'rejected');
       throw error;
     })};
   }

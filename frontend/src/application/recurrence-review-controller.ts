@@ -37,7 +37,7 @@ export interface ReviewServer {
   send(context: JournalContext, request: ReviewRecord): EntryRead<ReviewReceipt>;
   original(context: JournalContext, request: ReviewRecord): EntryRead<ReviewReceipt>;
 }
-export type ReviewNotice = 'invalid' | 'unavailable' | 'uncertain' | 'expired' | 'rejected' | 'journal' | 'tasks_unavailable';
+export type ReviewNotice = 'invalid' | 'unavailable' | 'uncertain' | 'expired' | 'rejected' | 'overlap' | 'journal' | 'tasks_unavailable';
 export interface ReviewView {
   readonly open: boolean; readonly busy: boolean; readonly readOnly: boolean;
   readonly selected: boolean; readonly target: ReviewTarget | null; readonly records: readonly ReviewRecord[];
@@ -177,7 +177,7 @@ export class RecurrenceReviewController {
       if (send && error instanceof ReviewRejected) {
         try {this.persist(scope, this.state.records.filter(item => item.key !== record.key));}
         catch {return 'journal';}
-        return 'rejected';
+        return record.command.step === 'preview' && error.reason === 'overlap' ? 'overlap' : 'rejected';
       }
       return 'uncertain';
     });
@@ -196,4 +196,6 @@ export class RecurrenceReviewController {
   }
 }
 
-export class ReviewRejected extends Error {}
+export class ReviewRejected extends Error {
+  constructor(readonly reason: 'rejected' | 'overlap' = 'rejected') {super('schedule_review_rejected');}
+}

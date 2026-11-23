@@ -25,37 +25,49 @@ export class DomusRecurrenceReview extends LitElement {
   declare language: Language;
   private declare action: ReviewKind | null;
   private focusFollowing: AbortController | null = null;
+  private previewFocus: AbortController | null = null;
 
   constructor() {super(); this.view = null; this.language = 'en'; this.action = null;}
   private stopFollowingFocus(): void {this.focusFollowing?.abort(); this.focusFollowing = null;}
-  disconnectedCallback(): void {this.stopFollowingFocus(); super.disconnectedCallback();}
+  private stopPreviewFocus(): void {this.previewFocus?.abort(); this.previewFocus = null;}
+  disconnectedCallback(): void {this.stopFollowingFocus(); this.stopPreviewFocus(); super.disconnectedCallback();}
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('view') && changed.get('view')?.target !== this.view?.target) {
       this.action = this.view?.target?.actions[0] ?? null;
     }
   }
   protected updated(changed: PropertyValues<this>): void {
-    const result = this.view?.result;
-    if (changed.has('view') && (result !== changed.get('view')?.result || this.view?.notice === 'tasks_unavailable'))
+    const result = this.view?.result, previous = changed.get('view');
+    if (changed.has('view') && (result !== previous?.result || this.view?.notice !== previous?.notice
+        || !this.view?.open || this.view.readOnly))
       this.stopFollowingFocus();
-    if (changed.has('view') && result && result !== changed.get('view')?.result
-        && result.receipt.preview === null && this.view?.notice !== 'tasks_unavailable') {
-      const heading = this.renderRoot.querySelector<HTMLElement>('#recurrence-result');
-      if (heading === null) return;
-      heading.focus();
-      const reveal = () => heading.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
-      reveal();
-      // Dependent task settings can expand after the receipt. A later user action always wins.
-      const follow = new AbortController(), root = this.renderRoot as ShadowRoot;
-      const observer = new ResizeObserver(() => {
-        if (!follow.signal.aborted && root.activeElement === heading) reveal();
-      });
-      follow.signal.addEventListener('abort', () => observer.disconnect(), {once:true});
-      for (const type of ['keydown', 'pointerdown', 'wheel'])
-        this.ownerDocument.addEventListener(type, () => follow.abort(), {capture:true, once:true, signal:follow.signal});
-      this.focusFollowing = follow;
-      observer.observe(this.parentElement ?? this);
+    if (changed.has('view') && (!this.view?.open || this.view.readOnly)) this.stopPreviewFocus();
+    if (changed.has('view') && !this.view?.busy) {
+      const overlap = this.previewFocus !== null && !this.previewFocus.signal.aborted && this.view?.notice === 'overlap';
+      this.stopPreviewFocus();
+      if (overlap) this.reveal('#recurrence-notice');
     }
+    if (changed.has('view') && result && result !== previous?.result
+        && result.receipt.preview === null && this.view?.notice !== 'tasks_unavailable') {
+      this.reveal('#recurrence-result');
+    }
+  }
+  private reveal(selector: string): void {
+    const heading = this.renderRoot.querySelector<HTMLElement>(selector);
+    if (heading === null) return;
+    heading.focus();
+    const reveal = () => heading.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
+    reveal();
+    // Dependent task settings can expand after feedback. A later user action always wins.
+    const follow = new AbortController(), root = this.renderRoot as ShadowRoot;
+    const observer = new ResizeObserver(() => {
+      if (!follow.signal.aborted && root.activeElement === heading) reveal();
+    });
+    follow.signal.addEventListener('abort', () => observer.disconnect(), {once:true});
+    for (const type of ['keydown', 'pointerdown', 'wheel', 'input', 'focusin'])
+      this.ownerDocument.addEventListener(type, () => follow.abort(), {capture:true, once:true, signal:follow.signal});
+    this.focusFollowing = follow;
+    observer.observe(this.parentElement ?? this);
   }
   private text(key: ReviewMessage): string {return reviewMessage(key, this.language);}
   private intent(detail: ReviewIntent): void {
@@ -71,6 +83,14 @@ export class DomusRecurrenceReview extends LitElement {
   }
   private submit(event: SubmitEvent, kind: ReviewKind): void {
     event.preventDefault();
+    this.stopFollowingFocus(); this.stopPreviewFocus();
+    const focus = new AbortController();
+    this.previewFocus = focus;
+    for (const type of ['keydown', 'pointerdown', 'wheel', 'input'])
+      this.ownerDocument.addEventListener(type, () => focus.abort(), {capture:true, once:true, signal:focus.signal});
+    this.ownerDocument.addEventListener('focusin', event => {
+      if (event.target !== this.ownerDocument.body && event.target !== this.ownerDocument.documentElement) focus.abort();
+    }, {capture:true, signal:focus.signal});
     const data = new FormData(event.currentTarget as HTMLFormElement);
     const value = (key: ReviewMessage) => String(data.get(key) ?? '');
     this.intent({type: 'preview', draft: {
@@ -174,7 +194,7 @@ export class DomusRecurrenceReview extends LitElement {
           : !view.busy ? html`<p>${this.text(view.selected ? 'none' : 'empty')}</p>` : nothing}
         ${view.result && view.selected ? this.button('again', 'open', view.busy) : nothing}
         ${this.button('close', 'close', view.busy)}` : this.button('open', 'open', view.busy)}
-      ${view.notice === null ? nothing : html`<p role="alert">${this.text(view.notice)}</p>`}
+      ${view.notice === null ? nothing : html`<p id="recurrence-notice" role="alert" tabindex="-1">${this.text(view.notice)}</p>`}
       ${view.records.length === 0 ? nothing : html`<details ?open=${view.records.some(item => item.status === 'pending')}>
         <summary>${this.text('operations')}</summary><ul>${view.records.map(item => html`<li>${this.text(item.command.selection.kind)}
           <button type="button" ?disabled=${view.busy} @click=${() => this.intent({type: 'recover', key: item.key})}>${this.text('recover')}</button>

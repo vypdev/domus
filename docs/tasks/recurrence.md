@@ -184,6 +184,13 @@ previous individual changes remain visible. If a deadline collides with that ret
 work, a live dependency would be broken, or an assignment has no compatible destination,
 the batch is rejected so the manager can review the current facts.
 
+When a preview's dates overlap retained work, the review explains that no change was
+made and asks you to adjust the dates or recurrence pattern, then preview again. Your
+date, time, pattern and reason stay in the form. The notice receives focus unless you
+have already moved on to another control or action. A rejected preview offers no apply
+action. Other rejections and unconfirmed results keep their existing refresh or original
+request recovery guidance.
+
 The rule revision, original cancellations, replacement work, new slots and continuation
 commit together. Use the original request to recover the linked result after a lost reply.
 A restored-away result remains historical.

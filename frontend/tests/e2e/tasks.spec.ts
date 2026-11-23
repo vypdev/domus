@@ -830,6 +830,95 @@ for (const mode of ['native', 'standalone'] as const) {
   for (const locale of ['en', 'es'] as const) {
     test.describe(`fixed review ${mode} ${locale}`, () => {
     test.use({hasTouch: locale === 'es'});
+    test(`occupied-date feedback preserves the proposal and permits correction in ${mode} ${locale}`, async ({page,context,request},info) => {
+      expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
+      const tasks=await open(page,context,mode);
+      const fixture=await request.post(origin(mode)+'/__fixture__/calendar-review');
+      expect(fixture.ok()).toBe(true);
+      const {title,completed,started,future,occupied_date:occupiedDate,new_date:newDate}=await fixture.json();
+      const t=(en:string,es:string)=>locale==='en'?en:es;
+      const activate=async(control:Locator)=>{
+        if(locale==='es')await control.tap();else{await control.focus();await control.press('Enter');}
+      };
+      if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+      await page.setViewportSize({width:locale==='es'?390:1120,height:844});
+      await page.emulateMedia({colorScheme:locale==='es'?'light':'dark'});
+      await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      const endpoint=base(mode)+'/api/v1/tasks/occurrences';
+      const read=async()=>{
+        const response=await page.request.get(endpoint);expect(response.ok()).toBe(true);
+        return (await response.json()).items;
+      };
+      const before=await read();
+      const candidates=before.filter((item:{title:string})=>item.title===title);
+      const index=candidates.findIndex((item:{occurrence_id:string})=>item.occurrence_id===future);
+      expect(index).toBeGreaterThanOrEqual(0);
+      await activate(tasks.getByRole('button',{name:title,exact:true}).nth(index));
+      const review=page.locator('domus-recurrence-review');
+      await activate(review.getByRole('button',{name:t('Review scheduling','Revisar programación'),exact:true}));
+      await review.getByRole('combobox').first().selectOption('fixed-replacement');
+      const date=review.getByLabel(t('Local date','Fecha local'),{exact:true});
+      const time=review.locator('input[name=time]'),pattern=review.locator('input[name=pattern]');
+      const reason=review.getByRole('textbox',{name:t('Reason for schedule change','Motivo del cambio de programación'),exact:true});
+      await date.fill(occupiedDate);await time.fill('07:00');await pattern.fill('FREQ=DAILY;COUNT=1');
+      const literal='<img src=x> retain this proposal';await reason.fill(literal);
+      let previews=0,applies=0,applyKey='',applyContext='';
+      page.on('request',value=>{
+        if(value.method()!=='POST')return;
+        if(value.url().endsWith('/fixed-replacement/preview'))previews++;
+        if(value.url().endsWith('/fixed-replacement/apply')){
+          applies++;applyKey=value.headers()['idempotency-key'];applyContext=value.headers()['x-domus-context'];
+        }
+      });
+      const notice=review.getByRole('alert');
+      for(const count of [1,2]){
+        await pattern.fill('FREQ=DAILY;COUNT='+count);
+        await reason.fill(literal+' '+count);
+        const rejected=page.waitForResponse(value=>value.request().method()==='POST'&&value.url().endsWith('/fixed-replacement/preview'));
+        await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
+        const response=await rejected;expect(response.status()).toBe(409);
+        expect((await response.json()).code).toBe('recurrence_reschedule_collision');
+        await expect(notice).toContainText(t('No change was made.','No se ha cambiado nada.'));
+        await expect(notice).toContainText(t('then preview again.','vuelve a previsualizar.'));
+        await expect(notice).toBeFocused();await expect(notice).toBeInViewport({ratio:1});
+        await expect(date).toHaveValue(occupiedDate);await expect(time).toHaveValue('07:00');
+        await expect(pattern).toHaveValue('FREQ=DAILY;COUNT='+count);await expect(reason).toHaveValue(literal+' '+count);
+        await expect(review.getByRole('button',{name:t('Apply reviewed change','Aplicar cambio revisado'),exact:true})).toHaveCount(0);
+        await expect(review.locator('img,script')).toHaveCount(0);
+        expect(applies).toBe(0);expect(await read()).toEqual(before);
+      }
+      await info.attach('occupied-date-feedback',{body:await page.screenshot(),contentType:'image/png'});
+      await date.fill(newDate);await pattern.fill('FREQ=DAILY;COUNT=1');
+      await activate(review.getByRole('button',{name:t('Preview schedule change','Previsualizar cambio de programación'),exact:true}));
+      await expect(review.getByRole('heading',{name:t('Review the proposed change','Revisa el cambio propuesto'),exact:true})).toBeVisible();
+      await expect(notice).toHaveCount(0);
+      await activate(review.getByRole('button',{name:t('Apply reviewed change','Aplicar cambio revisado'),exact:true}));
+      await expect(review.getByRole('heading',{name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toBeFocused();
+      expect(previews).toBe(3);expect(applies).toBe(1);expect(applyKey).toBeTruthy();
+      const after=await read();
+      for(const id of [completed,started])expect(after.find((item:{occurrence_id:string})=>item.occurrence_id===id))
+        .toEqual(before.find((item:{occurrence_id:string})=>item.occurrence_id===id));
+      expect(after.find((item:{occurrence_id:string})=>item.occurrence_id===future).state).toBe('cancelled');
+      await activate(review.getByText(t('Saved schedule requests','Solicitudes de programación guardadas'),{exact:true}));
+      await activate(review.getByRole('button',{name:t('Check original schedule request','Consultar solicitud de programación original'),exact:true}).last());
+      await expect(review.getByRole('heading',{name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toBeFocused();
+      expect(applies).toBe(1);
+      const originalPath=base(mode)+'/api/v1/tasks/recurrence/reviews/requests/recurrence.review.apply/'+applyKey;
+      expect(applyContext).toBeTruthy();const headers={'X-Domus-Context':applyContext};
+      const saved=await page.request.get(originalPath,{headers});expect(saved.ok()).toBe(true);const receipt=await saved.json();
+      expect((await request.post(origin(mode)+'/__fixture__/operator',{data:{action:'restart'}})).ok()).toBe(true);
+      await page.reload();
+      if(mode==='standalone'){
+        await page.getByRole('button',{name:'Sign in with Home Assistant',exact:true}).click();
+        await page.getByRole('link',{name:'Continue as fixture user',exact:true}).click();
+      }
+      await page.getByRole('link',{name:'Tasks',exact:true}).click();
+      if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+      expect(await read()).toEqual(after);
+      const original=await page.request.get(originalPath,{headers});
+      expect(original.ok()).toBe(true);expect(await original.json()).toEqual(receipt);expect(receipt.state).toBe('committed');expect(applies).toBe(1);
+      await info.attach('overlap-recovery-proof',{body:Buffer.from(JSON.stringify({mode,locale,previews,applies,operation:receipt.operation_id,protected:[completed,started],before,after})),contentType:'application/json'});
+    });
     for (const outcome of ['save', 'recovery', 'read failure', 'scope failure'] as const) {
     test(`protected calendar and fixed batch review ${outcome} use actual stored work in ${mode} ${locale}`, async ({page, context, request}) => {
       const responseLost = outcome === 'recovery';

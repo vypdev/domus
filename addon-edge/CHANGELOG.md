@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.90
+
+- Explain recognized schedule-preview overlaps in English and Spanish and offer correction without losing the proposal.
+- Focus the recovery notice unless newer input, navigation or access changes have taken over.
+- Preserve generic rejection, uncertain-request recovery, current permissions and schema-37 work.
+
 ## 0.0.0-edge.89
 
 - Keep a saved-change notice and explicit read retry when current task access cannot be loaded.
