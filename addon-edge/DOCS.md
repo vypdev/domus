@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.87 packages the immutable runtime declared in
+Edge 0.0.0-edge.88 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
@@ -14,6 +14,8 @@ unrelated drafts remain available. If reading current tasks fails, the focused
 the change. A preview, an unconfirmed or rejected write, and a historical receipt
 do not trigger this refresh. Leaving Tasks or changing the verified participant
 retires the old continuation. See the [schedule refresh qualification](../docs/evidence/task-schedule-refresh-qualification.md).
+The saved result stays visible if task settings finish loading later. Moving
+focus, typing, touching or scrolling retires that visibility continuation.
 
 Switching between Shopping and Inventory keeps same-participant drafts, literal
 notes, priorities, selected work and interrupted-operation identity. Use

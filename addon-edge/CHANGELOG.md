@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.88
+
+- Keep the focused saved schedule result visible while later task settings expand above it.
+- Retire that visibility continuation on newer keyboard, pointer or scroll input, result replacement or removal.
+- Remove the embedded review's unused viewport-height space and preserve schema-37 records, drafts and receipts.
+
 ## 0.0.0-edge.87
 
 - Refresh the authorized Tasks list and selected occurrence after a saved schedule change or original-apply recovery.

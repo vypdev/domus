@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.88 keeps the saved schedule result in view when task settings finish loading later. Any newer keyboard, pointer or scroll input takes over. Embedded schedule reviews use only their content's height. Tasks, original receipts, drafts and schema-37 data are preserved.
+
 Edge.87 refreshes Tasks after a saved schedule change or original-request recovery. The selected task and list show current facts while the saved receipt and unrelated drafts are retained. If reading tasks fails, use the focused **Refresh tasks** control without repeating the change. Navigation and verified participant changes retire the previous continuation. Schema 37, current permissions and original operations are preserved.
 
 Edge.86 preserves complete Unicode names and reasons at their existing limits. Correct an overlong value without losing it. Long reward forms fit narrow screens, and their primary action and focused name remain legible in both themes. Stock, schema-37 data and original operations are preserved.

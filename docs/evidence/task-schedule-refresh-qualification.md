@@ -43,4 +43,40 @@ retain their zero-skip, zero-flaky and zero-unexpected guard.
 This bounded correction does not establish full M2 acceptance, owner acceptance,
 cross-domain ledger effects, HA entity qualification or distribution readiness.
 Historical Edge.86 and Unicode receipts retain their original identities and
-claims. Edge.86 remains the compatible rollback until Edge.87 is qualified.
+claims. The accepted Edge.86 rollback is retained while the later candidate is qualified.
+
+## Saved result visibility
+
+Installed Edge.87 confirmed both apply/recovery journeys and retained its six
+synthetic rows across public restart. On a 390px screen, however, a late task
+allocation-settings read expanded the card above the focused result. Its heading
+moved to y849 in the 804px Ingress viewport. Functional effects were correct, but
+that result was not accepted as finished UX. The private original snapshots and
+the [frozen source record](task-schedule-refresh.json) keep their original claims.
+
+Edge.88 pins runtime `82eacbd10218154ca1eb38f1f03d51d768dd3aff` for the
+[visibility follow-up](task-schedule-refresh-focus.json). While a saved result
+owns focus, parent layout changes keep it visible. A newer focus, keyboard,
+pointer or wheel input retires that continuation. A new result or removal also
+cleans up its observer and input listeners. Embedded reviews use their content's
+height rather than reserving an otherwise empty viewport.
+
+The browser regression holds the real allocation-settings response until after
+the save acknowledgement, then requires the complete saved heading to remain in
+the viewport after the task card expands. It reproduced a viewport ratio of 0
+before the correction. Current source/image results are recorded in the
+follow-up receipt; installed and exact PR-head acceptance remain separate in
+[PR #172](https://github.com/vypdev/domus/pull/172).
+
+The corrected source passes 2,242 frontend tests with all four coverage metrics
+at 100% globally and per nonempty runtime file, all 153 composed entry variants
+and 68 catalog variants. The pinned local ARM64 image passes four
+package/listener checks and all twelve focused browser variants, including the
+late-settings response. All browser inventories report zero skipped, flaky or
+unexpected cases.
+
+The earlier amd64 job passed 61 container cases but failed its generic UI delivery
+check because it still expected the historical Edge.86 Unicode bundle. That
+check now uses the current reviewed app manifest; byte, protected-delivery and
+historical-identity assertions remain intact. Both architecture jobs still must
+pass the complete inventory on the final head.
