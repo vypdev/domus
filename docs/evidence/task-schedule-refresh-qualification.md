@@ -31,8 +31,10 @@ catalog variants pass with zero skipped, flaky or unexpected cases.
 
 The local ARM64 pinned image passes the product-file comparison, native launcher
 authorization/storage/restart and exact standalone bundle checks. Its twelve
-focused browser variants also pass on the actual image. Installed acceptance and
-the complete final-head amd64/ARM64 CI matrix remain pending in the receipt.
+focused browser variants also pass on the actual image. This source receipt keeps
+those identities fixed. Installed acceptance and the complete exact PR-head
+amd64/ARM64 matrix are reported separately in [PR #172](https://github.com/vypdev/domus/pull/172)
+and are required before merge; private Home Assistant snapshots remain local.
 The image-browser guard increases from 90 to 98 executed variants because this
 increment adds eight browser variants to the existing four recurrence variants;
 it does not add or claim eight owning specification cases. Both architectures

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "issue": "https://github.com/vypdev/domus/issues/171",
-  "status": "Source and local ARM64 package qualified; installed and final-head two-architecture matrix pending",
+  "status": "Frozen source and local ARM64 package qualification; exact PR-head and installed results are reported separately in PR172.",
   "scope": "UI reconciliation of recurrence-calendar-R5 and recurrence-calendar-C31; original-apply recovery supplements C33 without asserting its Inventory consequences. No new owning cases.",
   "immutableCandidate": {
     "version": "0.0.0-edge.87",
@@ -64,7 +64,7 @@
     ]
   },
   "actualImage": {
-    "status": "Local ARM64 package checks and12 focused browser variants passed; complete amd64 and ARM64 matrix pending",
+    "status": "Local ARM64 package checks and12 focused browser variants passed. Complete exact PR-head amd64/ARM64 results are reported in PR172.",
     "architectures": [
       "amd64",
       "ARM64"
@@ -89,7 +89,10 @@
     }
   },
   "installed": {
-    "status": "pending",
+    "includedInThisSourceReceipt": false,
+    "requiredBeforeMerge": true,
+    "evidenceLocation": "https://github.com/vypdev/domus/pull/172",
+    "privateOriginalSnapshotsRetainedLocally": true,
     "distributionAuthorized": false
   },
   "limitations": [
