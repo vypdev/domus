@@ -45,6 +45,11 @@ HA calendar entity qualification. They cover Domus through Ingress; standalone
 and cross-domain ledger acceptance retain their separate source/image evidence.
 Task-template editing, full owner acceptance and distribution gates remain open.
 
+The later [Tasks refresh qualification](task-schedule-refresh-qualification.md)
+tracks #171's correction to the C31 journey after applying or recovering a saved
+schedule change. It preserves this historical installed record and does not
+expand the owning case inventory.
+
 
 ## Calendar owner
 

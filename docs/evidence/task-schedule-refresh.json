@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "issue": "https://github.com/vypdev/domus/issues/171",
+  "status": "Source and local ARM64 package qualified; installed and final-head two-architecture matrix pending",
+  "scope": "UI reconciliation of recurrence-calendar-R5 and recurrence-calendar-C31; original-apply recovery supplements C33 without asserting its Inventory consequences. No new owning cases.",
+  "immutableCandidate": {
+    "version": "0.0.0-edge.87",
+    "sourceCommit": "17c1ef424ac9f3fae67dd076bee121947d9065c7",
+    "sourceArchiveSHA256": "8a4e9c0b8e8a9be8c1eff2a0ca76cad6bf9331b37d4a0330340bbac3ed18e31f",
+    "wheelSHA256": "d2d031b91afbbb56cbb8b45debf3737e5dfd6dd9302b825e7de0d7c93e5eb516",
+    "storageSchema": 37,
+    "pythonProductFilesUnchanged": 250,
+    "actualProductFiles": {
+      "index.html": "d117908999c4a1c0c82a80e3847fe9e6c8a1592973ba02a66b89854de2ff58ed",
+      ".vite/manifest.json": "a7ad9dd27fe73e6d0d8dc0851856a1025de70e7fe9cd6dfdaad1adb3ea00b232",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-Cu2JMOTZ.js": "ff2fe7cc6ef80cdd7f01477eeb138d2985269054b1973e314924c05350673427"
+    }
+  },
+  "dependencyCohort": "0.1.0-next.5",
+  "executedSource": {
+    "unitTests": 2240,
+    "runtimeFiles": 121,
+    "fullyCoveredNonemptyFiles": 114,
+    "emptyFiles": 7,
+    "coverage": {
+      "lines": {
+        "total": 7024,
+        "covered": 7024,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 9652,
+        "covered": 9652,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2041,
+        "covered": 2041,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 8866,
+        "covered": 8866,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "focusedBrowserVariants": 12,
+    "catalogVariants": 68,
+    "fullEntryVariants": 153,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "scenarios": [
+      "Confirmed current apply and original-apply GET reconcile current list/detail without another POST.",
+      "Preview and historical original receipts do not reconcile current task facts.",
+      "Temporary task read failure hides stale commands, preserves receipt and unrelated creation draft, focuses explicit refresh and restores selection without repeating apply.",
+      "Navigation, changed verified member, disposal and unexpected coordinator failure retire the old continuation.",
+      "EN desktop keyboard and ES390 touch in both protected compositions."
+    ]
+  },
+  "actualImage": {
+    "status": "Local ARM64 package checks and12 focused browser variants passed; complete amd64 and ARM64 matrix pending",
+    "architectures": [
+      "amd64",
+      "ARM64"
+    ],
+    "requiredBrowserVariantsPerArchitecture": 98,
+    "localARM64PackageChecks": {
+      "passed": 3,
+      "scope": [
+        "All250 Python and4 UI product-file hashes match the wheel and pin.",
+        "Native launcher authorization, storage, original-operation replay and restart.",
+        "Standalone listener serves the exact private bundle."
+      ],
+      "imageID": "sha256:a9fffcda1a190b176cbb94e15eecb75990a9c28a397519cc7f40c245073745e3"
+    },
+    "localARM64Browser": {
+      "expected": 12,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "scope": "The same save, original-GET recovery and failed-read variants execute on the actual pinned Edge87 image in both compositions.",
+      "sourceCommit": "17c1ef424ac9f3fae67dd076bee121947d9065c7"
+    }
+  },
+  "installed": {
+    "status": "pending",
+    "distributionAuthorized": false
+  },
+  "limitations": [
+    "This synchronization correction does not close the full M2 owning inventory, owner acceptance, cross-domain ledger/reservation consequences, HA entity qualification or later roadmap work.",
+    "The full backend/image matrix and substantive review must pass on the final PR head."
+  ],
+  "historicalEvidencePreserved": [
+    "recurrence-edge86-installed.json",
+    "unicode-text-limits.json",
+    "shopping-workspace-navigation.json"
+  ],
+  "newOwningCasesCreated": 0
+}

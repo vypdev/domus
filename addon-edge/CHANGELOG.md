@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.87
+
+- Refresh the authorized Tasks list and selected occurrence after a saved schedule change or original-apply recovery.
+- Retain the saved receipt and unrelated drafts when a current task read fails; retry the read without another mutation.
+- Retire late refreshes and receipts after navigation or a verified context change.
+- Preserve schema 37, current permissions, original requests and the exact published ha-ui cohort.
+
 ## 0.0.0-edge.86
 
 - Preserve complete Unicode names and reasons at their existing limits, retaining overlong drafts for correction.

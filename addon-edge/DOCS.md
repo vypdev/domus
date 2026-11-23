@@ -1,11 +1,19 @@
 # Installation and operation
 
-Edge 0.0.0-edge.86 packages the immutable runtime declared in
+Edge 0.0.0-edge.87 packages the immutable runtime declared in
 [artifact.json](artifact.json). Open **Shopping / Compras** directly for the shared
 list, manual extras, store sessions, purchases and physical receipts. Open
 **Inventory / Inventario** for products, Pantry, locations, materials and stock.
 Overview item links and previously shared shopping fragments focus the same item
 in Shopping. Unknown fragments fall back to Overview without a command.
+
+A saved schedule change refreshes the currently authorized Tasks list and selected
+task, including after checking the original apply request. The saved receipt and
+unrelated drafts remain available. If reading current tasks fails, the focused
+**Refresh tasks / Actualizar tareas** control retries that read without repeating
+the change. A preview, an unconfirmed or rejected write, and a historical receipt
+do not trigger this refresh. Leaving Tasks or changing the verified participant
+retires the old continuation. See the [schedule refresh qualification](../docs/evidence/task-schedule-refresh-qualification.md).
 
 Switching between Shopping and Inventory keeps same-participant drafts, literal
 notes, priorities, selected work and interrupted-operation identity. Use
