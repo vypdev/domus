@@ -536,3 +536,21 @@ test('the policy editor requires a preview and states the effect in Spanish', as
   await widget.updateComplete;
   expect(root.querySelector<HTMLSelectElement>('[name="missedPolicy"]')?.value).toBe('keep_visible');
 });
+
+test.each(['en','es'] as const)('schedule reasons preserve 1,000 Unicode codepoints with native validation and disabled fencing (%s)', async language => {
+  const node=document.createElement('domus-recurrence-review');mounted.push(node);document.body.append(node);node.language=language;
+  const view:ReviewView={open:true,busy:false,readOnly:false,selected:true,target:work,records:[],result:null,notice:null};
+  node.view=view;await node.updateComplete;
+  const root=node.shadowRoot!,action=root.querySelector('select')!;action.value='fixed-skip';action.dispatchEvent(new Event('change'));await node.updateComplete;
+  const reason=root.querySelector('vyp-ha-textarea')!;await reason.updateComplete;
+  const form=reason.form!,events=vi.fn();node.addEventListener('domus-review-intent',events);
+  const edit=(value:string)=>reason.dispatchEvent(new CustomEvent('ha-value-request',{detail:{value,reason:'input'}}));
+  const full='😀'.repeat(998)+'\n\t';edit(full+'X');await reason.updateComplete;
+  expect(reason.value).toBe(full+'X');expect(reason.checkValidity()).toBe(false);
+  expect(reason.validationMessage).toContain(language==='es'?'1.000':'1,000');
+  form.requestSubmit();expect(events).not.toHaveBeenCalled();
+  edit(full);await reason.updateComplete;expect(reason.checkValidity()).toBe(true);
+  expect(reason.shadowRoot!.querySelector('textarea')!.value).toBe(full);expect(new FormData(form).get('reason')).toBe(full);
+  form.requestSubmit();expect(events.mock.lastCall?.[0].detail.draft.reason).toBe(full);
+  node.view={...view,busy:true};await node.updateComplete;edit('Late edit');expect(reason.value).toBe(full);
+});

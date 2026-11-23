@@ -1,0 +1,390 @@
+{
+  "issue": "https://github.com/vypdev/domus/issues/165",
+  "nativeBranch": "bugfix/165-preserve-valid-unicode-text-at-existing-field-limits",
+  "acceptedBase": "487e157ff4b95b4ba6debf1543d816f95c985481",
+  "baseline": {
+    "qualification": "/private/tmp/domus-unicode-inputs-repro/qualification.json",
+    "fourNative160CodepointInputsRetainOnly80Emoji": true,
+    "actualUICommitted80AndProtectedAPIAccepts160": true,
+    "baselineWheelSHA256": "84314084096c5d9ee30c3d571325b8ae699951fd3fcf2788d6a8abb385e039ae",
+    "sourceHead": "8a63abb9032198f90aa20e1168f01ebd2912112f (same tree as accepted develop487)"
+  },
+  "scope": {
+    "nameFieldsCodepoints": 160,
+    "locationCodepoints": 80,
+    "inventoryAndShoppingReasonCodepoints": 240,
+    "rewardAndScheduleReasonCodepoints": 1000,
+    "haUi": "0.1.0-next.5",
+    "schema": 37,
+    "backendChanged": false,
+    "sdkChanged": false,
+    "workflowsChanged": "Only actual-image case inventory86->90 and its existing contract assertion; placements, action tags, permissions, timeouts and zero-retry policy unchanged.",
+    "apiFormatChanged": false
+  },
+  "retainedOwningRequirements": {
+    "specs/household-inventory.md": [
+      "SDD-I68-U1-R2",
+      "SDD-I68-U1-R4",
+      "household-inventory-R6"
+    ],
+    "specs/shopping-management.md": [
+      "shared-shopping-R3",
+      "shared-shopping-R4",
+      "purchase-balance-R1",
+      "receipt-void-R1",
+      "posted-receipt-R1",
+      "receipt-return-R1"
+    ],
+    "specs/points-rewards.md": [
+      "points-rewards-R6"
+    ],
+    "specs/recurrence-lifecycle-calendar.md": [
+      "RCL-05",
+      "RCL-07",
+      "RCL-09"
+    ]
+  },
+  "ownershipLimit": "Regression evidence for existing accepted behavior; no new native CaseID definitions, renumbering or completion claim for these broad capabilities.",
+  "checks": {
+    "frontendUnit": {
+      "passed": 2229,
+      "files": 50,
+      "statements": 9599,
+      "branches": 8807,
+      "functions": 2035,
+      "lines": 6978,
+      "allFourGlobalAndPerFile100": true,
+      "authoredRuntimeFiles": 121,
+      "nonempty": 114,
+      "empty": 7,
+      "log": "/private/tmp/domus-165-source-final-unit.log",
+      "packagingHeadCIConfirmsAllFourGlobalAnd121PerFile100": true
+    },
+    "nodePolicy": {
+      "passed": 42,
+      "allFourGlobalAndPerFile100": true
+    },
+    "typescriptRuntimeAndCatalog": true,
+    "nodeTypescript": true,
+    "nativeCatalogValidator": true,
+    "catalogBrowser": {
+      "passed": 68,
+      "stats": {
+        "startTime": "2026-11-22T23:50:29.716Z",
+        "duration": 79410.712,
+        "expected": 68,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "originalReport": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/ci757-frontend-artifact/frontend/test-results/catalog-results.json",
+      "sourceHead": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+      "run": "https://github.com/vypdev/domus/actions/runs/45082205762",
+      "allExecutedExactlyOnce": true
+    },
+    "targetedComposedUnicode": {
+      "passed": 4,
+      "qualification": "/private/tmp/domus-165-final-unicode-contrast-focus/qualification.json",
+      "contrastLight": 7.112998299903268,
+      "contrastDark": 9.141730265691209,
+      "focusedInputMinTop": 80.4375,
+      "stickyNavigationBottom": 56,
+      "notInstalledHAEvidence": true
+    },
+    "images": "pending exact-head actual amd64 and ARM64",
+    "nativeEdge": {
+      "version": "0.0.0-edge.86",
+      "accepted": true,
+      "state": "stopped",
+      "application": "0d5bd860_domus_edge",
+      "qualification": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/native-installed/native-installed-acceptance.json"
+    },
+    "imageInventoryPolicy": {
+      "passed": 48,
+      "seconds": 0.62
+    },
+    "combinedAffectedBrowser": {
+      "at": "2026-11-22T22:38:44.283214+00:00",
+      "stats": {
+        "startTime": "2026-11-22T22:33:49.618Z",
+        "duration": 124599.346,
+        "expected": 10,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "allExecutedExactlyOnce": true,
+      "retriesSkippedFlaky": 0,
+      "originalReport": "/private/tmp/domus-165-source-final-ten-browser/entry-results-original.json",
+      "originalArtifacts": "/private/tmp/domus-165-source-final-ten-browser/artifacts-original",
+      "includes": "4 Unicode/contrast/focus,4 protected calendar+fixed review+original receipt,2 shared workspace+permissions+history+recovery"
+    },
+    "documentation": true,
+    "packageContracts": {
+      "passed": 17,
+      "seconds": 0.49,
+      "log": "/private/tmp/domus-165-recovered-package-contracts.log"
+    },
+    "currentImageUIDelivery": {
+      "passed": 1,
+      "seconds": 7.25,
+      "actualImage": "sha256:829e29de1e7a5e5b9b4dce6a8d34457408e44b07942c512a805c629030733bb9",
+      "log": "/private/tmp/domus-165-current-ui-image-contract.log"
+    },
+    "initialFullSourceBrowser": {
+      "passed": 139,
+      "failed": 6,
+      "total": 145,
+      "seconds": 573.575905,
+      "qualification": "/private/tmp/domus-165-full-source-browser-initial/qualification-limits.json",
+      "cause": "Historical first139/6 execution; semantic replacements later passed all145 in the actual packaging-head CI. Original failure observations remain retained."
+    },
+    "fullSourceBrowser": {
+      "passed": 145,
+      "stats": {
+        "startTime": "2026-11-22T23:39:23.322Z",
+        "duration": 663166.121,
+        "expected": 145,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "originalReport": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/ci757-frontend-artifact/frontend/test-results/entry-results.json",
+      "sourceHead": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+      "run": "https://github.com/vypdev/domus/actions/runs/45082205762",
+      "allExecutedExactlyOnce": true
+    },
+    "immutableEdge86ImageBrowser": {
+      "passed": 90,
+      "stats": {
+        "startTime": "2026-11-22T23:13:01.410Z",
+        "duration": 591801.515,
+        "expected": 90,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "architecture": "aarch64",
+      "allExecutedExactlyOnce": true,
+      "qualification": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/image-browser90/qualification.json",
+      "allObservedJSCSSBoundToFrozenWheel": true
+    }
+  },
+  "status": "Immutable Edge.86 and installed native acceptance passed. Final repository merge acceptance is tracked by the exact-head checks and review on PR166.",
+  "responseBudgetRegression": {
+    "before": "A complete permitted64-offer/25-cancelled-redemption page with160/1000 supplementary-codepoint values fails in the old64KiB consumer before parsing. Original negative test report retained.",
+    "correction": "Only reward-page GET receives an explicit256KiB limit; streaming, declared-length, charset, same-origin, credentials and closed payload validation stay required. Ordinary requests remain64KiB.",
+    "negativeOriginal": "/private/tmp/domus-165-reward-page-negative-results.json"
+  },
+  "codeAndVerificationSHA256": {
+    ".github/workflows/ci_check.yml": "03a8c1b5d58daed3d1b96a3faf527139761bc840880fdc5323e11890c0e9d0a3",
+    "frontend/src/adapters/http-transport.ts": "8d1ec9f4a739c2e90c13cf3e4a03a90a1d45c0344dd8813ba27efad669c1a813",
+    "frontend/src/adapters/json-values.ts": "5e20de853a6d6c728f8dfef9f78f1ce0834511dc7c2e6a01e2b0872af4727e13",
+    "frontend/src/adapters/reward-http.ts": "30aa24d84e587e78e5cf694f0f42ca2d317ef1d8780e452d4a2f25ae23d95aff",
+    "frontend/src/presentation/domus-inventory.ts": "8403fa07fdcde6ab1a4a6f1c8d54286e4ab049f92437e2ae6696df713580bff2",
+    "frontend/src/presentation/domus-recurrence-review.ts": "12c128d511298fc05715b992b65cf103207114ee26c1e2ce2e508cab25a99dc3",
+    "frontend/src/presentation/domus-rewards.ts": "1e16a098353629e8844bc48f5166bb81aad910b76a97d426d883ae42d5e3fd9d",
+    "frontend/src/presentation/domus-shopping-list.ts": "d648f037edb9c06247a70725a09c69377678c651d541f5e73093acc164746fd4",
+    "frontend/src/presentation/domus-shopping.ts": "e8f68727870f76fd0d41e74b14330d1526606eede6d713c0cbee79ff464ceb59",
+    "frontend/src/presentation/recurrence-messages.ts": "ee37673d44140226135b30c94d18c77ac0706b81766fd325ae6d7b18d5af67c5",
+    "frontend/src/presentation/reward-messages.ts": "3eb9a0e36539240ac8f6f05149d410586b55e13f3b4ea2a64713df5818c2d859",
+    "frontend/tests/e2e/shopping-annotations.spec.ts": "2e9913c552b4794f286c3ce4fff164dd459efd42c5b4c8229d3d004384d063d2",
+    "frontend/tests/e2e/tasks.spec.ts": "1577f7fbdc7547e56d32cd780531789a683608bdda9567c44bdaec2e98941ec1",
+    "frontend/tests/e2e/workspace-navigation.spec.ts": "b3575a931512ccd4a499a4af2f704e972b8571e248d11dfb2747103a21c82414",
+    "frontend/tests/inventory.test.ts": "ff3de6e0bc67e2cd7c8c466ceb81c2a80fa5f8f50ccb1bfbd07219be77eeb063",
+    "frontend/tests/recurrence-review.test.ts": "15e0e6fbbea9c196c3592668e90febdb4ec6802d5f33c9281e8a4b5a16d4651e",
+    "frontend/tests/rewards.test.ts": "82e977934bf225c460c154578a727ec8955cf5b9132db45cae336cc0754d5803",
+    "frontend/tests/shopping-annotations.test.ts": "fad73a4dedc5370483ddbf2c9a324ccfb64363f071b4ee27f3c63be1ef9e402a",
+    "tests/python/test_ci_contract.py": "3b8e230a179e03b4950c2c91061682ef844209f3f83ecd9236705c828ca73f9f",
+    "tests/backend/test_app_package.py": "7602d1f1ca8891620703d5517268dd09b1c706895becec78e257bb55a98bd460",
+    "tests/packaging/test_ui_wheel.py": "7a84fff65a748f4f306c88b5940a5bddea97b98fc7b94392d48d961b19134d09",
+    "tests/containers/test_app_ui.py": "bb31d46036d40710dcf11fe428d963436131fa8eba87639c49bbb4f97a84d7df"
+  },
+  "updated": "2026-11-23T00:05:36.984615+00:00",
+  "runtimeSourceCommit": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+  "immutableCandidate": {
+    "version": "0.0.0-edge.86",
+    "sourceCommit": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+    "sourceArchiveSHA256": "a80f2f1201f2028c053a15f71f3b8b2d2c7896e38ea86cc17fa13c0c83d6e0ce",
+    "wheelSHA256": "45672f4c0b1ec1e683e9a4bd34369bff8d5223ec97b609122d10e4e150779867",
+    "storageSchema": 37,
+    "archiveTrackedFiles": 1027,
+    "allTrackedBlobsMatch": true,
+    "all250PythonBytesEqualAccepted85": true,
+    "actualProductFiles": {
+      "index.html": "18ca992b985d217e8f1123c9f24535fe5aeca4a55536a4f164490df8d73f426c",
+      ".vite/manifest.json": "032392d7536f0741a07a31d2e409d44b45a0fc9747bbbad1bc73aa98494df5ba",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DTeCBXBi.js": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40"
+    },
+    "actualArm64Image": "sha256:829e29de1e7a5e5b9b4dce6a8d34457408e44b07942c512a805c629030733bb9",
+    "all250InstalledPythonAnd4UIBytesMatchFrozenWheel": true,
+    "functionalTests": {
+      "passed": 6,
+      "seconds": 22.74,
+      "scope": "exact bytes; native authority/storage/restart; standalone delivery; missing-Supervisor rejection; genuine20/36 migration/restart/snapshot restoration"
+    }
+  },
+  "installedAcceptance": {
+    "acceptedAt": "2026-11-23T00:03:34.939Z",
+    "version": "0.0.0-edge.86",
+    "application": "0d5bd860_domus_edge",
+    "runtimeSource": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+    "packagingCommit": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+    "checks": {
+      "englishProduct161RetainedAndInvalid": true,
+      "englishInvalidProductCommands": 0,
+      "englishProduct160Saved": true,
+      "registrationResetEmptyAndNoError": true,
+      "selectedGramsRetainedForNextProduct": true,
+      "location80Persisted": true,
+      "reason240SavedWithStockOneGram": true,
+      "extra160PersistedAndOwnFormReset": true,
+      "purchase160PersistedAndOwnFormReset": true,
+      "reward160Persisted": true,
+      "reward160RenderedAfterRecordedSave": true,
+      "spanishTouchReward161RetainedRejectedAndZeroWrites": true,
+      "mobileNoHorizontalOverflow": true,
+      "spanishProduct160SavedByActualTouch": true,
+      "spanishRegistrationResetEmptyWithoutError": true,
+      "publicStoppedStateObserved": true,
+      "publicRunningStateAfterStartObserved": true,
+      "bothFull160ProductNamesAndLocation80SurvivePublicStopStart": true,
+      "reason240AndExactStockSurvivePublicStopStart": true,
+      "singleReward160SurvivesPublicStopStart": true,
+      "manualExtra160SurvivesPublicStopStart": true,
+      "purchase160SurvivesPublicStopStart": true,
+      "allReviewedProtectedValuesSurvivePublicStopStart": true,
+      "finalPublicStoppedStateObserved": true
+    },
+    "visuals": {
+      "lightContrast": 7.112998299903268,
+      "darkContrast": 9.141730265691209,
+      "spanishFocus": {
+        "bottom": 469.7578125,
+        "top": 413.7578125,
+        "width": 292
+      },
+      "navigation": {
+        "bottom": 56,
+        "top": 0,
+        "width": 358
+      },
+      "touchPoint": {
+        "x": 116.14453125,
+        "y": 442.1015625
+      }
+    },
+    "actualReceivedAssets": [
+      {
+        "file": "index-CjJnHZzV.css",
+        "status": 200,
+        "sha256": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      {
+        "file": "index-DTeCBXBi.js",
+        "status": 200,
+        "sha256": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40"
+      }
+    ],
+    "finalState": "stopped",
+    "browserOverridesResetAndOwnedTabClosed": true,
+    "qualification": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/native-installed/native-installed-acceptance.json",
+    "qualificationSHA256": "5bcefaa1842e5a71b8085dee83d4d27c89629c26026f48e2f72d1d4e272f0267",
+    "limits": [
+      "Installed proof covers native Home Assistant Ingress; both listeners and broader concurrency/recovery/restore are separately covered by actual-image and source campaigns. Final same-head CI and substantive review are separate merge gates."
+    ]
+  },
+  "sameHeadCIGates": {
+    "requiredForEveryFinalPRHead": true,
+    "trackedIn": "https://github.com/vypdev/domus/pull/166",
+    "mustIncludeSubstantiveReviewAndVerification": true,
+    "thisRecordDoesNotPreapproveAnotherCommit": true
+  },
+  "actualBrowserByteBinding": {
+    "at": "2026-11-22T22:48:11.252152+00:00",
+    "stats": {
+      "startTime": "2026-11-22T22:46:11.725Z",
+      "duration": 17046.912,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "sourceCommit": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+    "wheelSHA256": "45672f4c0b1ec1e683e9a4bd34369bff8d5223ec97b609122d10e4e150779867",
+    "everyActuallyReceivedJSCSSMatchesImmutableWheel": true,
+    "actualBrowserAssetWitnesses": [
+      [
+        {
+          "path": "assets/index-CjJnHZzV.css",
+          "sha256": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "status": 200
+        },
+        {
+          "path": "assets/index-DTeCBXBi.js",
+          "sha256": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40",
+          "status": 200
+        }
+      ],
+      [
+        {
+          "path": "assets/index-CjJnHZzV.css",
+          "sha256": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "status": 200
+        },
+        {
+          "path": "assets/index-DTeCBXBi.js",
+          "sha256": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40",
+          "status": 200
+        }
+      ],
+      [
+        {
+          "path": "assets/index-CjJnHZzV.css",
+          "sha256": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "status": 200
+        },
+        {
+          "path": "assets/index-DTeCBXBi.js",
+          "sha256": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40",
+          "status": 200
+        }
+      ],
+      [
+        {
+          "path": "assets/index-CjJnHZzV.css",
+          "sha256": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "status": 200
+        },
+        {
+          "path": "assets/index-DTeCBXBi.js",
+          "sha256": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40",
+          "status": 200
+        }
+      ]
+    ],
+    "producerPathCorrection": "/private/tmp/domus-165-ui-output-path-correction.json",
+    "notInstalledHAEvidence": true
+  },
+  "uiProofPathCorrection": {
+    "originalEmptyAssetRecordRetained": true,
+    "wrongPath": "frontend/dist",
+    "actualViteOutDir": "backend/src/domus/ui",
+    "correctionReceipt": "/private/tmp/domus-165-ui-output-path-correction.json",
+    "actualHTTPJSCSSBoundByFresh4BrowserVariants": true
+  },
+  "initialSourceCI": {
+    "sourceCommit": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+    "run": "https://github.com/vypdev/domus/actions/runs/45078970595",
+    "frontendUnit": 2229,
+    "backendJob": "success",
+    "failures": [
+      "Frontend wheel acceptance still compared current UI with the historical Edge.85 record.",
+      "amd64 image delivery still compared current UI with the historical Edge.85 record; remaining 61 container cases passed.",
+      "ARM64 also used the historical Edge.85 UI map; its other61 container cases passed. Corrected delivery was independently exercised against the real frozen Edge.86 image."
+    ],
+    "correction": "Use the current immutable Unicode qualification for both current wheel and image comparisons; preserve the historical Edge.85 documents and every byte-level assertion.",
+    "finalSameHeadCIStillRequired": true
+  }
+}

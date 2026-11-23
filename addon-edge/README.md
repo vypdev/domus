@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.86 preserves complete Unicode names and reasons at their existing limits. Correct an overlong value without losing it. Long reward forms fit narrow screens, and their primary action and focused name remain legible in both themes. Stock, schema-37 data and original operations are preserved.
+
 Edge.85 reveals the Inventory heading when you return from Shopping work further down the page. Reopening the Inventory tab also brings its heading into view. Drafts and original operations stay intact.
 
 Edge.84 keeps Inventory available when you leave Shopping while it is refreshing. Returning opens the current Shopping work. Drafts and original operations stay intact.

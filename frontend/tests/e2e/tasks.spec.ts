@@ -873,7 +873,7 @@ for (const mode of ['native', 'standalone'] as const) {
       await review.locator('input[name=time]').fill('07:00');
       await review.locator('input[name=pattern]').fill('FREQ=DAILY;COUNT=1');
       const reason = '<img src=x onerror=alert(1)> reviewed reason';
-      await review.locator('textarea[name=reason]').fill(reason);
+      await review.getByRole('textbox',{name:t('Reason for schedule change','Motivo del cambio de programación'),exact:true}).fill(reason);
       await review.getByRole('button', {name: t('Preview schedule change', 'Previsualizar cambio de programación'), exact: true}).click();
       await expect(review.getByText(reason, {exact: true})).toBeVisible();
       await expect(review.locator('img,script')).toHaveCount(0);

@@ -7,12 +7,15 @@ import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
+import {registerField} from '@vypdev/ha-ui/field';
+import type {FieldValueEvent} from '@vypdev/ha-ui/field';
+import {textFieldState} from '@vypdev/ha-ui/field-contracts';
 import type {RewardsView} from '../application/rewards-controller';
 import {MEMBER_ROLES} from '../domain/administration-commands';
 import type {Revision} from '../domain/administration';
 import type {MemberRole} from '../domain/administration-commands';
 import {displayPoints, minorPoints} from '../domain/point-allocation';
-import {hasTaskText} from '../domain/tasks';
+import {hasTaskText, taskText} from '../domain/tasks';
 import type {Redemption, RewardCommand, RewardOffer, RewardReport} from '../domain/rewards';
 import {rewardMessage} from './reward-messages';
 import type {RewardMessage} from './reward-messages';
@@ -26,17 +29,22 @@ const NEW: OfferDraft = {title: '', price: '', enabled: true, roles: MEMBER_ROLE
 export class DomusRewards extends LitElement {
   static properties = {view: {attribute: false}, language: {attribute: false}, zone: {attribute: false},
     selectedOffer: {state: true}, selectedCancellation: {state: true}, reason: {state: true},
-    editing: {state: true}, offerDraft: {state: true}, code: {state: true}, delivered: {state: true}};
+    editing: {state: true}, offerDraft: {state: true}, code: {state: true}, delivered: {state: true},
+    offerInvalid: {state:true}, reasonInvalid: {state:true}};
   static styles = css`
+    vyp-ha-field {--vyp-ha-danger:var(--warning);--vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    vyp-ha-field, vyp-ha-field::part(input) {scroll-margin-block-start:80px}
     :host {display:grid;gap:16px;margin-block:16px;--vyp-ha-surface:var(--surface);--vyp-ha-text:var(--text);
-      --vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent)}
+      --vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent);--vyp-ha-on-accent:var(--surface)}
     h3 {margin:0} form,fieldset,ol {display:grid;gap:10px}
     ol {list-style:none;padding:0;margin:0 0 12px} li+li {border-block-start:1px solid var(--line);padding-block-start:12px}
     li {overflow-wrap:anywhere} li p {margin-block:6px}
+    form,fieldset,ol,label,li {min-width:0}
     form,fieldset {margin-block:10px} fieldset {border:1px solid var(--line);border-radius:8px}
     label {display:grid;gap:4px;font-weight:650} label:has(input[type=checkbox]) {display:flex;align-items:center;gap:8px}
     input,select,textarea {font:inherit;color:inherit;background:var(--surface);padding:8px;border:1px solid var(--line);
       border-radius:8px;max-width:100%;box-sizing:border-box} input[type=checkbox] {accent-color:var(--accent)}
+    select {width:100%;min-width:0}
     .actions {display:flex;flex-wrap:wrap;gap:8px} summary {font-weight:650}
     :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
   `;
@@ -50,16 +58,20 @@ export class DomusRewards extends LitElement {
   private declare offerDraft: OfferDraft;
   private declare code: string;
   private declare delivered: boolean;
+  private declare offerInvalid: boolean;
+  private declare reasonInvalid: boolean;
 
   constructor() {
     super(); this.view = null; this.language = 'en'; this.zone = 'UTC';
     this.selectedOffer = null; this.selectedCancellation = null; this.reason = '';
     this.editing = null; this.offerDraft = NEW; this.code = ''; this.delivered = false;
+    this.offerInvalid = false; this.reasonInvalid = false;
   }
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('view') && changed.get('view')?.scope.key !== this.view?.scope.key) {
       this.selectedOffer = null; this.selectedCancellation = null; this.reason = '';
       this.editing = null; this.offerDraft = NEW; this.code = ''; this.delivered = false;
+      this.offerInvalid = false; this.reasonInvalid = false;
     }
   }
   private text(key: RewardMessage): string {return rewardMessage(key, this.language);}
@@ -115,14 +127,20 @@ export class DomusRewards extends LitElement {
         this.selectedCancellation === request.id ? html`<form @submit=${(event: SubmitEvent) => {
           event.preventDefault();
           if (!blocked && hasTaskText(this.reason)) {
+            try {taskText(this.reason, 1000, true);} catch {this.reasonInvalid = true; return;}
             const reason = this.reason; this.selectedCancellation = null; this.reason = '';
             this.submit({action: 'reward.cancel', redemption_id: request.id, expected_revision: request.revision, reason});
           }
-        }}><label>${this.text('cancelReason')}<input .value=${live(this.reason)} maxlength="1000" ?disabled=${blocked}
-          @input=${(event: InputEvent) => {this.reason = (event.target as HTMLInputElement).value;}}></label>
+        }}><vyp-ha-field .value=${this.reason} ?disabled=${blocked}
+          .state=${textFieldState({label:this.text('cancelReason'), required:true,
+            requiredMessage:this.text('invalidReason'), error:this.reasonInvalid ? this.text('invalidReason') : ''})}
+          @ha-value-request=${(event: FieldValueEvent) => {
+            if (blocked) return;
+            this.reason = event.detail.value; this.reasonInvalid = false;
+          }}></vyp-ha-field>
           <div class="actions">${this.submitButton('confirmCancel', blocked || !hasTaskText(this.reason))}
           ${this.button('cancelDraft', () => {this.selectedCancellation = null; this.reason = '';}, blocked)}</div></form>`
-          : this.button('cancel', () => {this.selectedCancellation = request.id; this.reason = '';}, blocked)}` : nothing}</li>`;
+          : this.button('cancel', () => {this.selectedCancellation = request.id; this.reason = ''; this.reasonInvalid = false;}, blocked)}` : nothing}</li>`;
   }
 
   private editOffer(report: RewardReport, blocked: boolean) {
@@ -133,17 +151,26 @@ export class DomusRewards extends LitElement {
     const valid = hasTaskText(draft.title) && cost !== null && cost > 0 && draft.roles.length > 0;
     return html`<form @submit=${(event: SubmitEvent) => {
       event.preventDefault();
-      if (!blocked && !stale && valid) this.submit({action: 'reward.offer', offer_id: editing?.id ?? null, title: draft.title,
-        cost_minor: cost, enabled: draft.enabled, eligible_roles: draft.roles, expected_revision: editing?.revision ?? '0'});
+      if (!blocked && !stale && valid) {
+        try {taskText(draft.title, 160, true);} catch {this.offerInvalid = true; return;}
+        this.submit({action: 'reward.offer', offer_id: editing?.id ?? null, title: draft.title,
+          cost_minor: cost, enabled: draft.enabled, eligible_roles: draft.roles, expected_revision: editing?.revision ?? '0'});
+      }
     }}>
       <label>${this.text('edit')}<select .value=${live(editing?.id ?? '')} ?disabled=${blocked} @change=${(event: Event) => {
         const offer = report.catalog.find(item => item.id === (event.target as HTMLSelectElement).value);
         this.editing = offer === undefined ? null : {id: offer.id, revision: offer.revision};
         this.offerDraft = offer === undefined ? NEW : {title: offer.title, price: (offer.cost / 100).toFixed(2), enabled: offer.enabled, roles: offer.roles};
+        this.offerInvalid = false;
       }}><option value="">${this.text('newOffer')}</option>
         ${report.catalog.map(offer => html`<option .value=${offer.id}>${offer.title}</option>`)}</select></label>
-      <label>${this.text('offerTitle')}<input maxlength="160" .value=${live(draft.title)} ?disabled=${blocked}
-        @input=${(event: InputEvent) => {this.offerDraft = {...this.offerDraft, title: (event.target as HTMLInputElement).value};}}></label>
+      <vyp-ha-field .value=${draft.title} ?disabled=${blocked}
+        .state=${textFieldState({label:this.text('offerTitle'), required:true,
+          requiredMessage:this.text('invalidTitle'), error:this.offerInvalid ? this.text('invalidTitle') : ''})}
+        @ha-value-request=${(event: FieldValueEvent) => {
+          if (blocked) return;
+          this.offerDraft = {...this.offerDraft, title:event.detail.value}; this.offerInvalid = false;
+        }}></vyp-ha-field>
       <label>${this.text('price')}<input inputmode="decimal" maxlength="8" .value=${live(draft.price)} ?disabled=${blocked}
         @input=${(event: InputEvent) => {this.offerDraft = {...this.offerDraft, price: (event.target as HTMLInputElement).value};}}></label>
       <label><input type="checkbox" .checked=${draft.enabled} ?disabled=${blocked} @change=${(event: Event) => {
@@ -209,6 +236,6 @@ export class DomusRewards extends LitElement {
     `;
   }
 }
-registerCard(); registerButton(); registerFeedback();
+registerCard(); registerButton(); registerFeedback(); registerField();
 customElements.define('domus-rewards', DomusRewards);
 declare global {interface HTMLElementTagNameMap {'domus-rewards': DomusRewards;}}

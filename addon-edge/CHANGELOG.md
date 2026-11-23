@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.86
+
+- Preserve complete Unicode names and reasons at their existing limits, retaining overlong drafts for correction.
+- Keep full reward histories readable and long reward forms within narrow screens.
+- Improve dark primary-action contrast and keep focused reward names below fixed navigation.
+- Preserve schema 37, stock quantities, current permissions and original receipts.
+
 ## 0.0.0-edge.85
 
 - Reveal the Inventory heading when returning from Shopping work further down the page.

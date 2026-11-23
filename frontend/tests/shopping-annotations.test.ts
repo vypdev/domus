@@ -206,10 +206,23 @@ async function shoppingForm() {
     shoppingList:{items:[],cursor:null}};
   node.view=view;document.body.append(node);await node.updateComplete;
   const form = node.shadowRoot!.querySelector<HTMLFormElement>('#shopping-extra-form')!;
-  const name = form.querySelector<HTMLInputElement>('input[name="name"]')!;
+  const name = form.querySelector<HTMLElementTagNameMap['vyp-ha-field']>('vyp-ha-field[name="name"]')!;
   const quantity = form.querySelector<HTMLInputElement>('input[name="quantity"]')!;
   return {node,view,form,name,quantity};
 }
+
+test.each(['en','es'] as const)('manual extra names retain the full domain value, correct invalid drafts and fence disabled edits (%s)', async language => {
+  const {node,view,form,name,quantity}=await shoppingForm();node.language=language;await node.updateComplete;
+  const events=vi.fn();node.addEventListener('domus-inventory-intent',events);quantity.value='1';
+  const edit=(value:string)=>name.dispatchEvent(new CustomEvent('ha-value-request',{detail:{value,reason:'input'}}));
+  const full='😀'.repeat(160);edit(full+'X');form.dispatchEvent(new Event('submit',{cancelable:true}));await node.updateComplete;
+  expect(events).not.toHaveBeenCalled();expect(name.value).toBe(full+'X');expect(name.state.error).toContain('160');
+  node.view={...view,pending:true};await node.updateComplete;
+  edit('Late edit');expect(name.value).toBe(full+'X');
+  node.view=view;await node.updateComplete;edit(full);form.dispatchEvent(new Event('submit',{cancelable:true}));
+  expect(events.mock.lastCall?.[0].detail.command).toMatchObject({action:'shopping.add-extra',product_id:null,name:full,quantity:'1'});
+  expect(new FormData(form).get('name')).toBe(full);
+});
 
 test('checking an earlier committed outcome preserves the unrelated manual-request draft', async () => {
   const {node,view,name,quantity} = await shoppingForm();
@@ -234,12 +247,12 @@ test.each(['scope','replacement','programmatic'] as const)('an earlier form subm
   if (change === 'replacement') {
     node.view={...view,shoppingList:null};await node.updateComplete;
     node.view=view;await node.updateComplete;
-    node.shadowRoot!.querySelector<HTMLInputElement>('input[name="name"]')!.value='New form';
+    node.shadowRoot!.querySelector<HTMLElementTagNameMap['vyp-ha-field']>('vyp-ha-field[name="name"]')!.value='New form';
   } else if (change === 'programmatic') name.value='Later programmatic draft';
   const next = change === 'scope' ? {...view,scope:{...scope,key:'another-home'}} : view;
-  const before = node.shadowRoot!.querySelector<HTMLInputElement>('input[name="name"]')!.value;
+  const before = node.shadowRoot!.querySelector<HTMLElementTagNameMap['vyp-ha-field']>('vyp-ha-field[name="name"]')!.value;
   node.view={...next,result:saved};await node.updateComplete;await node.updateComplete;
-  expect(node.shadowRoot!.querySelector<HTMLInputElement>('input[name="name"]')!.value).toBe(before);
+  expect(node.shadowRoot!.querySelector<HTMLElementTagNameMap['vyp-ha-field']>('vyp-ha-field[name="name"]')!.value).toBe(before);
 });
 
 test.each(['historical','rejected'] as const)('a resolved %s request retires its form ownership without clearing the draft', async kind => {
