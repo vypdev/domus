@@ -51,7 +51,7 @@ Standalone reauthenticates after restart, matching its non-durable session bound
 The actual-image inventory increases from 102 to 106 journeys per architecture,
 with zero unexpected, skipped or flaky results required. Complete source-browser,
 image, installed Home Assistant and final-head CI/review results remain separate
-gates; a source unit result does not substitute for them. The immutable Edge.91
+gates; a source unit result does not substitute for them. The immutable Edge.92
 candidate preserves schema 37, all 250 Python product files and the exact
 `0.1.0-next.5` ha-ui cohort. Prior qualification receipts remain frozen.
 

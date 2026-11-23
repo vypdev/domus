@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
   "issue": "https://github.com/vypdev/domus/issues/173",
-  "status": "Frozen Edge91 source and local ARM64 package/image qualification. Installed acceptance, complete final-head161 source/106-per-architecture image CI and substantive review remain required separately.",
-  "scope": "Explain only validated409 recurrence_reschedule_collision preview rejection, retain the proposal and permit explicit correction. Existing recurrence-calendar-R5/C34; no new owning cases.",
+  "status": "Frozen Edge92 source qualification for accurate collision feedback. Local image, installed acceptance, complete final-head161 source/106-per-architecture image CI and substantive review remain required separately.",
+  "scope": "Explain only validated409 recurrence_reschedule_collision preview rejection without inferring whether retained work or proposed dates collided. Preserve explicit correction and ownership. Existing recurrence-calendar-R5/C34; no new owning cases.",
   "immutableCandidate": {
-    "version": "0.0.0-edge.91",
-    "sourceCommit": "6e796a68e9926098415b4fa77a428e8d21ff791c",
-    "sourceArchiveSHA256": "e21ad2e1d3786c6985d211adc6b3708ccbb76c9d198c675e0326dfe9ec867e78",
-    "wheelSHA256": "d3e02bd0fd6e45ab5b666a6247375def154b462016fd97faed9fb2cbab5104bd",
+    "version": "0.0.0-edge.92",
+    "sourceCommit": "b37d5d0aceef832e2233b54d62cd7e755489c58d",
+    "sourceArchiveSHA256": "3c0b25d29a675ca48c97aca02b6fa7d4aa161c17bee071cfe0f0e61e87e47f33",
+    "wheelSHA256": "897333b203166deb24e5fb2050df45f19f2063e4c6cdc46a3ea5b2457a694b70",
     "storageSchema": 37,
     "pythonProductFilesUnchanged": 250,
     "actualProductFiles": {
-      ".vite/manifest.json": "69939547a1b6c8a03539cea21100da3fd37ba11916d03ef5dfe6385e9bb014a6",
-      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-D7TR6P89.js": "68fb3e24ae72f17bc3281946bddf9b44920f65ae41a49979c83aae092dd4b89e",
-      "index.html": "3e5b13c9974a00ce149b352e625ef28588c8efcd832b5e49b52948de3f3aaa30"
+      "index.html": "2b098f0b281ce452dc8e871b6adfac0a24607e79f934deca3f013c1309a8dfc2",
+      ".vite/manifest.json": "db2947390c87cdafcd1624c887bf6a7d229af2909d643c6a61e66514e5042117",
+      "assets/index-BphRPb7d.js": "e04aa363a310a1f4bbf924f90712fb02cb20576114ac18ec876bab9154fe29ad",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
     }
   },
   "dependencyCohort": "0.1.0-next.5",
   "executedSource": {
-    "unitTests": 2281,
+    "unitTests": 2287,
     "runtimeFiles": 121,
     "fullyCoveredNonemptyFiles": 114,
     "emptyFiles": 7,
@@ -64,28 +64,13 @@
     "occupiedDateSkipped": 0,
     "occupiedDateFlaky": 0,
     "fullEntryVariants": null,
-    "fullEntryStatus": "Complete final-head161 CI required. The initial Edge90 full local attempt and its corrected observation are recorded separately in the frozen Edge90 receipt.",
+    "fullEntryStatus": "Complete final-head161 CI required for Edge92. Edge91 final head independently passed all161 source journeys and106 image journeys per architecture; frozen receipt and original CI evidence remain separate.",
     "requiredFullEntryVariants": 161
   },
   "actualImage": {
     "requiredBrowserVariantsPerArchitecture": 106,
-    "localARM64Status": "3 package checks and4 occupied-date image journeys passed; complete final-head matrix required.",
-    "exactFinalHeadMatrix": "Required separately before merge.",
-    "localARM64PackageChecks": {
-      "passed": 3,
-      "deselected": 1,
-      "deselectedScope": "Existing actual Edge5 upgrade left to complete final-head62-container matrix.",
-      "imageID": "sha256:82b0dff791b1745372a64d8457a1f4d3e0b473748606f26ca9e1db6832dcd1ff",
-      "scope": "Exact250 Python/4 UI file identities, native authority/storage/restart, standalone bundle delivery."
-    },
-    "localARM64BrowserVariants": {
-      "expected": 4,
-      "unexpected": 0,
-      "skipped": 0,
-      "flaky": 0,
-      "sourceCommit": "6e796a68e9926098415b4fa77a428e8d21ff791c",
-      "scope": "Actual immutable product image; real409 collision responses forwarded once with0 retries, draft retained, switching tasks retires old notice, one corrected apply preserves started/completed work and original receipt across restart. Native/standalone EN keyboard/ES390 touch."
-    }
+    "localARM64Status": "Pending for Edge92; prior Edge91 images are not substituted.",
+    "exactFinalHeadMatrix": "Required separately before merge."
   },
   "installed": {
     "includedInThisSourceReceipt": false,
@@ -105,7 +90,8 @@
     "task-schedule-refresh.json",
     "unicode-text-limits.json",
     "recurrence-edge86-installed.json",
-    "recurrence-overlap-feedback-edge90.json"
+    "recurrence-overlap-feedback-edge90.json",
+    "recurrence-overlap-feedback-edge91.json"
   ],
   "historicalEdge90CompleteEntryAttempt": {
     "inventory": 161,
@@ -123,5 +109,17 @@
     "genuineSourceJourneys": 4,
     "sourceJourneyBoundary": "After two real rejected previews, select another task, verify no stale notice, return and complete a fresh corrected preview/apply/restart recovery."
   },
-  "infrastructureChecksUnchangedFromEdge90": true
+  "infrastructureChecksUnchangedFromEdge90": true,
+  "sharedCollisionCodeCorrection": {
+    "finding": "https://github.com/vypdev/domus/pull/175#discussion_r4667210389",
+    "acceptedAsValid": true,
+    "cause": "Fixed-state/fixed-pattern proposed slots may collide with each other using the same409 code as retained-work collisions.",
+    "correction": "Neutral EN/ES notice explains the proposed change would create overlapping scheduled work.",
+    "redLanguageCases": 2,
+    "greenLanguageCases": 2,
+    "previewRouteVariants": 8,
+    "genuineSourceJourneys": 4,
+    "catalogVariants": 68,
+    "domainPolicyUnchanged": true
+  }
 }
