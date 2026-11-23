@@ -36,6 +36,11 @@ implementation, verification and packaging gates. The Family increments now cove
 [Base points during task creation](evidence/task-base-points-qualification.md) lets task
 configurators set the exact amount used by the existing award rules. Full task editors and owner
 acceptance of the installed recurrence experience remain open.
+Additional [installed Edge.86 observations](evidence/recurrence-edge86-installed.json)
+record fixed and relative creation, Calendar, unstarted-successor reopening and
+restart persistence through Ingress. English keyboard and narrow Spanish touch
+observations retain their precise scope; full M2 and distribution acceptance
+remain separate gates.
 The [assignment interface](evidence/task-assignment-qualification.md) adds planned
 assignees, replacement and release with explicit conflict review and original-request recovery.
 The [task material workflow](evidence/task-material-workflow-qualification.md) connects optional
