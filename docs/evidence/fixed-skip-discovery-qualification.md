@@ -56,13 +56,30 @@ coverage globally and per file across 114 nonempty and seven empty runtime files
 typing, application import contracts, 238 architecture/Python-tooling tests and documentation
 checks pass.
 
-Immutable package/image acceptance,
-installed Home Assistant observations and final-head CI/review remain separate open gates
-for this increment. Full M2, the remaining roadmap and Stable/distribution acceptance remain
-open independently.
+Complete final-head CI/review, normal merge and destination acceptance remain separate
+open gates for this increment. Full M2, the remaining roadmap and Stable/distribution
+acceptance remain open independently.
 
 The prepared Edge.93 declaration pins runtime `72c241b`, schema 37 and the exact ha-ui
 `0.1.0-next.5` cohort. The official source archive matches all 1,039 tracked Git blobs.
 All 250 Python and four compiled UI wheel files match the verified source and current
 source-browser payload; only the three intended Python modules differ from Edge.92.
 This inventory proof does not substitute for actual pinned-image or installed acceptance.
+
+The actual immutable ARM64 Edge.93 image passes the three selected package/runtime contracts:
+all 250 Python/four UI files match the declaration, native launcher authority/storage/replay/
+restart, and standalone exact private-bundle delivery. All four selected Chromium journeys
+also pass against that image. These bounded runs do not replace the full both-CPU CI inventory.
+
+The installed Home Assistant candidate passes English desktop keyboard and Spanish 390px
+mobile touch acceptance. A real four-occurrence schedule supplies completed, performed-then-
+reopened, started and future work whose fresh review menus omit the action. One eligible
+assigned overdue occurrence is explicitly previewed and skipped. The other three task
+projections and an unrelated draft remain unchanged. The same original receipt is recovered
+before and after the public stop/start controls; all four task projections survive restart,
+and the settled action remains absent. Served JS/CSS match the pin. The installation finishes
+stopped with all four optional switches off. No native fixture or private API writes are used.
+The initial required-origin configuration and an owner-environment HA restart are recorded
+separately from acceptance. Debugger events were evicted during the full HA shell reload;
+direct current reads and original receipts were retained afterward. This is not a gapless
+HTTP trace or an installed per-file Python-hash claim.

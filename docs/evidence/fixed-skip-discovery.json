@@ -95,7 +95,9 @@
   "diagnostics": {
     "backendLauncher": "The first full-suite invocation lacked its nested temporary-directory parent. It produced setup errors and partial coverage; the corrected unchanged product suite passed.",
     "browserPreparation": "The first actual source run timed out opening the creation draft before the seeded task list settled. The incomplete run was stopped; its trace/PNG/log remain separate from subsequent four-variant passes. A stale preceding collection report is explicitly not execution evidence.",
-    "mobileLayout": "The first passing browser screenshots exposed native controls extending beyond the scheduling card. A zero-minimum Domus form column corrects this; all2287 unit tests and all four actual source variants pass with that correction."
+    "mobileLayout": "The first passing browser screenshots exposed native controls extending beyond the scheduling card. A zero-minimum Domus form column corrects this; all2287 unit tests and all four actual source variants pass with that correction.",
+    "pinnedImageLauncher": "The first selected local launch omitted the existing DOMUS_TEST_IMAGE fixture variable. One inventory check passed and two setup errors were retained separately. Supplying both required image variables passes all three contracts unchanged.",
+    "nativeEnvironment": "The initial unconfigured start correctly required public_origins. HA then restarted during startup; after recovery and explicit status refresh, the configured installation completed acceptance. A short observer deadline during the later public start was not treated as runtime failure or retried."
   },
   "collectedInventories": {
     "fullSourceBrowser": 165,
@@ -112,15 +114,47 @@
     "uiFilesVerified": 4,
     "unchangedPythonFiles": 247,
     "declaration": "addon-edge/artifact.json",
-    "actualPinnedImage": "pending",
-    "installedHomeAssistant": "pending"
+    "actualPinnedImage": {
+      "architecture": "aarch64",
+      "productFilesMatchDeclaration": {
+        "python": 250,
+        "ui": 4
+      },
+      "selectedRuntimeContractsPassed": 3,
+      "selectedBrowserVariantsPassed": 4,
+      "browserReportSHA256": "0e4bfee96678eebe40ef996bfecf8abaee0ceae3625523e48334935583a2ac32",
+      "scope": "Exact immutable Edge93 image. Full CI image inventory on both CPU families remains a separate gate."
+    },
+    "installedHomeAssistant": {
+      "result": "passed",
+      "mode": "native Ingress",
+      "controls": [
+        "English desktop keyboard",
+        "Spanish390px mobile touch"
+      ],
+      "taskCount": 4,
+      "completedPerformedReopenedStartedAndFutureWorkExcludeSkip": true,
+      "oneExplicitSkip": true,
+      "otherThreeTaskProjectionsUnchanged": true,
+      "originalReceiptRecoveredBeforeAndAfterPublicStopStart": true,
+      "allFourTaskProjectionsPreservedAcrossRestart": true,
+      "unrelatedDraftPreservedBeforeReload": true,
+      "servedJSAndCSSMatchPin": true,
+      "finalStopped": true,
+      "optionalSwitches": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "observations": "Direct UI actions and captured production responses only; no native fixture/private API writes.",
+      "limits": "The HA shell reload evicted debugger events. Direct current reads and original receipts were retained after restart; this is not a gapless HTTP trace. Installed Python files are not claimed to have been individually hashed."
+    }
   },
   "remainingGates": [
-    "Actual pinned image and package execution",
     "Complete final-head CI including source165, catalog68, container62/image110 on amd64 andARM64",
-    "Installed immutable Edge candidate in Home Assistant with EN keyboard and ES mobile touch",
     "Substantive same-head review and normal merge",
     "Exact destination tree/ref, full destination CI, Branch Sync and native issue closure"
   ],
-  "limits": "This is a bounded supplement to C30. Full M2, the remaining M0\u2013M5 roadmap and Stable/distribution acceptance remain open."
+  "limits": "This is a bounded supplement to C30. Full M2, the remaining M0–M5 roadmap and Stable/distribution acceptance remain open."
 }
