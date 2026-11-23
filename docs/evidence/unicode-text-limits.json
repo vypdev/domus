@@ -57,7 +57,8 @@
       "authoredRuntimeFiles": 121,
       "nonempty": 114,
       "empty": 7,
-      "log": "/private/tmp/domus-165-source-final-unit.log"
+      "log": "/private/tmp/domus-165-source-final-unit.log",
+      "packagingHeadCIConfirmsAllFourGlobalAnd121PerFile100": true
     },
     "nodePolicy": {
       "passed": 42,
@@ -68,7 +69,18 @@
     "nativeCatalogValidator": true,
     "catalogBrowser": {
       "passed": 68,
-      "seconds": 51.1
+      "stats": {
+        "startTime": "2026-11-22T23:50:29.716Z",
+        "duration": 79410.712,
+        "expected": 68,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "originalReport": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/ci757-frontend-artifact/frontend/test-results/catalog-results.json",
+      "sourceHead": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+      "run": "https://github.com/vypdev/domus/actions/runs/45082205762",
+      "allExecutedExactlyOnce": true
     },
     "targetedComposedUnicode": {
       "passed": 4,
@@ -79,16 +91,14 @@
       "stickyNavigationBottom": 56,
       "notInstalledHAEvidence": true
     },
-    "fullSourceBrowser": {
-      "passed": 139,
-      "failed": 6,
-      "total": 145,
-      "seconds": 573.575905,
-      "qualification": "/private/tmp/domus-165-full-source-browser-initial/qualification-limits.json",
-      "cause": "4 obsolete native-textarea selectors and 2 former outer-alert assertions. All six semantic replacements pass in the final ten-variant run; full final source suite remains pending."
-    },
     "images": "pending exact-head actual amd64 and ARM64",
-    "nativeEdge": "Immutable Edge.86 image built and payload/functional qualification passed; not yet installed in Home Assistant.",
+    "nativeEdge": {
+      "version": "0.0.0-edge.86",
+      "accepted": true,
+      "state": "stopped",
+      "application": "0d5bd860_domus_edge",
+      "qualification": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/native-installed/native-installed-acceptance.json"
+    },
     "imageInventoryPolicy": {
       "passed": 48,
       "seconds": 0.62
@@ -120,9 +130,47 @@
       "seconds": 7.25,
       "actualImage": "sha256:829e29de1e7a5e5b9b4dce6a8d34457408e44b07942c512a805c629030733bb9",
       "log": "/private/tmp/domus-165-current-ui-image-contract.log"
+    },
+    "initialFullSourceBrowser": {
+      "passed": 139,
+      "failed": 6,
+      "total": 145,
+      "seconds": 573.575905,
+      "qualification": "/private/tmp/domus-165-full-source-browser-initial/qualification-limits.json",
+      "cause": "Historical first139/6 execution; semantic replacements later passed all145 in the actual packaging-head CI. Original failure observations remain retained."
+    },
+    "fullSourceBrowser": {
+      "passed": 145,
+      "stats": {
+        "startTime": "2026-11-22T23:39:23.322Z",
+        "duration": 663166.121,
+        "expected": 145,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "originalReport": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/ci757-frontend-artifact/frontend/test-results/entry-results.json",
+      "sourceHead": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+      "run": "https://github.com/vypdev/domus/actions/runs/45082205762",
+      "allExecutedExactlyOnce": true
+    },
+    "immutableEdge86ImageBrowser": {
+      "passed": 90,
+      "stats": {
+        "startTime": "2026-11-22T23:13:01.410Z",
+        "duration": 591801.515,
+        "expected": 90,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "architecture": "aarch64",
+      "allExecutedExactlyOnce": true,
+      "qualification": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/image-browser90/qualification.json",
+      "allObservedJSCSSBoundToFrozenWheel": true
     }
   },
-  "status": "Immutable Edge.86 payload qualified; package proof pointers corrected; full image browser, installed HA and final same-head CI/review pending.",
+  "status": "Immutable Edge.86 and installed native acceptance passed. Final repository merge acceptance is tracked by the exact-head checks and review on PR166.",
   "responseBudgetRegression": {
     "before": "A complete permitted64-offer/25-cancelled-redemption page with160/1000 supplementary-codepoint values fails in the old64KiB consumer before parsing. Original negative test report retained.",
     "correction": "Only reward-page GET receives an explicit256KiB limit; streaming, declared-length, charset, same-origin, credentials and closed payload validation stay required. Ordinary requests remain64KiB.",
@@ -152,7 +200,7 @@
     "tests/packaging/test_ui_wheel.py": "7a84fff65a748f4f306c88b5940a5bddea97b98fc7b94392d48d961b19134d09",
     "tests/containers/test_app_ui.py": "bb31d46036d40710dcf11fe428d963436131fa8eba87639c49bbb4f97a84d7df"
   },
-  "updated": "2026-11-22T23:14:11.410096+00:00",
+  "updated": "2026-11-23T00:05:36.984615+00:00",
   "runtimeSourceCommit": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
   "immutableCandidate": {
     "version": "0.0.0-edge.86",
@@ -177,8 +225,82 @@
       "scope": "exact bytes; native authority/storage/restart; standalone delivery; missing-Supervisor rejection; genuine20/36 migration/restart/snapshot restoration"
     }
   },
-  "installedAcceptance": null,
-  "sameHeadCIGates": null,
+  "installedAcceptance": {
+    "acceptedAt": "2026-11-23T00:03:34.939Z",
+    "version": "0.0.0-edge.86",
+    "application": "0d5bd860_domus_edge",
+    "runtimeSource": "8b2660d282f7e58dedfccd6b11ba53eabe54b2e6",
+    "packagingCommit": "75724c862c2b0a4028a0b8714d0ed5bcaa9f3046",
+    "checks": {
+      "englishProduct161RetainedAndInvalid": true,
+      "englishInvalidProductCommands": 0,
+      "englishProduct160Saved": true,
+      "registrationResetEmptyAndNoError": true,
+      "selectedGramsRetainedForNextProduct": true,
+      "location80Persisted": true,
+      "reason240SavedWithStockOneGram": true,
+      "extra160PersistedAndOwnFormReset": true,
+      "purchase160PersistedAndOwnFormReset": true,
+      "reward160Persisted": true,
+      "reward160RenderedAfterRecordedSave": true,
+      "spanishTouchReward161RetainedRejectedAndZeroWrites": true,
+      "mobileNoHorizontalOverflow": true,
+      "spanishProduct160SavedByActualTouch": true,
+      "spanishRegistrationResetEmptyWithoutError": true,
+      "publicStoppedStateObserved": true,
+      "publicRunningStateAfterStartObserved": true,
+      "bothFull160ProductNamesAndLocation80SurvivePublicStopStart": true,
+      "reason240AndExactStockSurvivePublicStopStart": true,
+      "singleReward160SurvivesPublicStopStart": true,
+      "manualExtra160SurvivesPublicStopStart": true,
+      "purchase160SurvivesPublicStopStart": true,
+      "allReviewedProtectedValuesSurvivePublicStopStart": true,
+      "finalPublicStoppedStateObserved": true
+    },
+    "visuals": {
+      "lightContrast": 7.112998299903268,
+      "darkContrast": 9.141730265691209,
+      "spanishFocus": {
+        "bottom": 469.7578125,
+        "top": 413.7578125,
+        "width": 292
+      },
+      "navigation": {
+        "bottom": 56,
+        "top": 0,
+        "width": 358
+      },
+      "touchPoint": {
+        "x": 116.14453125,
+        "y": 442.1015625
+      }
+    },
+    "actualReceivedAssets": [
+      {
+        "file": "index-CjJnHZzV.css",
+        "status": 200,
+        "sha256": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      },
+      {
+        "file": "index-DTeCBXBi.js",
+        "status": 200,
+        "sha256": "3a60cd520666c663fffabff0c68fa7dff66d1d051e66d31bcc3dc113a0c04e40"
+      }
+    ],
+    "finalState": "stopped",
+    "browserOverridesResetAndOwnedTabClosed": true,
+    "qualification": "/Users/efrain.espada@feverup.com/.codex/visualizations/2026/11/10/01a1c7a7-71f1-7da1-8efe-ea93560ec6b4/domus-goal-retained/domus-165-edge86.ioqrb8vr/native-installed/native-installed-acceptance.json",
+    "qualificationSHA256": "5bcefaa1842e5a71b8085dee83d4d27c89629c26026f48e2f72d1d4e272f0267",
+    "limits": [
+      "Installed proof covers native Home Assistant Ingress; both listeners and broader concurrency/recovery/restore are separately covered by actual-image and source campaigns. Final same-head CI and substantive review are separate merge gates."
+    ]
+  },
+  "sameHeadCIGates": {
+    "requiredForEveryFinalPRHead": true,
+    "trackedIn": "https://github.com/vypdev/domus/pull/166",
+    "mustIncludeSubstantiveReviewAndVerification": true,
+    "thisRecordDoesNotPreapproveAnotherCommit": true
+  },
   "actualBrowserByteBinding": {
     "at": "2026-11-22T22:48:11.252152+00:00",
     "stats": {
@@ -259,7 +381,8 @@
     "backendJob": "success",
     "failures": [
       "Frontend wheel acceptance still compared current UI with the historical Edge.85 record.",
-      "amd64 image delivery still compared current UI with the historical Edge.85 record; remaining 61 container cases passed."
+      "amd64 image delivery still compared current UI with the historical Edge.85 record; remaining 61 container cases passed.",
+      "ARM64 also used the historical Edge.85 UI map; its other61 container cases passed. Corrected delivery was independently exercised against the real frozen Edge.86 image."
     ],
     "correction": "Use the current immutable Unicode qualification for both current wheel and image comparisons; preserve the historical Edge.85 documents and every byte-level assertion.",
     "finalSameHeadCIStillRequired": true

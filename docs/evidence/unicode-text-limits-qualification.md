@@ -3,8 +3,9 @@
 [Issue #165](https://github.com/vypdev/domus/issues/165) repairs existing text
 contracts in product registration, Shopping names, storage locations and reasons,
 reward titles/cancellations and schedule review. The [machine-readable record](unicode-text-limits.json)
-separates baseline reproduction, local execution, historical failures and pending
-immutable/installed/CI acceptance. This increment is not yet accepted.
+separates baseline reproduction, local execution, historical failures, immutable
+image qualification and installed acceptance. Final repository merge gates and
+their exact commit are tracked on [PR #166](https://github.com/vypdev/domus/pull/166).
 
 ## Existing contract and observed failure
 
@@ -63,8 +64,8 @@ Wheel SHA-256 is `45672f4c0b1ec1e683e9a4bd34369bff8d5223ec97b609122d10e4e1507798
 byte-identical to accepted Edge.85. The actual ARM64 image `sha256:829e29de1e7a5e5b9b4dce6a8d34457408e44b07942c512a805c629030733bb9`
 installs all 250 Python modules and all 4 UI files byte-for-byte from that wheel.
 Six real-image checks pass in 22.74 seconds, including both listeners, authority,
-restart and genuine schema 20/36 upgrade/snapshot restoration. This is not full
-current-head CI or installed Home Assistant acceptance.
+restart and genuine schema 20/36 upgrade/snapshot restoration. These functional image checks are separate from the actual installed acceptance below
+and the final exact-head repository gates on the pull request.
 
 An initial verifier inventoried a nonexistent `frontend/dist` and recorded an
 empty asset map; its original closed record is retained. Vite actually writes
@@ -97,14 +98,43 @@ variants pass again with real painted contrast, focus and width checks, once
 each with zero retries. The combined final ten-variant execution passes once in 124.60 seconds, with no skipped, retried or flaky cases. These local checks are not same-head CI or
 installed acceptance.
 
-Require final exact-head CI, substantive review and verification, complete 145
-source and 68 catalog variants, all 6,040 unchanged backend tests / 250 modules,
-and 62 container plus 90 browser cases on each real image architecture. Native HA
-modules must retain full coverage. Qualify the new immutable Edge archive/wheel,
-actual image and installed English desktop/light/keyboard and Spanish
-mobile/dark/touch journeys, including exact persistence and public restart.
-This record does not claim the remaining full-suite, installed or same-head acceptance gates. No Stable
-release or deployment is authorized by this increment.
+The packaging-head CI `75724c862c2b0a4028a0b8714d0ed5bcaa9f3046` subsequently
+passes all 145 source and 68 catalog variants, each exactly once with zero skipped,
+retried or flaky cases. Its downloaded original JSON reports are independently
+counted. Its original coverage report confirms all four metrics at 100% globally
+and for all 121 frontend runtime files. The complete backend job passes all
+6,040 cases with full coverage; amd64 passes all 62 container and 90 browser cases.
+Final exact-head CI, substantive review, verification, both image architectures
+and native-HA module coverage remain repository merge gates tracked on PR #166.
+No Stable release or deployment is authorized by this increment.
+
+## Installed Home Assistant acceptance
+
+Home Assistant builds and installs Edge.86 from the published temporary source.
+Its actual received JS and CSS bodies match the frozen wheel hashes. The original
+public Supervisor log confirms successful installation even though a concurrent
+Home Assistant Core restart interrupted the frontend response. The new app uses
+only the documented local public origin. No other installation is modified.
+
+English desktop/light/keyboard and Spanish 390px/dark/actual CDP touch exercise
+the public UI. A 161-character product draft remains intact, receives its
+localized error and sends no command; the complete 160-character product then
+saves. Registration clears its error and retains the chosen base unit. An
+80-character location, 240-character stock reason, 160-character manual extra,
+160-character untracked purchase and 160-character reward save without truncation.
+The Spanish reward draft also retains all 161 characters after an actual touch,
+shows its translated error and sends no reward command. Native measured contrast
+is 7.11:1 in light and 9.14:1 in dark. The focused field remains below navigation,
+and the mobile document is exactly 390px wide.
+
+A public Stop followed by Start retains both complete product names, location,
+exact stock and reason, extra, purchase and one reward. Fresh protected UI reads
+verify those values after reopening; no duplicate reward appears. The app is
+stopped again, automatic behavior remains off, temporary browser overrides are
+reset and the owned test tab is closed. Representative original screenshots and
+the frozen installed receipt remain with the immutable candidate. This installed
+proof covers native Ingress; the separate real-image/source campaigns qualify
+both listeners, broader permission/concurrency/recovery and restoration behavior.
 
 ## Initial source CI diagnostics
 
@@ -113,5 +143,5 @@ backend job. Wheel acceptance and amd64 UI delivery still compared the changed
 bundle with the historical Edge.85 record. The amd64 container campaign passed
 its other 61 cases. Current package tests now use this increment's frozen UI
 manifest; historical Edge.85 evidence and all byte comparisons remain intact.
-All 17 local package/documentation contracts pass. A final same-head CI is still
-required after publishing the candidate metadata and corrected proof pointers.
+All 17 local package/documentation contracts pass. The subsequent packaging-head source, wheel and amd64 gates pass. Final checks
+for the pull request head, including any qualification-only commit, remain required.
