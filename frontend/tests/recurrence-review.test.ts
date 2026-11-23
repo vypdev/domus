@@ -302,6 +302,53 @@ test('controller handles expiry, blocked authority, unavailable storage and call
 const mounted: HTMLElement[] = [];
 afterEach(() => {for (const node of mounted.splice(0)) node.remove();});
 
+test('saved receipt follows a late layout change until a newer focus, input, result or removal retires it', async () => {
+  const observers: {callback: ResizeObserverCallback; target: Element | null; disconnected: boolean}[] = [];
+  vi.stubGlobal('ResizeObserver', class {
+    readonly state: typeof observers[number];
+    constructor(callback: ResizeObserverCallback) {this.state={callback,target:null,disconnected:false};observers.push(this.state);}
+    observe(target: Element) {this.state.target=target;}
+    disconnect() {this.state.disconnected=true;}
+  });
+  const reveal = vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => {});
+  const parent=document.createElement('div'), widget=document.createElement('domus-recurrence-review'), later=document.createElement('button');
+  later.textContent='Newer action';parent.append(widget,later);document.body.append(parent);mounted.push(parent);
+  const received: ReviewRecord={...intent,status:'received',operationId:'apply-op',
+    command:{step:'apply',selection:attachment,previewKey:intent.key,fingerprint}};
+  const value: ReviewView={open:true,busy:false,readOnly:false,selected:true,target:null,records:[received],
+    result:{record:received,receipt:storedEffect},notice:null};
+  const latest=()=>observers.filter(observer=>observer.target===parent).at(-1)!;
+  const deliver=(observer:typeof observers[number])=>observer.callback([],{} as ResizeObserver);
+  const saved=async()=>{widget.view={...value,result:{...value.result!}};await widget.updateComplete;return latest();};
+  try {
+    const first=await saved(), heading=widget.shadowRoot!.querySelector<HTMLElement>('#recurrence-result')!;
+    expect(widget.shadowRoot!.activeElement).toBe(heading);expect(getComputedStyle(widget).minHeight).toBe('0px');
+    let before=reveal.mock.calls.length;deliver(first);expect(reveal).toHaveBeenCalledTimes(before+1);
+    later.focus();before=reveal.mock.calls.length;deliver(first);
+    expect(document.activeElement).toBe(later);expect(reveal).toHaveBeenCalledTimes(before);
+    for (const type of ['keydown','pointerdown','wheel']) {
+      const current=await saved();document.dispatchEvent(new Event(type));before=reveal.mock.calls.length;
+      deliver(current);expect(current.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+    }
+    const old=await saved();await saved();before=reveal.mock.calls.length;deliver(old);
+    expect(old.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+    const current=latest();widget.view=null;await widget.updateComplete;before=reveal.mock.calls.length;deliver(current);
+    expect(current.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+    const removed=await saved();widget.remove();before=reveal.mock.calls.length;deliver(removed);
+    expect(removed.disconnected).toBe(true);expect(reveal).toHaveBeenCalledTimes(before);
+  } finally {widget.remove();reveal.mockRestore();vi.unstubAllGlobals();}
+});
+
+test('closed receipts never focus hidden content and a component can follow layout inside a shadow root', async () => {
+  const host=document.createElement('div'), root=host.attachShadow({mode:'open'}), widget=document.createElement('domus-recurrence-review');
+  document.body.append(host);mounted.push(host);root.append(widget);
+  const value: ReviewView={open:false,busy:false,readOnly:false,selected:true,target:null,records:[intent],
+    result:{record:intent,receipt:storedEffect},notice:null};
+  widget.view=value;await widget.updateComplete;expect(widget.shadowRoot!.querySelector('#recurrence-result')).toBeNull();
+  widget.view={...value,open:true,result:{...value.result!}};await widget.updateComplete;
+  expect(widget.parentElement).toBeNull();expect(widget.shadowRoot!.activeElement?.id).toBe('recurrence-result');
+});
+
 test('review component shows bounded impacts, closed actions, literal content and original recovery in both languages', async () => {
   const widget = document.createElement('domus-recurrence-review'), dispatch = vi.fn();
   widget.addEventListener('domus-review-intent', dispatch); document.body.append(widget); mounted.push(widget);

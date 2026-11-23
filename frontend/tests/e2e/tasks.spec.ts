@@ -894,6 +894,15 @@ for (const mode of ['native', 'standalone'] as const) {
       let applies = 0;
       let originalKey = '';
       let originalRead = false;
+      const settingsGate = Promise.withResolvers<void>();
+      let delayedSettings = false;
+      await page.route(base(mode) + '/api/v1/family/allocation?**', async route => {
+        if (outcome === 'save' && applies > 0) {
+          delayedSettings = true;
+          await settingsGate.promise;
+        }
+        await route.continue();
+      });
       page.on('request', item => {
         if (item.method() === 'GET' && item.url().includes('/tasks/recurrence/reviews/requests/recurrence.review.apply/')) originalRead = true;
       });
@@ -934,6 +943,12 @@ for (const mode of ['native', 'standalone'] as const) {
       }
       await expect(tasks.locator('.task-list li').filter({hasText: title}).filter({hasText: t('Cancelled', 'Cancelada')})).toHaveCount(1);
       await expect(review.getByRole('heading', {name: t('Schedule change saved', 'Cambio de programación guardado'), exact: true})).toBeFocused();
+      if (outcome === 'save') {
+        await expect.poll(() => delayedSettings).toBe(true);
+        settingsGate.resolve();
+        await expect(tasks.getByRole('button', {name:t('Save policy','Guardar política'),exact:true})).toBeVisible();
+        await expect(review.getByRole('heading', {name:t('Schedule change saved','Cambio de programación guardado'),exact:true})).toBeInViewport({ratio:1});
+      }
       if (!responseLost) await expect(draftTitle).toHaveValue('Keep my unrelated creation draft');
       if (!responseLost) {
         await expect(tasks.locator('#selected-task-title').locator('..')).toContainText(t('Cancelled', 'Cancelada'));
