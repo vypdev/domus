@@ -26,6 +26,78 @@ async function saveAdministration(widget: Locator) {
   await widget.getByRole('button', {name: 'Close editor', exact: true}).click();
 }
 
+for (const mode of ['native', 'standalone'] as const) for (const locale of ['en', 'es'] as const) {
+  test.describe(`restored task history ${mode} ${locale}`, () => {
+    test.use({hasTouch: locale === 'es', viewport: {width: locale === 'es' ? 390 : 1280, height: 844}});
+    test(`historical creation recovery reads current tasks without probing rolled-away work in ${mode} ${locale}`, async ({page, context, request}, info) => {
+      test.setTimeout(90_000);
+      const t = (en: string, es: string) => locale === 'en' ? en : es;
+      const activate = async (control: Locator) => {
+        await expect(control).toBeVisible(); await expect(control).toBeEnabled();
+        if (locale === 'es') await control.tap(); else await control.press('Enter');
+      };
+      expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
+      const tasks = await open(page, context, mode), api = base(mode) + '/api/v1/';
+      await page.getByLabel('Language', {exact: true}).selectOption(locale);
+      const title = tasks.getByRole('textbox', {name: t('Title', 'Título'), exact: true});
+      const expandDraft = async () => {
+        if (!await title.isVisible()) await activate(tasks.getByRole('heading', {name: t('New task', 'Nueva tarea'), exact: true}).locator('..'));
+        await expect(title).toBeVisible();
+      };
+      await title.fill('Checkpoint task');
+      await activate(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}));
+      await activate(tasks.getByRole('button', {name: t('Mark done now', 'Marcar como hecha ahora'), exact: true}));
+      await expect(tasks.getByText(t('No approval required', 'No necesita aprobación'), {exact: true})).toBeVisible();
+      const checkpoint = await (await page.request.get(api + 'tasks/occurrences')).json();
+      const keptId = checkpoint.items[0].occurrence_id;
+      const kept = await (await page.request.get(api + 'tasks/occurrences/' + keptId)).json();
+      expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'snapshot'}})).ok()).toBe(true);
+      await activate(tasks.locator('summary').filter({hasText: t('Saved requests', 'Solicitudes guardadas')}));
+      const dismiss = tasks.getByRole('button', {name: t('Dismiss saved request', 'Descartar solicitud guardada'), exact: true, includeHidden: true});
+      while (await dismiss.count()) {
+        if (!await dismiss.first().isVisible()) await activate(tasks.locator('summary').filter({hasText: t('Saved requests', 'Solicitudes guardadas')}));
+        const count = await dismiss.count(); await activate(dismiss.first()); await expect(dismiss).toHaveCount(count - 1);
+      }
+      await expandDraft(); await title.fill('Rolled-away task');
+      const creation = page.waitForRequest(value => value.method() === 'POST' && value.url() === api + 'tasks/definitions');
+      await activate(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}));
+      await expect(tasks.getByRole('heading', {name: 'Rolled-away task', exact: true})).toBeVisible();
+      const key = (await (await creation).allHeaders())['idempotency-key'];
+      const originalPath = api + 'tasks/requests/task.create/' + key;
+      const original = await (await page.request.get(originalPath)).json();
+      const rolledId = original.result.occurrence_id;
+      expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'restore'}})).ok()).toBe(true);
+      await page.reload();
+      if (mode === 'standalone') {
+        await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
+        await page.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
+      }
+      await page.getByRole('link', {name: 'Tasks', exact: true}).click();
+      await page.getByLabel('Language', {exact: true}).selectOption(locale);
+      await expect(tasks.getByRole('button', {name: 'Checkpoint task', exact: true})).toBeVisible();
+      await expect(tasks.getByRole('button', {name: 'Rolled-away task', exact: true})).toHaveCount(0);
+      await expandDraft(); await title.fill('Independent new draft');
+      await activate(tasks.locator('summary').filter({hasText: t('Saved requests', 'Solicitudes guardadas')}));
+      const before = await (await request.get(origin(mode) + '/__fixture__/stats')).json();
+      const requests: {method: string; path: string}[] = [];
+      page.on('request', value => {if (value.url().startsWith(api + 'tasks/')) requests.push({method: value.method(), path: value.url()});});
+      await activate(tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}));
+      await expect(tasks.getByRole('heading', {name: t('Previously processed change', 'Cambio procesado anteriormente'), exact: true})).toBeVisible();
+      await expect(tasks.getByRole('button', {name: t('Refresh tasks', 'Actualizar tareas'), exact: true})).toBeEnabled();
+      await expect(tasks.getByRole('alert')).toHaveCount(0);
+      await expect(title).toHaveValue('Independent new draft');
+      await expect(tasks.locator('.task-list li')).toHaveCount(1);
+      expect(requests.some(value => value.method !== 'GET' || value.path === api + 'tasks/occurrences/' + rolledId)).toBe(false);
+      const historical = await (await page.request.get(originalPath)).json();
+      expect(historical).toMatchObject({state: 'historical', operation_id: original.operation_id, result: original.result});
+      expect(await (await page.request.get(api + 'tasks/occurrences/' + keptId)).json()).toEqual(kept);
+      expect((await (await request.get(origin(mode) + '/__fixture__/stats')).json()).counts).toEqual(before.counts);
+      await page.screenshot({path: info.outputPath('restored-task-history-' + mode + '-' + locale + '.png'), fullPage: true});
+      await info.attach('restored-task-history-proof', {body: JSON.stringify({mode, locale, operation: original.operation_id, requests, counts: before.counts}), contentType: 'application/json'});
+    });
+  });
+}
+
 for (const mode of ['native','standalone'] as const) for (const locale of ['en','es'] as const) {
   test.describe(`material workflow ${mode} ${locale}`, () => {
   test.use({hasTouch:locale==='es',viewport:{width:locale==='es'?390:1280,height:844}});

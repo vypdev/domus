@@ -202,13 +202,17 @@ export class TaskController {
         this.planning?.bind(null); this.state = Object.freeze({...blank('ready'), notice: outcome.reason}); return;
       }
       if (this.clock.now() >= this.state.session!.expiresAt) throw new EntryReadError('authentication_required');
-      if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome.occurrenceId, prior, generation);
+      if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome, prior, generation);
       if ((command.action === 'task.assign' || command.action === 'task.transition')
           && outcome.kind === 'rejected' && outcome.reason === 'conflict')
         await this.facts(generation, command.occurrenceId);
     });
   }
-  private async receiptFacts(command: TaskCommand, occurrence: string | null, prior: State, generation: number): Promise<void> {
+  private async receiptFacts(command: TaskCommand, receipt: Extract<TaskCommandResult, {kind: 'receipt'}>, prior: State, generation: number): Promise<void> {
+    if (receipt.stage === 'historical') {
+      await this.facts(generation, null);
+      return;
+    }
     if (isCategoryCommand(command)) {
       const current = await this.read(this.server.access(this.state.session!.context), generation);
       if (scopeKey(scope(this.state.session!, current)) !== prior.scopeKey) {
@@ -218,7 +222,7 @@ export class TaskController {
       await this.facts(generation, prior.detail?.occurrenceId ?? null);
       return;
     }
-    await this.facts(generation, occurrence);
+    await this.facts(generation, receipt.occurrenceId);
     if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation, prior);
   }
   private async materialFacts(cycleId: string, generation: number, prior: State): Promise<void> {
@@ -328,7 +332,7 @@ export class TaskController {
       const outcome = await this.read(this.server.original({key, command: current.command, operationId: current.operationId}, this.state.session!.context), generation);
       this.save(key, outcome);
       if (outcome.stage === 'committed' && current.command.action === 'task.create' && current.stage !== 'committed') this.planning?.clear();
-      await this.receiptFacts(current.command, outcome.occurrenceId, prior, generation);
+      await this.receiptFacts(current.command, outcome, prior, generation);
     });
   }
   dismiss(key: string): Promise<void> {
