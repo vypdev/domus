@@ -1,7 +1,9 @@
 # Installation and operation
 
-Edge 0.0.0-edge.93 packages the immutable runtime declared in
+Edge 0.0.0-edge.94 packages the immutable runtime declared in
 [artifact.json](artifact.json).
+
+After restoration, checking an earlier task request keeps its original result clearly historical when its effect is absent. Current tasks refresh without reopening rolled-away work or creating it again. New-task drafts stay available. A genuine failure to read current tasks still offers **Refresh tasks / Actualizar tareas**. See the [task history recovery qualification](../docs/evidence/task-history-recovery-qualification.md).
 
 In **Tasks / Tareas**, an enabled reviewed-skip policy offers the action only for
 current unstarted overdue work. Reopening performed work does not make it eligible.
