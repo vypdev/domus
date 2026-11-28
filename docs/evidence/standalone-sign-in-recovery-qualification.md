@@ -79,9 +79,22 @@ The browser fixture uses missing binding without changing an installed clock. It
 companion separately exercises the exact five-minute expiry boundary. Actual owner acceptance
 must record its own provider, immutable candidate and natural expired-attempt observations.
 
+## Immutable Edge.95 preparation
+
+- Runtime source: `aa5baf97b938a0450f07d6b13a49f2e696795ca3`.
+- Source archive SHA-256: `c1b8fc3961a6a1361b7e8fca8085d1dded5962cff6d47a622a5837f5afbd718b`.
+- Wheel SHA-256: `29bd0fb85c3c55eb3e34debaa73dff08fd1778568e12b3749d62eef0bfbf756c`.
+- All 1,043 archive files match their Git blobs. An independent frozen build binds all 250
+  Python modules and four UI assets to the tested source. Its noneditable installed runtime
+  matches the wheel. Only the HTTP entrypoint changed among the 250 Python modules.
+- Storage schema remains 37; the exact published ha-ui cohort remains 0.1.0-next.5.
+
+The [artifact declaration](../../addon-edge/artifact.json) and
+[bounded qualification record](standalone-sign-in-recovery.json) identify these bytes.
+This is package preparation; actual CPU image and installed acceptance are separate gates.
+
 ## Remaining gates
 
-Prepare an immutable Edge candidate, independently bind its source/wheel/UI bytes, and exercise the installed
-standalone recovery and native behavior. Both CPU image suites and substantive review must pass
+Exercise the installed standalone recovery and native behavior. Both CPU image suites and substantive review must pass
 on the final head before merge; destination CI, Branch Sync and issue closure follow independently.
 Full M1/M5, production HTTPS and Stable distribution acceptance remain separate roadmap work.

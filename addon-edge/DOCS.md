@@ -1,7 +1,12 @@
 # Installation and operation
 
-Edge 0.0.0-edge.94 packages the immutable runtime declared in
+Edge 0.0.0-edge.95 packages the immutable runtime declared in
 [artifact.json](artifact.json).
+
+If standalone sign-in expires or its attempt is no longer valid, Domus offers localized recovery.
+Choose **Sign in with Home Assistant / Iniciar sesión con Home Assistant** to start a fresh
+attempt and complete it within five minutes. Household records and existing verified access are
+retained. See the [sign-in recovery qualification](../docs/evidence/standalone-sign-in-recovery-qualification.md).
 
 After restoration, checking an earlier task request keeps its original result clearly historical when its effect is absent. Current tasks refresh without reopening rolled-away work or creating it again. New-task drafts stay available. A genuine failure to read current tasks still offers **Refresh tasks / Actualizar tareas**. See the [task history recovery qualification](../docs/evidence/task-history-recovery-qualification.md).
 

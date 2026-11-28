@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.95
+
+- Offer localized recovery and one deliberate retry for an expired or invalid standalone sign-in.
+- Preserve strict API rejection, current verified access, household records and the original authentication limits.
+- Keep recovery guidance readable and focused with keyboard and narrow touch layouts.
+
 ## 0.0.0-edge.94
 
 - Recover historical task results without trying to open rolled-away tasks or material cycles.
