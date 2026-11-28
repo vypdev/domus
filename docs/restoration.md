@@ -144,6 +144,12 @@ state. A historical event has delivery=suppressed unless it was actually acknowl
 delivery=delivered preserves that fact. It never enters the pending queue or accepts a fabricated
 acknowledgement. Current operations may retain first archive provenance if selected again.
 
+The Tasks workspace keeps a recovered historical result distinct from current task facts. It reads
+the currently authorized list without selecting an occurrence or material cycle from that old result.
+A rolled-away creation therefore does not produce a missing-task warning or recreate work. Genuine
+current-list failures still offer the ordinary read retry. See the bounded
+[task history recovery qualification](evidence/task-history-recovery-qualification.md).
+
 New event positions remain above every retained position. New snapshots and repeated preparation
 retain historical facts and their delivery/provenance; last_committed_at includes historical receipts
 and remains a timestamp summary, not ancestry proof. Historical setup cannot create a household or

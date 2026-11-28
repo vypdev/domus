@@ -243,6 +243,56 @@ test('lost task replies block a second new key and recover by read without resen
   await f.controller.recover('key-1'); expect(f.server.original).toHaveBeenCalledTimes(1);
   expect(f.server.send).toHaveBeenCalledTimes(1); expect(f.controller.view.outcome).toEqual(saved);
 });
+test.each(['committed', 'uncertain'] as const)('a %s creation restored away recovers history without reading its absent task', async stage => {
+  const f = fixture(); await f.controller.refresh();
+  if (stage === 'uncertain') f.server.send.mockResolvedValueOnce({kind: 'uncertain'});
+  await f.controller.create('Later task', '', 'normal');
+  const request = f.server.send.mock.calls[0][0];
+  const checkpointTask = {...detail, occurrenceId: 'checkpoint-task', title: 'Retained task'};
+  f.server.list.mockReturnValue(read({items: [checkpointTask], nextCursor: null}));
+  f.server.detail.mockClear();
+  f.server.detail.mockImplementation(() => ({result: Promise.reject(new EntryReadError('unavailable')), cancel: vi.fn()}));
+  const historical = {...saved, stage: 'historical' as const, archivedBy: 'restore-1'};
+  f.server.original.mockReturnValueOnce(read(historical));
+  await f.controller.recover(request.key);
+  expect(f.controller.view.notice).toBeNull();
+  expect(f.controller.view.page?.items).toEqual([checkpointTask]);
+  expect(f.controller.view.detail).toBeNull();
+  expect(f.controller.view.outcome).toEqual(historical);
+  expect(f.controller.view.records?.[0]).toMatchObject({key: request.key, stage: 'historical', operationId: saved.operationId, command: request.command});
+  expect(f.server.detail).not.toHaveBeenCalled();
+  expect(f.server.send).toHaveBeenCalledOnce(); expect(f.entropy.requestKey).toHaveBeenCalledOnce();
+});
+test.each(['unavailable', 'forbidden'] as const)('historical recovery still exposes a genuine current-list %s failure', async reason => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.send.mockResolvedValueOnce({kind: 'uncertain'}); await f.controller.create('Later task', '', 'normal');
+  f.server.original.mockReturnValueOnce(read({...saved, stage: 'historical', archivedBy: 'restore-1'}));
+  f.server.list.mockImplementationOnce(() => ({result: Promise.reject(new EntryReadError(reason)), cancel: vi.fn()}));
+  await f.controller.recover('key-1');
+  expect(f.controller.view.notice).toBe(reason);
+  expect(f.controller.view.detail).toBeNull();
+  expect(f.server.send).toHaveBeenCalledOnce();
+  if (reason === 'forbidden') expect(f.controller.view.page).toBeNull();
+  else expect(f.controller.view.outcome).toMatchObject({stage: 'historical', operationId: saved.operationId});
+});
+test.each(['category', 'material'] as const)('historical %s recovery refreshes current facts without following its old resource', async kind => {
+  const f = fixture(); await f.controller.refresh();
+  const command = kind === 'category'
+    ? {action: 'task.category.create' as const, payload: {expected_revision: 0 as const, label: 'Rolled-away category'}}
+    : {action: 'task.material.settle' as const, occurrenceId: 'work-1', intentId: 'intent-1', payload: {
+      expected_revision: revisionValue('7'), cycle_id: 'cycle-1', action: 'post' as const, reason: '' as const}};
+  f.journal.prepare('original-key', command, 1000); await f.controller.refresh();
+  const historical = kind === 'category'
+    ? {...saved, action: 'task.category.create' as const, state: 'active' as const, occurrenceId: null, stage: 'historical' as const, archivedBy: 'restore-1'}
+    : {...materialReceipt(pendingMaterialWork()), stage: 'historical' as const, archivedBy: 'restore-1'};
+  f.server.original.mockReturnValueOnce(read(historical)); f.server.detail.mockClear();
+  await f.controller.recover('original-key');
+  expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.outcome).toEqual(historical);
+  expect(f.controller.view.page?.items).toEqual([detail]); expect(f.controller.view.detail).toBeNull();
+  expect(f.controller.view.records?.[0]).toMatchObject({key: 'original-key', stage: 'historical', operationId: historical.operationId});
+  expect(f.server.detail).not.toHaveBeenCalled(); expect(f.server.materialCycle).not.toHaveBeenCalled();
+  expect(f.server.send).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+});
 test('base points require current configuration authority and survive lost-reply recovery', async () => {
   const f = fixture();
   await f.controller.refresh();

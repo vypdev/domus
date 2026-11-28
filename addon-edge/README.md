@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.94 keeps recovered task results historical when restoration removed their effect. Checking the original request refreshes current tasks without opening rolled-away work or recreating it. New drafts and genuine read-retry guidance are preserved.
+
 Edge.93 offers reviewed skips only for currently eligible overdue work. Completed, started, previously performed and already skipped occurrences keep their history and original requests. Scheduling controls fit the narrow card.
 
 Edge.92 uses the same recovery guidance for dates that overlap existing scheduled work or each other. The proposed change remains unapplied; correct its dates or pattern and preview again.

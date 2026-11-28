@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.94
+
+- Recover historical task results without trying to open rolled-away tasks or material cycles.
+- Preserve original receipts, unrelated drafts and current authorization; retain read retries for genuine failures.
+
 ## 0.0.0-edge.93
 
 - Offer reviewed skips only for currently eligible overdue work under the enabled missed-work policy.

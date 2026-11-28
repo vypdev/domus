@@ -1,0 +1,69 @@
+{
+  "issue": 177,
+  "requirements": [
+    "REST-06"
+  ],
+  "owningCases": [
+    "platform-restoration-C15"
+  ],
+  "newOwningCases": [],
+  "base": "2b8a7c46a9c8927ca074212c29236e2d7340d840",
+  "scope": "Historical task-result presentation and current-fact refresh only; no backend, schema, cohort or Copilot resource changes.",
+  "runtimeCommit": "4064b50fa7b687665adb55a5dc569c3369f8be6d",
+  "localVerification": {
+    "frontend": {
+      "passed": 2293,
+      "files": 121,
+      "allFourMetricsGlobalAndPerFile": 100,
+      "controllerRegressions": 6,
+      "originalCreationRegressionsFailedBeforeFix": 2
+    },
+    "sourceBrowser": {
+      "test": "historical creation recovery reads current tasks without probing rolled-away work",
+      "variants": [
+        "native/en/keyboard",
+        "native/es/390px/touch",
+        "standalone/en/keyboard",
+        "standalone/es/390px/touch"
+      ],
+      "expected": 4,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "originalReportSHA256": "edf53204f47ced5148f2a40cad0af3ce1dd878a12f6b4796b74fef251c175c99",
+      "compiledUI": {
+        ".vite/manifest.json": "8e97c1026f7f53e9e858daa0db6ba7e2ed40b1a6295e496e58f07cd8c2c6aa26",
+        "assets/index-BQljvmTv.js": "2da06ec194a219c29a0a502e3949057f178ff23bb1520a76663bce1085c15231",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "aa9b9f2c25945e7dd9191c856f18d7ae009c67cba8751e07c187571a33ef92fd"
+      },
+      "originalOperationPreserved": true,
+      "checkpointTaskAndCycleUnchanged": true,
+      "noHistoricalOccurrenceRead": true,
+      "noTaskWrite": true,
+      "unchangedDatabaseCounts": true,
+      "independentDraftPreserved": true
+    },
+    "typing": "Runtime and catalog checks passed.",
+    "architecture": "Root typecheck and Node architecture tests passed.",
+    "documentation": "Local links passed."
+  },
+  "candidate": {
+    "schemaVersion": 1,
+    "version": "0.0.0-edge.94",
+    "sourceCommit": "4064b50fa7b687665adb55a5dc569c3369f8be6d",
+    "sourceArchiveSHA256": "521c14725fa5d79f0562e5db539f6800cb31bbdbe716bba115b345c384c6bdbd",
+    "storageSchema": 37,
+    "wheelSHA256": "89ff7250408567f2a607a622fc7df6f2c448b31632b9162559f454be9fddf954"
+  },
+  "remainingGates": [
+    "Exact final-head product CI including both actual CPU image suites.",
+    "Actual installed Edge94 acceptance.",
+    "Destination CI/Branch Sync and issue closure after authorized merge."
+  ],
+  "limits": [
+    "Source browser operator and identity fixtures are synthetic and test-only.",
+    "Earlier real-owner Edge93 restoration is bounded pre-fix evidence; it exposed this defect.",
+    "No completeM1/M5, production HTTPS, Stable or distribution claim."
+  ]
+}

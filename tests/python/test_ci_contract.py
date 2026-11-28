@@ -436,10 +436,10 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all one hundred ten actual-image household journeys"
+        if step.get("name") == "Require all 114 actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==110" in audit["run"]
+    assert "expected']==114" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )
