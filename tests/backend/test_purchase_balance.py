@@ -350,7 +350,7 @@ def test_v25_migration_and_activated_restore_of_cancelled_balances(tmp_path, mon
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (37,)
+        assert db.execute("PRAGMA user_version").fetchone() == (38,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             actual = db.execute("SELECT * FROM " + table).fetchall()

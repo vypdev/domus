@@ -95,6 +95,7 @@ class TaskMaterialAuthority(Protocol):
 
 
 class TaskMaterialRepository(Protocol):
+    def has_pending_location(self, household_id: str, location_id: str) -> bool: ...
     def get(self, household_id: str, intent_id: str) -> MaterialIntent | None: ...
     def list(
         self, household_id: str, cycle_id: str, *, limit: int = 25, after: str | None = None

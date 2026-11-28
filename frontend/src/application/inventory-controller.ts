@@ -1,6 +1,6 @@
 /** Manage only current household scope and the original unresolved stock command. */
 import {canonicalGtin, inventoryCommand, shoppingItemKey} from '../domain/inventory';
-import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, PurchaseSessionDetail, PurchaseSessions, ShoppingAction, ShoppingList, ShoppingSources} from '../domain/inventory';
+import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, PurchaseSessionDetail, PurchaseSessions, ShoppingAction, ShoppingList, ShoppingSources, StorageLocation} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
 import {EntryReadError} from './ports';
@@ -9,6 +9,8 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'invalid_inventory_barcode', 'inventory_barcode_linked', 'inventory_barcode_changed',
   'invalid_inventory_location_name', 'inventory_location_exists', 'inventory_location_limit',
   'inventory_location_missing', 'inventory_same_location',
+  'inventory_location_not_empty', 'inventory_location_pending_effects', 'inventory_location_archived',
+  'inventory_location_unchanged', 'inventory_location_state_conflict', 'inventory_location_revision_exhausted',
   'invalid_task_text', 'invalid_inventory_unit', 'invalid_inventory_receipt', 'invalid_material_quantity',
   'invalid_material_precision', 'inventory_product_missing', 'inventory_stock_capacity',
   'invalid_inventory_reason', 'inventory_insufficient_stock', 'inventory_movement_missing',
@@ -34,6 +36,11 @@ export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string | null;
   replenishmentSaved?: true;
   locationSaved?: true;
+  addedLocation?: Readonly<{id: string; name: string}>;
+  locationChanged?: Readonly<{
+    action: 'inventory.rename-location' | 'inventory.archive-location' | 'inventory.restore-location';
+    location: Pick<StorageLocation, 'id' | 'name' | 'revision' | 'archived'>;
+  }>;
   barcodeSaved?: Readonly<{barcode: string; linked: boolean}>;
   shoppingAction?: ShoppingAction;
   sessionId?: string;

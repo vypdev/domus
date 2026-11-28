@@ -257,3 +257,39 @@ preserving the separate exact-human command actor. The existing gateway is uncha
 
 See [checkpoint evidence](evidence/m1-household-api.json), [identity](identity-household.md),
 [operations](operations-identity-storage.md) and [native installation](installation-home-assistant.md).
+
+## Named storage location lifecycle
+
+The same protected Inventory command route accepts these closed bodies. Each
+requires current inventory management authority and the reviewed positive
+`expected_revision` as a decimal string, together with the normal original
+request key, verified context and CSRF proof.
+
+| Action | Other required fields |
+|---|---|
+| `inventory.rename-location` | `location_id`, `name`, `expected_revision` |
+| `inventory.archive-location` | `location_id`, `expected_revision` |
+| `inventory.restore-location` | `location_id`, `expected_revision` |
+
+Pantry is immutable. Names retain the existing 80-codepoint validation and
+household case-insensitive uniqueness. Archived names remain reserved and count
+towards the 32 named locations. A real change returns only `location_id`, `name`,
+`revision` and `archived`, with the next revision as a string. The old
+`inventory.add-location` result remains exactly `location_id` and `name`.
+
+Catalog location rows additionally expose `archive_blocked_reason`, either
+`null`, `inventory_location_not_empty` or `inventory_location_pending_effects`.
+This hint covers all directly bound stock and live effects, including pending
+task-material effects, regardless of the current product page. The archive
+transaction checks those facts again under the writer lock. General unlocated
+product demand and settled historical bindings do not block an empty location.
+Archiving never cancels anything automatically.
+
+Missing scoped locations return 404; stale revisions and invalid lifecycle
+transitions return 409. Exact no-op renames create no revision, receipt or
+history. New transfer endpoints and other new location-bound work must be
+active. History keeps archived rows and resolves their current names.
+Original recovery still uses `GET /api/v1/inventory/requests/{action}/{key}`
+under that action's current authority. A historical receipt after compatible
+restoration does not reenact its old write. See the
+[qualification record](evidence/storage-location-lifecycle-qualification.md).

@@ -5,7 +5,7 @@ from dataclasses import astuple, dataclass
 from typing import cast
 
 from domus.application.inventory_ports import LedgerEntry
-from domus.domain.errors import Conflict, StorageFailure
+from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.inventory import (
     MAX_NAMED_LOCATIONS,
     MAX_STOCK_UNITS,
@@ -15,6 +15,7 @@ from domus.domain.inventory import (
     CatalogProduct,
     EffectKind,
     InventoryEffect,
+    LocationUsage,
     MovementKind,
     ReplenishmentPolicy,
     StockMovement,
@@ -147,6 +148,27 @@ LOCATION_STATEMENTS = (
 )
 
 
+LOCATION_LIFECYCLE_STATEMENTS = (
+    "ALTER TABLE inventory_locations ADD COLUMN revision INTEGER NOT NULL DEFAULT 1 "
+    "CHECK(revision>=1)",
+    "ALTER TABLE inventory_locations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0 "
+    "CHECK(archived IN (0,1))",
+    "CREATE INDEX inventory_location_materials ON inventory_materials(household_id,location_id)",
+    "CREATE INDEX inventory_pending_effects ON inventory_effects(household_id,reference_id) "
+    "WHERE remaining>0",
+)
+
+
+def _location(row: sqlite3.Row) -> StorageLocation:
+    archived = row["archived"]
+    if archived not in (0, 1):
+        raise StorageFailure("invalid_inventory_locations")
+    try:
+        return StorageLocation(row["location_id"], row["name"], row["revision"], bool(archived))
+    except InvalidInput:
+        raise StorageFailure("invalid_inventory_locations") from None
+
+
 def _transfer(row: sqlite3.Row) -> StockTransfer:
     return StockTransfer(
         row["transfer_id"],
@@ -271,19 +293,66 @@ class SQLiteInventory:
 
     def locations(self, home: str) -> tuple[StorageLocation, ...]:
         return tuple(
-            StorageLocation(row["location_id"], row["name"])
+            _location(row)
             for row in self.connection.execute(
-                "SELECT location_id,name FROM inventory_locations "
+                "SELECT location_id,name,revision,archived FROM inventory_locations "
                 "WHERE household_id=? ORDER BY name_key",
                 (home,),
             )
         )
 
+    def location(self, home: str, location_id: str) -> StorageLocation | None:
+        row = self.connection.execute(
+            "SELECT location_id,name,revision,archived FROM inventory_locations "
+            "WHERE household_id=? AND location_id=?",
+            (home, location_id),
+        ).fetchone()
+        return None if row is None else _location(row)
+
     def add_location(self, home: str, value: StorageLocation) -> None:
         self.connection.execute(
-            "INSERT INTO inventory_locations VALUES (?,?,?,?)",
-            (home, value.location_id, value.name, value.name.casefold()),
+            "INSERT INTO inventory_locations "
+            "(household_id,location_id,name,name_key,revision,archived) VALUES (?,?,?,?,?,?)",
+            (
+                home,
+                value.location_id,
+                value.name,
+                value.name.casefold(),
+                value.revision,
+                int(value.archived),
+            ),
         )
+
+    def save_location(self, home: str, value: StorageLocation, expected_revision: int) -> None:
+        changed = self.connection.execute(
+            "UPDATE inventory_locations SET name=?,name_key=?,revision=?,archived=? "
+            "WHERE household_id=? AND location_id=? AND revision=?",
+            (
+                value.name,
+                value.name.casefold(),
+                value.revision,
+                int(value.archived),
+                home,
+                value.location_id,
+                expected_revision,
+            ),
+        ).rowcount
+        if changed != 1:
+            raise Conflict("revision_conflict")
+
+    def location_usage(self, home: str, location_id: str) -> LocationUsage:
+        recorded = self.connection.execute(
+            "SELECT 1 FROM inventory_materials WHERE household_id=? AND location_id=? "
+            "AND balance!=0 LIMIT 1",
+            (home, location_id),
+        ).fetchone()
+        pending = self.connection.execute(
+            "SELECT 1 FROM inventory_effects e JOIN inventory_materials m "
+            "USING(household_id,reference_id) WHERE e.household_id=? AND m.location_id=? "
+            "AND e.remaining>0 LIMIT 1",
+            (home, location_id),
+        ).fetchone()
+        return LocationUsage(recorded is not None, pending is not None)
 
     def location_is_used(self, home: str, location_id: str) -> bool:
         return (
@@ -555,20 +624,35 @@ def verify_replenishment(connection: sqlite3.Connection) -> None:
             raise StorageFailure("invalid_replenishment_bounds")
 
 
-def verify_inventory_locations(connection: sqlite3.Connection) -> None:
+def verify_inventory_locations(connection: sqlite3.Connection, *, lifecycle: bool = True) -> None:
     stock = SQLiteInventory(connection)
     for home, count in connection.execute(
         "SELECT household_id,COUNT(*) FROM inventory_locations GROUP BY household_id"
     ):
         if count > MAX_NAMED_LOCATIONS:
             raise StorageFailure("invalid_inventory_locations")
-        for location in stock.locations(home):
+        locations = (
+            stock.locations(home)
+            if lifecycle
+            else tuple(
+                StorageLocation(row["location_id"], row["name"])
+                for row in connection.execute(
+                    "SELECT location_id,name FROM inventory_locations WHERE household_id=?",
+                    (home,),
+                )
+            )
+        )
+        for location in locations:
             key = connection.execute(
                 "SELECT name_key FROM inventory_locations WHERE household_id=? AND location_id=?",
                 (home, location.location_id),
             ).fetchone()[0]
             if key != location.name.casefold():
                 raise StorageFailure("invalid_inventory_locations")
+            if location.archived:
+                usage = stock.location_usage(home, location.location_id)
+                if usage.recorded_stock or usage.pending_effects:
+                    raise StorageFailure("invalid_archived_inventory_location")
 
     for row in connection.execute(
         "SELECT m.household_id,m.reference_id,m.location_id,m.product_id "

@@ -56,6 +56,11 @@ _MESSAGES: dict[MaterialState, tuple[str, str | None]] = {
 
 def material_outcome(value: MaterialIntent) -> MaterialOutcome:
     message, action = _MESSAGES[value.state]
+    if value.pending_reason is MaterialPendingReason.LOCATION_ARCHIVED:
+        action = (
+            "Ask an inventory manager to restore the archived location, "
+            "then explicitly retry settlement."
+        )
     return MaterialOutcome(
         value.intent_id,
         value.cycle_id,

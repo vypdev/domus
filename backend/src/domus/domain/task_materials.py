@@ -24,6 +24,7 @@ _PENDING = {
     MaterialPendingReason.PERMISSION_REQUIRED: MaterialState.PENDING_AUTHORIZATION,
     MaterialPendingReason.STOCK_SHORTAGE: MaterialState.PENDING_REGULARIZATION,
     MaterialPendingReason.BINDING_CHANGED: MaterialState.PENDING_REGULARIZATION,
+    MaterialPendingReason.LOCATION_ARCHIVED: MaterialState.PENDING_REGULARIZATION,
     MaterialPendingReason.EXPLICIT_SETTLEMENT_REQUIRED: MaterialState.PENDING_PROCESSING,
     MaterialPendingReason.AWAITING_INVENTORY: MaterialState.PENDING_PROCESSING,
     MaterialPendingReason.INVENTORY_UNAVAILABLE: MaterialState.PENDING_PROCESSING,

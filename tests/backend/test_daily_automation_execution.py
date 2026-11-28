@@ -94,7 +94,7 @@ def test_due_trigger_admits_durable_work_before_one_ordinary_task_command(tmp_pa
         )
     with closing(sqlite3.connect(store.path)) as db:
         db.row_factory = sqlite3.Row
-        assert _verify_database(db, store, previous=False) == 37
+        assert _verify_database(db, store, previous=False) == 38
 
 
 def test_only_offline_unadmitted_times_are_skipped_and_suppression_survives_restart(tmp_path):
@@ -428,7 +428,7 @@ def test_real_durable_backlog_stops_at_rule_and_household_capacity(tmp_path, sco
         assert unit.tasks.definitions("home") == ()
     with closing(sqlite3.connect(store.path)) as db:
         db.row_factory = sqlite3.Row
-        assert _verify_database(db, store, previous=False) == 37
+        assert _verify_database(db, store, previous=False) == 38
 
 
 def test_a_stale_persisted_cursor_does_not_reemit_an_already_known_trigger(tmp_path):
@@ -483,7 +483,7 @@ def test_maximum_supported_rule_still_enables_admits_executes_and_survives_check
     assert engine.execute(step.trigger_key).status == "created"
     with closing(sqlite3.connect(store.path)) as db:
         db.row_factory = sqlite3.Row
-        assert _verify_database(db, store, previous=False) == 37
+        assert _verify_database(db, store, previous=False) == 38
 
 
 def test_rule_owned_execution_continues_after_the_activator_leaves_without_human_proof(tmp_path):

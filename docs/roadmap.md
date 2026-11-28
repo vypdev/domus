@@ -71,8 +71,9 @@ distinguishes completed source checks from the remaining installed and merge gat
   increment](evidence/stock-location-transfer-qualification.md) shows the stock at each location and
   records a move as two linked ledger entries. [Manual local barcode
   lookup](evidence/local-barcode-qualification.md) finds a household product from printed digits
-  and lets managers review its association or removal. Multiple lists, prices, refunds, location
-  editing and archiving, lot and package management and optional online lookup remain open.
+  and lets managers review its association or removal. Location editing and archiving are
+  [in implementation and qualification](evidence/storage-location-lifecycle-qualification.md).
+  Multiple lists, prices, refunds, lot and package management and optional online lookup remain open.
 - M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md)
   and includes the native Home Assistant calendar,
   [task deadline sensors](evidence/ha-deadline-sensors-qualification.md),

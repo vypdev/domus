@@ -62,6 +62,24 @@ class LocationBody(StrictModel):
     name: str = Field(min_length=1, max_length=MAX_LOCATION_NAME)
 
 
+class LocationRevisionBody(StrictModel):
+    location_id: Identifier
+    expected_revision: str = Field(pattern=r"^[1-9][0-9]{0,18}$")
+
+
+class RenameLocationBody(LocationRevisionBody):
+    action: Literal["inventory.rename-location"]
+    name: str = Field(min_length=1, max_length=MAX_LOCATION_NAME)
+
+
+class ArchiveLocationBody(LocationRevisionBody):
+    action: Literal["inventory.archive-location"]
+
+
+class RestoreLocationBody(LocationRevisionBody):
+    action: Literal["inventory.restore-location"]
+
+
 Barcode = Annotated[str, Field(min_length=8, max_length=14, pattern=r"^(?:[0-9]{8}|[0-9]{12,14})$")]
 
 
@@ -234,6 +252,9 @@ CatalogBody = Annotated[
     | LinkBarcodeBody
     | RemoveBarcodeBody
     | LocationBody
+    | RenameLocationBody
+    | ArchiveLocationBody
+    | RestoreLocationBody
     | TransferBody
     | IntakeBody
     | AdjustmentBody
@@ -376,6 +397,14 @@ def create_inventory_router(
             )
         elif isinstance(body, LocationBody):
             receipt = inventory.add_location(key, body.name)
+        elif isinstance(body, RenameLocationBody):
+            receipt = inventory.rename_location(
+                key, body.location_id, body.name, int(body.expected_revision)
+            )
+        elif isinstance(body, ArchiveLocationBody):
+            receipt = inventory.archive_location(key, body.location_id, int(body.expected_revision))
+        elif isinstance(body, RestoreLocationBody):
+            receipt = inventory.restore_location(key, body.location_id, int(body.expected_revision))
         elif isinstance(body, TransferBody):
             receipt = inventory.transfer(
                 key,

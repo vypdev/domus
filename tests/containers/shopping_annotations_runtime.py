@@ -58,7 +58,7 @@ def verify_reopened(root, receipt, *, restored):
 
 
 def exercise(fixtures, version):
-    assert SCHEMA_VERSION == 37
+    assert SCHEMA_VERSION == 38
     kind = "shopping-annotations" if version == 36 else "inventory-history"
     source = fixtures / f"v{version}-{kind}-source.sql"
     with TemporaryDirectory(prefix="shopping-annotations-image-") as temporary:
@@ -92,7 +92,7 @@ def exercise(fixtures, version):
         try:
             store = owned.database
             with store._connection() as db:
-                assert db.execute("PRAGMA user_version").fetchone()[0] == 37
+                assert db.execute("PRAGMA user_version").fetchone()[0] == 38
                 assert db.execute("PRAGMA foreign_key_check").fetchall() == []
                 for name in tables:
                     selection = ",".join('"' + column + '"' for column in columns[name])
@@ -176,7 +176,7 @@ def exercise(fixtures, version):
             checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create(
                 "image-annotated"
             )
-            assert checkpoint.schema_version == 37
+            assert checkpoint.schema_version == 38
             commands.clear_extra("image-clear", receipt["extra"])
             SQLiteRestorations(
                 store, archive, target, store.installation, Clock(), checkpoint
@@ -202,7 +202,7 @@ def exercise(fixtures, version):
         json.dumps(
             {
                 "source_schema": version,
-                "current_schema": 37,
+                "current_schema": 38,
                 "all_original_columns_preserved": True,
                 "literal_annotations": True,
                 "fresh_process_replay": True,

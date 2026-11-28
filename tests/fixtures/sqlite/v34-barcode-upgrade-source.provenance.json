@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 34,
+  "historicalRuntimeCommit": "1acd83cd8ee2aa1fd25a64b830a74c1413ab24c8",
+  "runtimeSourceFilesMatched": 227,
+  "runtimeSourceInventorySHA256": "f841a74adef019056d6c14a40f2874cd86ca039f38ed12fcb10411076e76e8b5",
+  "inputFixture": "tests/fixtures/sqlite/v30-purchase-store-source.sql",
+  "inputFixtureSHA256": "bb64799c146646a7c9e4bb1f8c1abfc25f4925d7cd08397ecb617e0f3741d109",
+  "outputFixtureSHA256": "9c9a8b37e830f612af040e131b8e96b3c549529e74564a98e8abcf8e94a11435",
+  "allInputRowsPreserved": true,
+  "roundtripRowsEqual": true,
+  "scope": "Synthetic data upgraded by unchanged historical schema-34 source, not current code or a claim about a published wheel."
+}

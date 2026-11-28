@@ -3,7 +3,7 @@ import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
 import type {ShoppingAttention} from '../application/shopping-attention';
 import type {StockAttention} from '../application/stock-attention';
-import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, canonicalGtin, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, shoppingNote, shoppingPriority, signedQuantity, stockUnits} from '../domain/inventory';
+import {BASE_UNITS, LOCATION_ARCHIVE_BLOCKS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, canonicalGtin, inventoryCommand, locationName, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, shoppingNote, shoppingPriority, signedQuantity, stockUnits} from '../domain/inventory';
 import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import {revisionValue} from '../domain/administration';
@@ -64,11 +64,19 @@ function product(value: unknown): ProductStock {
     replenishment:policy, outstandingPurchase, shoppingNeeded};
 }
 
+function locationRevision(value: unknown) {
+  try {return revisionValue(value);} catch {return invalid();}
+}
+
 function namedLocation(value: unknown): StorageLocation {
-  const row = fields(value, ['location_id','name'], []);
+  const row = fields(value, ['location_id','name','revision','archived','archive_blocked_reason'], []);
   const id = identifier(row.location_id);
   check(id !== 'pantry');
-  return {id, name:text(row.name, MAX_LOCATION_NAME)};
+  const archived = boolean(row.archived);
+  const archiveBlockedReason = row.archive_blocked_reason === null
+    ? null : choice(row.archive_blocked_reason, LOCATION_ARCHIVE_BLOCKS);
+  check(!archived || archiveBlockedReason === null);
+  return {id, name:locationName(row.name), revision:locationRevision(row.revision), archived, archiveBlockedReason};
 }
 
 function report(value: unknown): InventoryReport {
@@ -149,11 +157,13 @@ function aggregateQuantity(value: unknown): string {
 }
 
 function locationStock(value: unknown, unit: BaseUnit): LocationStock {
-  const row = fields(value, ['location_id','name','stock'], []);
+  const row = fields(value, ['location_id','name','stock','archived'], []);
   const id = identifier(row.location_id);
   check((id === 'pantry') === (row.name === null));
+  const archived = boolean(row.archived);
+  check(id !== 'pantry' || !archived);
   return {id, name:row.name === null ? null : text(row.name, MAX_LOCATION_NAME),
-    stock:stockTotals(row.stock, unit, taskQuantity)};
+    stock:stockTotals(row.stock, unit, taskQuantity), archived};
 }
 
 function history(value: unknown, productId: string): MovementHistory {
@@ -423,9 +433,22 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
   if (command.action === 'inventory.add-location') {
-    const location = namedLocation(row.result);
-    check(location.name === command.name);
-    return {kind, operationId, productId:null, movement:null, locationSaved:true};
+    // Original add-location receipts retain their two-field pre-lifecycle shape.
+    const result = fields(row.result, ['location_id','name'], []);
+    const id = identifier(result.location_id), name = locationName(result.name);
+    check(id !== 'pantry' && name === command.name);
+    return {kind, operationId, productId:null, movement:null, locationSaved:true, addedLocation:{id,name}};
+  }
+  if (command.action === 'inventory.rename-location' || command.action === 'inventory.archive-location'
+      || command.action === 'inventory.restore-location') {
+    const result = fields(row.result, ['location_id','name','revision','archived'], []);
+    const id = identifier(result.location_id), name = locationName(result.name);
+    const revision = locationRevision(result.revision), archived = boolean(result.archived);
+    check(id === command.location_id && BigInt(revision) === BigInt(command.expected_revision) + 1n);
+    if (command.action === 'inventory.rename-location') check(name === command.name && !archived);
+    else check(archived === (command.action === 'inventory.archive-location'));
+    return {kind, operationId, productId:null, movement:null,
+      locationChanged:{action:command.action, location:{id,name,revision,archived}}};
   }
   if (command.action === 'inventory.transfer') {
     const result = fields(row.result, [...TRANSFER_FIELDS,'base_unit','quantity'], []);

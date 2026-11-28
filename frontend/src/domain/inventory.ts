@@ -14,6 +14,8 @@ export const MAX_SESSION_ITEMS = 16;
 export const MAX_PURCHASE_STORE_NAME = 160;
 export const MAX_LOCATION_NAME = 80;
 export const MAX_NAMED_LOCATIONS = 32;
+export const LOCATION_ARCHIVE_BLOCKS = ['inventory_location_not_empty', 'inventory_location_pending_effects'] as const;
+export type LocationArchiveBlock = typeof LOCATION_ARCHIVE_BLOCKS[number];
 export const MAX_SHOPPING_NOTE_CODEPOINTS = 1000;
 export const SHOPPING_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
 export type ShoppingPriority = typeof SHOPPING_PRIORITIES[number];
@@ -73,6 +75,9 @@ export type InventoryCommand =
   | Readonly<{action: 'inventory.link-barcode'; barcode: string; product_id: string}>
   | Readonly<{action: 'inventory.remove-barcode'; barcode: string; product_id: string; association_id: string}>
   | Readonly<{action: 'inventory.add-location'; name: string}>
+  | Readonly<{action: 'inventory.rename-location'; location_id: string; name: string; expected_revision: Revision}>
+  | Readonly<{action: 'inventory.archive-location'; location_id: string; expected_revision: Revision}>
+  | Readonly<{action: 'inventory.restore-location'; location_id: string; expected_revision: Revision}>
   | Readonly<{action: 'inventory.transfer'; product_id: string; source_location: string;
     destination_location: string; quantity: string}>
   | Readonly<{action: 'inventory.intake'; product_id: string; quantity: string}>
@@ -111,6 +116,9 @@ export interface StockTransfer {
 export interface StorageLocation {
   readonly id: string;
   readonly name: string;
+  readonly revision: Revision;
+  readonly archived: boolean;
+  readonly archiveBlockedReason: LocationArchiveBlock | null;
 }
 
 export interface StockTotals {
@@ -123,6 +131,7 @@ export interface LocationStock {
   readonly id: string;
   readonly name: string | null;
   readonly stock: StockTotals;
+  readonly archived: boolean;
 }
 
 export interface StockMovement {
@@ -320,6 +329,12 @@ export function purchaseStoreName(value: unknown): string {
   return taskText(value, MAX_PURCHASE_STORE_NAME, true);
 }
 
+function lifecycleLocation(value: unknown): string {
+  const id = taskIdentifier(value);
+  if (id === 'pantry') throw new Error('invalid_inventory_command');
+  return id;
+}
+
 export function positiveQuantity(value: unknown): string {
   const quantity = taskQuantity(value);
   if (quantity === '0') throw new Error('invalid_inventory_quantity');
@@ -349,6 +364,14 @@ export function inventoryCommand(value: unknown): InventoryCommand {
       association_id: taskIdentifier(record.association_id)};
   if (action === 'inventory.add-location' && hasFields(record, ['action', 'name']))
     return {action, name: locationName(record.name)};
+  if (action === 'inventory.rename-location'
+      && hasFields(record, ['action', 'location_id', 'name', 'expected_revision']))
+    return {action, location_id:lifecycleLocation(record.location_id), name:locationName(record.name),
+      expected_revision:revisionValue(record.expected_revision)};
+  if ((action === 'inventory.archive-location' || action === 'inventory.restore-location')
+      && hasFields(record, ['action', 'location_id', 'expected_revision']))
+    return {action, location_id:lifecycleLocation(record.location_id),
+      expected_revision:revisionValue(record.expected_revision)};
   if (action === 'inventory.transfer'
       && hasFields(record, ['action','product_id','source_location','destination_location','quantity'])) {
     const source_location = taskIdentifier(record.source_location);

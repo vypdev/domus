@@ -28,6 +28,14 @@ MATERIAL_STATEMENTS = (
 )
 
 
+PENDING_LOCATION_STATEMENT = (
+    "CREATE INDEX task_material_pending_location ON task_material_intents"
+    "(household_id,json_extract(document,'$.line.binding.location_id')) "
+    "WHERE state IN ('pending_recording','pending_authorization',"
+    "'pending_regularization','pending_processing')"
+)
+
+
 def migrate_task_documents(connection: sqlite3.Connection) -> None:
     """Caller owns atomic migration. Receipts, source events and cycles remain byte-identical."""
     for row in connection.execute("SELECT definition_id,document FROM task_definitions").fetchall():

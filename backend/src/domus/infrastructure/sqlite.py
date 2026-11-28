@@ -59,6 +59,7 @@ from domus.infrastructure.sqlite_inventory import (
     CATALOG_TABLES,
     INVENTORY_STATEMENTS,
     INVENTORY_TABLES,
+    LOCATION_LIFECYCLE_STATEMENTS,
     LOCATION_STATEMENTS,
     LOCATION_TABLES,
     MOVEMENT_HISTORY_STATEMENTS,
@@ -109,6 +110,7 @@ from domus.infrastructure.sqlite_task_categories import (
 from domus.infrastructure.sqlite_task_material_schema import (
     MATERIAL_STATEMENTS,
     MATERIAL_TABLES,
+    PENDING_LOCATION_STATEMENT,
     migrate_task_documents,
 )
 from domus.infrastructure.sqlite_task_materials import SQLiteTaskMaterials
@@ -121,7 +123,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 37
+SCHEMA_VERSION = 38
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -214,6 +216,8 @@ SCHEMA_STATEMENTS = (
     BARCODE_STATEMENT,
     *SCHEDULED_AUTOMATION_STATEMENTS,
     *SHOPPING_ANNOTATION_STATEMENTS,
+    *LOCATION_LIFECYCLE_STATEMENTS,
+    PENDING_LOCATION_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -296,6 +300,8 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((BARCODE_STATEMENT,) if version >= 35 else ()),
             *(SCHEDULED_AUTOMATION_STATEMENTS if version >= 36 else ()),
             *(SHOPPING_ANNOTATION_STATEMENTS if version >= 37 else ()),
+            *(LOCATION_LIFECYCLE_STATEMENTS if version >= 38 else ()),
+            *((PENDING_LOCATION_STATEMENT,) if version >= 38 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -666,6 +672,8 @@ class SQLiteDatabase:
                         *((BARCODE_STATEMENT,) if version < 35 else ()),
                         *(SCHEDULED_AUTOMATION_STATEMENTS if version < 36 else ()),
                         *(SHOPPING_ANNOTATION_STATEMENTS if version < 37 else ()),
+                        *(LOCATION_LIFECYCLE_STATEMENTS if version < 38 else ()),
+                        *((PENDING_LOCATION_STATEMENT,) if version < 38 else ()),
                     )
                     for statement in migration:
                         connection.execute(statement)

@@ -114,3 +114,10 @@ establish live recovery acceptance in the installed package.
 See [native checkpoint evidence](evidence/m1-native-household-api.json) and
 [original preview evidence](evidence/m1-native-ha-acceptance.json) and
 [persistent owner acceptance](evidence/m1-persistent-ha-acceptance.json). These describe different artifacts/scopes.
+
+The native composition also installs the same
+[named storage location lifecycle](household-api.md#named-storage-location-lifecycle)
+commands and bounded read models. Current Ingress identity and fixed-origin CSRF
+remain required; the Supervisor transport itself grants no human authority.
+The [native OpenAPI snapshot](contracts/native-household-api.openapi.json)
+includes the three strict lifecycle commands and archived location metadata.

@@ -1,5 +1,123 @@
 import {expect, test} from '@playwright/test';
 import type {BrowserContext, Locator, Page} from '@playwright/test';
+
+for(const mode of ['native','standalone'] as const)for(const locale of ['en','es'] as const){
+  test.describe(`storage location lifecycle ${mode}/${locale}`,()=>{
+    test.use({hasTouch:locale==='es',viewport:{width:locale==='es'?390:1280,height:844}});
+    test('rename, recover, archive and restore the same location with retained stock history',async({page,context,request},info)=>{
+      test.setTimeout(90_000);
+      const text=(en:string,es:string)=>locale==='es'?es:en;
+      const activate=async(control:Locator)=>{
+        await expect(control).toBeVisible();await expect(control).toBeEnabled();
+        if(locale==='es')await control.tap();else await control.press('Enter');
+      };
+      const external:string[]=[],errors:string[]=[];
+      let verifiedContext='';
+      page.on('request',value=>{const assertion=value.headers()['x-domus-context'];if(assertion)verifiedContext=assertion;});
+      page.on('pageerror',error=>errors.push(error.message));
+      await context.route('**/*',route=>{
+        if(new URL(route.request().url()).origin===origin(mode))return route.continue();
+        external.push(route.request().url());return route.abort('internetdisconnected');
+      });
+      if(process.env.DOMUS_BROWSER_IMAGE){
+        const image=await request.get(origin(mode)+'/__fixture__/image');expect(image.ok()).toBe(true);
+        expect(await image.json()).toEqual({source_commit:process.env.DOMUS_TEST_SOURCE_COMMIT,
+          architecture:process.env.DOMUS_TEST_ARCH,image_id:expect.stringMatching(/^sha256:[a-f0-9]{64}$/u),mode});
+      }
+      expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
+      await open(page,context,mode);await page.getByLabel('Language',{exact:true}).selectOption(locale);
+      await activate(page.locator('vyp-ha-tabs').getByRole('link',{name:text('Inventory','Inventario'),exact:true}));
+      const stock=page.locator('domus-inventory'),locations=stock.locator('domus-storage-locations');
+      const api=base(mode)+'/api/v1/inventory',commands=api+'/commands';
+      const readApi=async(path:string)=>{
+        expect(verifiedContext).toMatch(/^v1:/u);
+        const response=await page.request.get(path,{headers:{'X-Domus-Context':verifiedContext}});
+        expect(response.status()).toBe(200);return response.json();
+      };
+      const add=locations.locator('.location-add'),review=locations.locator('.location-review');
+      const name=()=>review.getByRole('textbox',{name:text('Location name','Nombre de la ubicación'),exact:true});
+      const press=(en:string,es:string,within:Locator=stock)=>activate(within.getByRole('button',{name:text(en,es),exact:true}));
+      for(const value of ['QA90 Cupboard','QA90 Shelf']){
+        await add.getByRole('textbox').fill(value);await press('Add location','Añadir ubicación',add);
+        await expect(add.getByRole('textbox')).toHaveValue('');
+      }
+      await stock.getByRole('textbox',{name:text('Product name','Nombre del producto'),exact:true}).fill('QA90 Soap');
+      await press('Register product','Registrar producto');
+      const product=stock.locator('article').filter({has:page.getByRole('heading',{name:'QA90 Soap',exact:true})});
+      await press('Record stock intake','Registrar entrada de stock',product);
+      await product.getByRole('textbox',{name:text('Quantity to add','Cantidad que se añadirá'),exact:true}).fill('2');
+      await press('Review intake','Revisar entrada',product);await press('Confirm intake','Confirmar entrada',product);
+      const history=stock.getByRole('region',{name:text('Movement history','Historial de movimientos')+' · QA90 Soap',exact:true});
+      const choose=async(control:Locator,label:string)=>{
+        await activate(control);
+        if(locale==='es')await history.getByRole('option',{name:label,exact:true}).tap();
+        else{
+          const labels=await history.getByRole('option',{disabled:false}).allTextContents();
+          const index=labels.map(value=>value.trim()).indexOf(label);expect(index).toBeGreaterThanOrEqual(0);
+          await control.press('Home');for(let step=0;step<index;step++)await control.press('ArrowDown');await control.press('Enter');
+        }
+        await expect(control).toContainText(label);
+      };
+      const transfer=async(source:string,destination:string)=>{
+        await press('Move stock','Trasladar stock',product);
+        await choose(history.getByRole('combobox',{name:text('From location','Ubicación de origen'),exact:true}),source);
+        await choose(history.getByRole('combobox',{name:text('To location','Ubicación de destino'),exact:true}),destination);
+        await history.getByRole('textbox',{name:text('Quantity to move','Cantidad que se trasladará'),exact:true}).fill('1');
+        await press('Review transfer','Revisar traslado',history);await press('Confirm transfer','Confirmar traslado',history);
+        await expect(history.locator('.transfer-form')).toHaveCount(0);
+      };
+      await transfer(text('Pantry','Despensa'),'QA90 Cupboard');
+      const first=await readApi(api+'?limit=25');
+      const original=first.locations.find((item:{name:string})=>item.name==='QA90 Cupboard');
+      expect(original).toMatchObject({revision:'1',archived:false,archive_blocked_reason:'inventory_location_not_empty'});
+      await expect(locations.getByRole('button',{name:text('Archive','Archivar')+' QA90 Cupboard',exact:true})).toBeDisabled();
+      await press('Rename QA90 Cupboard','Renombrar QA90 Cupboard',locations);await expect(name()).toBeFocused();
+      await name().fill('QA90 Shelf');await press('Save name','Guardar nombre',review);
+      await expect(name()).toHaveValue('QA90 Shelf');await expect(name()).toHaveAttribute('aria-invalid','true');
+      const long='𐐀'.repeat(80);await name().fill(long+'X');await press('Save name','Guardar nombre',review);
+      await expect(name()).toHaveValue(long+'X');await expect(name()).toHaveAttribute('aria-invalid','true');
+      await name().fill(long);await add.getByRole('textbox').fill('Independent location draft');
+      let originalBody:Record<string,unknown>|undefined,key='';let posts=0;
+      await page.route(commands,async route=>{
+        posts++;expect(route.request().postDataJSON()).toEqual({action:'inventory.rename-location',location_id:original.location_id,name:long,expected_revision:'1'});
+        key=(await route.request().allHeaders())['idempotency-key'];
+        const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+        originalBody=await response.json();await route.abort('connectionclosed');
+      });
+      await press('Save name','Guardar nombre',review);
+      const recover=stock.getByRole('button',{name:text('Recover original request','Recuperar la solicitud original'),exact:true});
+      await expect(recover).toBeEnabled();await expect(name()).toHaveValue(long);await page.unroute(commands);
+      await activate(recover);await expect(review).toHaveCount(0);expect(posts).toBe(1);
+      await expect(add.getByRole('textbox')).toHaveValue('Independent location draft');
+      const recovered=await readApi(api+'/requests/inventory.rename-location/'+key);
+      expect(recovered.operation_id).toBe(originalBody!.operation_id);
+      await expect(history.getByText(text('Pantry','Despensa')+' → '+long,{exact:true})).toHaveCount(2);
+      const layout=async()=>expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(locale==='es'?390:1280);
+      await layout();await locations.screenshot({path:info.outputPath('locations-renamed-'+locale+'.png')});
+      await transfer(long,text('Pantry','Despensa'));
+      await press('Archive '+long,'Archivar '+long,locations);await expect(review.getByRole('heading')).toBeFocused();
+      await press('Confirm archive','Archivar ubicación',review);await expect(review).toHaveCount(0);
+      await expect(locations.locator('details')).toHaveAttribute('open','');
+      await expect(history.getByText(new RegExp('^'+long+' \\('+(locale==='es'?'Archivada':'Archived')+'\\)$','u'))).toBeVisible();
+      await press('Move stock','Trasladar stock',product);
+      for(const select of await history.getByRole('combobox').all()){
+        await activate(select);await expect(history.getByRole('option',{name:long,exact:true})).toHaveCount(0);
+        await select.press('Escape');await expect(select).toHaveAttribute('aria-expanded','false');
+      }
+      await press('Cancel','Cancelar',history);
+      await press('Restore '+long,'Restaurar '+long,locations);await press('Confirm restore','Restaurar ubicación',review);
+      await expect(review).toHaveCount(0);await transfer(text('Pantry','Despensa'),long);
+      const current=await readApi(api+'?limit=25');
+      expect(current.locations.find((item:{location_id:string})=>item.location_id===original.location_id))
+        .toEqual({location_id:original.location_id,name:long,revision:'4',archived:false,archive_blocked_reason:'inventory_location_not_empty'});
+      await expect(add.getByRole('textbox')).toHaveValue('Independent location draft');await layout();
+      await info.attach('storage-location-lifecycle-evidence',{body:JSON.stringify({mode,locale,originalID:original.location_id,
+        revision:'4',lostReplyPosts:posts,originalReceipt:originalBody,external,errors}),contentType:'application/json'});
+      expect(external).toEqual([]);expect(errors).toEqual([]);
+    });
+  });
+}
+
 const prefix = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 type Mode = 'native' | 'standalone';
 const origin = (mode: Mode) => `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;

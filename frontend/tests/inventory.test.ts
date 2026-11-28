@@ -29,9 +29,9 @@ const wireMovement = {movement_id:'movement', kind:'intake', quantity:'1.250001'
 const historyStock = {recorded:'1.250001', reserved:'0', available:'1.250001'};
 const wireHistory = {product_id:'product', product_name:'Olive oil', base_unit:'millilitre',
   movements:[wireMovement], next_cursor:'older', total:historyStock,
-  locations:[{location_id:'pantry', name:null, stock:historyStock}]};
+  locations:[{location_id:'pantry', name:null, archived:false, stock:historyStock}]};
 const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older', total:historyStock,
-  locations:[{id:'pantry', name:null, stock:historyStock}], movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
+  locations:[{id:'pantry', name:null, archived:false, stock:historyStock}], movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
     reason:null, occurrenceId:null, corrects:null, correctedBy:null, shoppingReceipt:false, returnOf:null, transfer:null}]};
 const emptyPolicy = {source_id:'product', minimum:'0', target:'0', revision:'0', needed:'0'} as const;
 const policy = {action:'inventory.configure-replenishment', product_id:'product', minimum:'1.250001',
@@ -675,6 +675,11 @@ function component(surface: 'inventory' | 'shopping' = 'inventory') {
   const submit = (form:HTMLFormElement) => form.dispatchEvent(new Event('submit',{cancelable:true}));
   return {node,root,events,press,input,submit};
 }
+async function locationContent(root: ShadowRoot) {
+  const node=root.querySelector('domus-storage-locations')!;
+  await node.updateComplete;
+  return node.shadowRoot!;
+}
 const initial: InventoryState = {scope,report:null,history:null,busy:false,pending:false,result:null,notice:null};
 
 test.each(['en','es'] as const)('product and location fields retain complete codepoint-bounded text and rejected drafts (%s)', async language => {
@@ -693,11 +698,11 @@ test.each(['en','es'] as const)('product and location fields retain complete cod
   f.node.view={...initial,report,pending:true};await f.node.updateComplete;
   enterField(name,'Late edit');await f.node.updateComplete;expect(name.value).toBe(tooLong);
   f.node.view={...initial,report};await f.node.updateComplete;
-  const location=f.root.querySelector<HaTextField>('.location-content vyp-ha-field')!;
-  const locationForm=location.form!;const full='😀'.repeat(80);
-  enterField(location,full);await f.node.updateComplete;f.submit(locationForm);
+  const location=(await locationContent(f.root)).querySelector<HaTextField>('.location-add vyp-ha-field')!;
+  const locationForm=location.closest('form')!;const full='😀'.repeat(80);
+  enterField(location,full);await locationContent(f.root);f.submit(locationForm);
   expect(f.events.mock.lastCall?.[0].detail.command).toEqual({action:'inventory.add-location',name:full});
-  enterField(location,full+'X');await f.node.updateComplete;f.events.mockClear();f.submit(locationForm);await f.node.updateComplete;
+  enterField(location,full+'X');await locationContent(f.root);f.events.mockClear();f.submit(locationForm);await locationContent(f.root);
   expect(f.events).not.toHaveBeenCalled();expect(location.value).toBe(full+'X');expect(location.state.error).toContain('80');
 });
 
@@ -2040,15 +2045,77 @@ const addLocation = {action:'inventory.add-location', name:'Cupboard'} as const;
 const moveStock = {action:'inventory.transfer', product_id:'product', source_location:'pantry',
   destination_location:'cupboard', quantity:'1.25'} as const;
 const namedLocation = {location_id:'cupboard', name:'Cupboard'};
+const wireLocation = {...namedLocation, revision:'1', archived:false, archive_blocked_reason:null};
+
+test.each(['native','standalone'] as const)('location lifecycle commands and narrow original receipts retain identity and revision (%s)',async mode=>{
+  const rename = {action:'inventory.rename-location',location_id:'cupboard',name:'Drawer',expected_revision:revisionValue('1')} as const;
+  const archive = {action:'inventory.archive-location',location_id:'cupboard',expected_revision:revisionValue('1')} as const;
+  const restore = {...archive,action:'inventory.restore-location'} as const;
+  for(const command of [rename,archive,restore]){
+    expect(inventoryCommand(command)).toEqual(command);
+    for(const invalid of [{...command,location_id:'pantry'},{...command,expected_revision:'0'},
+      {...command,expected_revision:1},{...command,extra:true},{...command,location_id:'../elsewhere'}])
+      expect(()=>inventoryCommand(invalid)).toThrow();
+    const result={location_id:'cupboard',name:command.action===rename.action?'Drawer':'Cupboard',revision:'2',archived:command.action===archive.action};
+    const {server}=http([[200,csrf],[200,receipt(result)],[200,receipt(result,'historical')]],mode);
+    const pending={...request,command};
+    expect(await server.send(scope,pending).result).toMatchObject({kind:'committed',locationChanged:{action:command.action,
+      location:{id:'cupboard',name:result.name,revision:'2',archived:result.archived}}});
+    expect(await server.original(scope,pending).result).toMatchObject({kind:'historical',locationChanged:{action:command.action}});
+    for(const patch of [{location_id:'elsewhere'},{revision:'1'},{revision:'3'},{archived:!result.archived},
+      {revision:2},{extra:true},...(command.action===rename.action?[{name:'Wrong name'}]:[])]){
+      const broken=http([[200,receipt({...result,...patch})]],mode);
+      await expect(broken.server.original(scope,pending).result).rejects.toMatchObject({code:'invalid_response'});
+    }
+  }
+  expect(()=>inventoryCommand({...rename,name:'Pantry'})).toThrow();
+  expect(()=>inventoryCommand({...rename,name:'😀'.repeat(81)})).toThrow();
+});
+
+test('catalog and history distinguish current archived metadata from unchanged original add receipts',async()=>{
+  for(const patch of [{revision:'0'},{revision:1},{archived:null},{archive_blocked_reason:'unknown'},
+    {archived:true,archive_blocked_reason:'inventory_location_not_empty'},{extra:true}]){
+    const {server}=http([[200,{...wire,locations:[{...wireLocation,...patch}]}]]);
+    await expect(server.read(scope,null).result).rejects.toMatchObject({code:'invalid_response'});
+  }
+  const {server}=http([[200,{...wire,locations:[{...wireLocation,archived:true}]}],
+    [200,{...wire,locations:[{...wireLocation,archive_blocked_reason:'inventory_location_pending_effects'}]}],
+    [200,{...wireHistory,locations:[{...wireHistory.locations[0],archived:true}]}],
+    [200,{...wireHistory,locations:[{...wireHistory.locations[0],archived:'false'}]}],
+    [200,{...locationHistory,locations:locationHistory.locations.map(item=>({...item,archived:item.location_id!=='pantry'}))}],
+    [200,receipt({...namedLocation,revision:'1',archived:false})]]);
+  expect((await server.read(scope,null).result).locations[0].archived).toBe(true);
+  expect((await server.read(scope,null).result).locations[0].archiveBlockedReason).toBe('inventory_location_pending_effects');
+  for(let index=0;index<2;index++)await expect(server.history(scope,'product',null).result).rejects.toMatchObject({code:'invalid_response'});
+  expect((await server.history(scope,'product',null).result).locations[1].archived).toBe(true);
+  await expect(server.original(scope,{...request,command:addLocation}).result).rejects.toMatchObject({code:'invalid_response'});
+});
 const locationLink = {transfer_id:'transfer', product_id:'product', source_location:'pantry',
   destination_location:'cupboard', withdrawal_id:'withdrawal', deposit_id:'deposit'};
 const emptyStock = {recorded:'0',reserved:'0',available:'0'};
 const locationHistory = {...wireHistory, total:historyStock, locations:[
-  {location_id:'pantry',name:null,stock:emptyStock}, {...namedLocation,stock:historyStock},
+  {location_id:'pantry',name:null,archived:false,stock:emptyStock}, {...namedLocation,archived:false,stock:historyStock},
 ], movements:[
   {...wireMovement, movement_id:'deposit',kind:'transfer',quantity:'1.25',transfer:locationLink},
   {...wireMovement, movement_id:'withdrawal',kind:'transfer',quantity:'-1.25',transfer:locationLink},
 ]};
+
+test.each(['en','es'] as const)('archived stock history retains current names and lifecycle feedback without clearing product drafts (%s)',async language=>{
+  const f=component();f.node.language=language;
+  const archived={id:'cupboard',name:'Former cupboard',revision:revisionValue('2'),archived:true,archiveBlockedReason:null};
+  f.node.view={...initial,report:{...report,locations:[archived]},history:{...history,
+    locations:[...history.locations,{id:'cupboard',name:'Former cupboard',archived:true,stock:emptyStock}],
+    movements:[{...history.movements[0],kind:'transfer',transfer:{id:'link',productId:'product',source:'pantry',destination:'cupboard',withdrawalId:'movement',depositId:'deposit'}}]}};
+  await f.node.updateComplete;
+  expect(f.root.textContent).toContain('Former cupboard ('+(language==='es'?'Archivada':'Archived')+')');
+  const product=f.root.querySelector<HaTextField>('.registration-form vyp-ha-field')!;enterField(product,'Independent product draft');
+  for(const action of ['inventory.rename-location','inventory.archive-location','inventory.restore-location'] as const){
+    f.node.view={...f.node.view,result:{kind:'committed',operationId:action,productId:null,movement:null,locationChanged:{action,location:archived}}};
+    await f.node.updateComplete;expect(product.value).toBe('Independent product draft');
+    expect(f.root.querySelector('[role="status"]')?.textContent).toBeTruthy();
+  }
+  expect([...f.root.querySelectorAll('vyp-ha-button')].some(item=>item.state.label===(language==='es'?'Mover existencias':'Move stock'))).toBe(false);
+});
 
 test('location and transfer commands validate closed payloads and recover exact outcomes', async () => {
   expect(inventoryCommand(addLocation)).toEqual(addLocation);
@@ -2060,7 +2127,7 @@ test('location and transfer commands validate closed payloads and recover exact 
   ]) expect(() => inventoryCommand(invalid)).toThrow();
   const savedTransfer = {...locationLink, base_unit:'millilitre', quantity:moveStock.quantity};
   const {server} = http([
-    [200,{...wire,locations:[namedLocation]}], [200,locationHistory],
+    [200,{...wire,locations:[wireLocation]}], [200,locationHistory],
     [200,csrf], [200,receipt(namedLocation)], [200,receipt(namedLocation,'historical')],
     [200,csrf], [200,receipt(savedTransfer)], [200,receipt(savedTransfer,'historical')],
     [200,receipt({...namedLocation,name:'Drawer'})],
@@ -2070,7 +2137,7 @@ test('location and transfer commands validate closed payloads and recover exact 
     [200,receipt({...savedTransfer,quantity:'2'})],
   ]);
   const locationRequest = {...request,command:addLocation}, transferRequest = {...request,command:moveStock};
-  expect((await server.read(scope,null).result).locations).toEqual([{id:'cupboard',name:'Cupboard'}]);
+  expect((await server.read(scope,null).result).locations).toEqual([{id:'cupboard',name:'Cupboard',revision:revisionValue('1'),archived:false,archiveBlockedReason:null}]);
   const view = await server.history(scope,'product',null).result;
   expect(view.total).toEqual(historyStock);
   expect(view.movements.map(item => [item.id,item.transfer?.id])).toEqual([['deposit','transfer'],['withdrawal','transfer']]);
@@ -2085,8 +2152,8 @@ test('location and transfer commands validate closed payloads and recover exact 
 });
 
 test('bounded location projections reject conflicting links, totals and identities', async () => {
-  for (const locations of [null,[namedLocation,namedLocation],[{...namedLocation,location_id:'pantry'}],
-    Array.from({length:33}, (_, index) => ({...namedLocation,location_id:'loc-' + index}))]) {
+  for (const locations of [null,[wireLocation,wireLocation],[{...wireLocation,location_id:'pantry'}],
+    Array.from({length:33}, (_, index) => ({...wireLocation,location_id:'loc-' + index}))]) {
     const {server} = http([[200,{...wire,locations}]]);
     await expect(server.read(scope,null).result).rejects.toMatchObject({code:'invalid_response'});
   }
@@ -2119,14 +2186,14 @@ test('bounded location projections reject conflicting links, totals and identiti
 
 test('the shared location and transfer controls retain drafts through rejection and show linked balances', async () => {
   const {node,root,events,press,submit} = component();
-  const reportWithLocation = {...report,locations:[{id:'cupboard',name:'Cupboard'}]};
+  const reportWithLocation = {...report,locations:[{id:'cupboard',name:'Cupboard',revision:revisionValue('1'),archived:false,archiveBlockedReason:null}]};
   const stockHistory: MovementHistory = {...history,locations:[...history.locations,
-    {id:'cupboard',name:'Cupboard',stock:emptyStock}]};
+    {id:'cupboard',name:'Cupboard',archived:false,stock:emptyStock}]};
   const setValue = (control:Element, type:string, value:string|null) =>
     control.dispatchEvent(new CustomEvent(type,{detail:{value}}));
   node.view = {...initial,report:reportWithLocation};
   await node.updateComplete;
-  const locationForm = root.querySelector<HTMLFormElement>('.location-content form')!;
+  const locationForm = (await locationContent(root)).querySelector<HTMLFormElement>('.location-add')!;
   const name = locationForm.querySelector('vyp-ha-field')!;
   submit(locationForm);
   await node.updateComplete;
@@ -2139,14 +2206,14 @@ test('the shared location and transfer controls retain drafts through rejection 
   await node.updateComplete;
   expect(name.value).toBe(' Cupboard ');
   expect(root.querySelector('vyp-ha-feedback')?.state?.message).toContain('already has this name');
-  node.view = {...node.view,result:{kind:'committed',operationId:'loc',productId:null,movement:null,locationSaved:true}};
+  node.view = {...node.view,result:{kind:'committed',operationId:'loc',productId:null,movement:null,locationSaved:true,addedLocation:{id:'cupboard',name:'Cupboard'}}};
   await node.updateComplete;
   expect(name.value).toBe('');
   expect(root.textContent).toContain('Storage location added.');
   node.view = {...node.view,report:{...reportWithLocation,mayManage:false},
-    result:{kind:'historical',operationId:'previous-location',productId:null,movement:null,locationSaved:true}};
+    result:{kind:'historical',operationId:'previous-location',productId:null,movement:null,locationSaved:true,addedLocation:{id:'cupboard',name:'Cupboard'}}};
   await node.updateComplete;
-  expect(root.querySelector('.location-content form')).toBeNull();
+  expect((await locationContent(root)).querySelector('.location-add')).toBeNull();
   node.view = {...node.view,report:reportWithLocation,result:null};
   await node.updateComplete;
 
@@ -2195,7 +2262,7 @@ test('the shared location and transfer controls retain drafts through rejection 
   node.view = {...node.view,busy:true};
   await node.updateComplete;
   const submissions = events.mock.calls.length;
-  submit(form); submit(root.querySelector<HTMLFormElement>('.location-content form')!);
+  submit(form); submit((await locationContent(root)).querySelector<HTMLFormElement>('.location-add')!);
   expect(events.mock.calls).toHaveLength(submissions);
   node.view = {...node.view,busy:false,result:{kind:'rejected',reason:'inventory_insufficient_stock',command:moveStock}};
   await node.updateComplete;
@@ -2205,7 +2272,7 @@ test('the shared location and transfer controls retain drafts through rejection 
   expect(quantity.value).toBe('1,25');
   const cupboardStock = {recorded:'2',reserved:'0',available:'2'};
   node.view = {...node.view,history:{...stockHistory,unit:'piece',
-    locations:[{id:'pantry',name:null,stock:emptyStock},{id:'cupboard',name:'Cupboard',stock:cupboardStock}]}};
+    locations:[{id:'pantry',name:null,archived:false,stock:emptyStock},{id:'cupboard',name:'Cupboard',archived:false,stock:cupboardStock}]}};
   await node.updateComplete;
   expect(quantity.state.description).toContain('whole number');
   setValue(source,'ha-select-request','cupboard');
