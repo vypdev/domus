@@ -48,3 +48,10 @@ evidence after the earlier branch-admission failure. The owning SDD and branch
 recovery were explicitly authorized; the diagnostic is recorded in
 [Copilot #1005](https://github.com/vypdev/copilot/issues/1005#issuecomment-7241629733).
 This exception does not remove product CI, review, migration or Edge gates.
+
+The [prepared candidate receipt](storage-location-lifecycle.json) pins Edge.96
+to source `0162a2c6e5fbdc964516f1c7c9fc88029110ac05`, schema 38 and wheel SHA-256
+`51bc9313f4cac4c7768c8c8c99e0c391da62527cddd8ab03f327bd36e069586c`. All 251 Python and four UI files
+match the frozen published source and the qualified local build. Full same-head
+CI, actual images, substantive review and installed Edge acceptance remain
+pending. Edge.95 is retained as a compatible previous application/data pair.

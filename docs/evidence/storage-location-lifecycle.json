@@ -1,0 +1,94 @@
+{
+  "status": "candidate-prepared; exact-head CI, actual images, substantive review and installed acceptance pending",
+  "issue": 90,
+  "pullRequest": 183,
+  "specification": "specs/household-inventory.md#manage-storage-location-names-and-archived-locations",
+  "caseIDs": [
+    "stock-location-lifecycle-C01",
+    "stock-location-lifecycle-C02",
+    "stock-location-lifecycle-C03",
+    "stock-location-lifecycle-C04",
+    "stock-location-lifecycle-C05",
+    "stock-location-lifecycle-C06",
+    "stock-location-lifecycle-C07",
+    "stock-location-lifecycle-C08"
+  ],
+  "implementationCommit": "0162a2c6e5fbdc964516f1c7c9fc88029110ac05",
+  "currentPackage": {
+    "version": "0.0.0-edge.96",
+    "sourceCommit": "0162a2c6e5fbdc964516f1c7c9fc88029110ac05",
+    "sourceArchiveSHA256": "7fc92167aa112ac23e093f41f74987f06649cb431a72d6e69e2a508b5298a65a",
+    "storageSchema": 38,
+    "wheelSHA256": "51bc9313f4cac4c7768c8c8c99e0c391da62527cddd8ab03f327bd36e069586c"
+  },
+  "localVerification": {
+    "backend": {
+      "tests": 6123,
+      "authoredModules": 251,
+      "globalAndEveryFileLineAndBranchCoverage": 100,
+      "failures": 0,
+      "skips": 0
+    },
+    "frontend": {
+      "tests": 2321,
+      "authoredModules": 122,
+      "allFourCoverageMetricsGlobalAndEveryFile": 100,
+      "failures": 0,
+      "skips": 0
+    },
+    "sourceBrowser": {
+      "tests": 177,
+      "retry": 0,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "compiledUI": {
+        "index.html": "870b6046931885a441c4817774edf9fb6ea9f4ff602275e1d100cd93cedeb25b",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-ygCscmBE.js": "5b708bbda9cf7117f0596f87a33c089e391401f440ec8b0855ce8dfb47efe1dd",
+        ".vite/manifest.json": "6737d27565b6bb6c8e54f4df0e62d541cc3a23fcad71f821529844b820a9174d"
+      }
+    },
+    "catalog": {
+      "tests": 70,
+      "retry": 0,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "frozenBuild": {
+      "gitFilesByteVerified": 1058,
+      "pythonFiles": 251,
+      "uiFiles": 4,
+      "wheelBytes": 686395,
+      "allWheelFilesMatchedInstalledRuntimeAndQualifiedSource": true,
+      "separateDependencyStore": false
+    },
+    "genuineSourceSchemas": [
+      20,
+      30,
+      37
+    ],
+    "schema37Fixture": {
+      "provenance": "tests/fixtures/sqlite/v37-storage-location-source.provenance.json",
+      "fixtureSHA256": "ce9afb6103b6435935db0025e0616e7f176bb4fa21627ea1d43ca172935d2d0e",
+      "captureWheelVersion": "0.0.0-edge.95",
+      "captureWheelFilesMatched": 250,
+      "pairedTransfers": 4
+    },
+    "schema34BarcodeCompatibility": {
+      "provenance": "tests/fixtures/sqlite/v34-barcode-upgrade-source.provenance.json",
+      "historicalRuntimeCommit": "1acd83cd8ee2aa1fd25a64b830a74c1413ab24c8",
+      "freshCaptureReproducedByteForByte": true
+    }
+  },
+  "pendingGates": {
+    "containerCasesPerArchitecture": 68,
+    "actualImageJourneysPerArchitecture": 122,
+    "sameHeadCI": true,
+    "substantiveReview": true,
+    "installedEdge": true,
+    "normalMergeAndDestinationCI": true
+  },
+  "scope": "Local source qualification and frozen candidate preparation only. No image, installed Home Assistant, destination or Stable acceptance claimed."
+}

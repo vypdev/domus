@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.96
+
+- Rename, archive and restore named storage locations while retaining their identity and movement history.
+- Explain stock and pending-effect preconditions, preserve rejected drafts and recover original changes without repeating them.
+- Keep archive and restore confirmation accessible with English keyboard and narrow Spanish touch controls.
+- Keep the previous app and its compatible data together for rollback; older versions cannot open upgraded storage.
+
 ## 0.0.0-edge.95
 
 - Offer localized recovery and one deliberate retry for an expired or invalid standalone sign-in.
