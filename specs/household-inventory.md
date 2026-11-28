@@ -1396,3 +1396,188 @@ installed Edge evidence with scoped cleanup.
 The roadmap's Overview section calls for stock attention. Household Inventory
 defines availability and replenishment. The application experience specification
 defines the existing Overview and Inventory navigation.
+
+## Manage storage location names and archived locations
+
+- Status: Draft
+- Owners: Domus maintainers and Inventory
+- Scope: Rename, archive, and restore named stock locations
+- Source: accepted issue #90 and the owner's directly-bound-effects decision
+- Implementation baseline: verified develop after PR #180; code and Edge acceptance are separate gates
+- Open decisions blocking readiness: none
+
+### 1. Executive summary
+
+Keep the storage location list accurate as a household reorganizes its
+supplies. Preserve a location's identity and stock history across name
+changes and archiving. A manager can restore an archived location when needed.
+
+### 2. Problem, current behavior, and evidence
+
+Inventory can create named locations and transfer stock between them.
+A typo requires creating another location. An obsolete empty location
+remains in the transfer selectors. Existing locations already have stable
+identifiers used by product bindings and paired movement records.
+
+### 3. Actors, surfaces, and terminology
+
+Household readers inspect stock and history. A member with current inventory
+management authority can maintain named locations. Pantry is the existing
+built-in default and remains available. An archived location keeps its identity
+and history and is excluded from new transfer choices.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| stock-location-lifecycle-R01 | A manager can rename a named location with a current revision and a valid, household-unique name. Identity, bindings, quantities and movements remain intact. Pantry retains its localized label. |
+| stock-location-lifecycle-R02 | A manager can archive an empty named location and restore the same identity. Check recorded balances and pending inventory effects directly bound to this location atomically. Resolve them explicitly before archive; never cancel them automatically. General product demand or reservations without this location do not block archive. Settled historical bindings and movements do not by themselves count as pending effects. Hide archived locations from transfers, retain history and give managers a way to restore the location before another write. |
+| stock-location-lifecycle-R03 | Current grants, household isolation, original operation recovery and revision checks protect changes and restoration. Read models distinguish active and archived locations. |
+| stock-location-lifecycle-R04 | Migrated locations are active at their initial lifecycle revision. Compatible restore preserves state, history and original operation receipts. |
+| stock-location-lifecycle-R05 | Inventory shows clear English and Spanish controls, archive preconditions, conflict recovery and history for narrow touch and wide keyboard use. |
+
+Keep the existing 80-character name validation and case-insensitive household uniqueness. Archived names remain reserved, and the existing 32-location limit includes archived records so every retained location remains representable. Keep Pantry immutable and localized.
+
+Use the existing bounded location catalog and exact quantity rules. This
+increment leaves lots, package conversions and receipt routing to their own acceptance.
+
+### 5. Current versus proposed product journey
+
+Open Storage locations and correct a cupboard label without moving its
+contents. Move the remaining stock out before archiving. Past transfers
+still identify that cupboard. Restore it from Archived locations when the
+household wants to use it again.
+
+### 6. Functional behavior and state model
+
+A named location has a stable identity, display name, active status and
+revision. Compare and update the revision in the same transaction as every
+state check and receipt. The transfer command checks active membership again
+before writing. An accepted write increments the revision. History resolves
+a retained location identity to its current name and status.
+
+### 7. User-facing configuration
+
+Use the existing household locale, name rules and inventory grants. Names
+remain reserved within a household while a location is archived so that
+restoring it can retain its name. Explain the catalog limit using the existing
+location capacity.
+
+### 8. Clean Architecture design
+
+Keep name and lifecycle values in the domain. Application services own access,
+revision, stock preconditions, commands and queries. SQLite implements the
+transactional state and compatible restore checks. HTTP maps narrow typed
+contracts. Compose forms and feedback from the published ha-ui components.
+
+### 9. UI/UX and content contract
+
+Show Rename and Archive for named active locations. Keep Restore accessible
+under Archived locations. Confirm archive with a description of its effect
+on transfers and history. If stock remains, direct the member to move it out.
+If another member edited the location, preserve the draft and offer refresh.
+Display an archived label when it appears in stock history.
+
+### 10. Failure, recovery, and cleanup
+
+Stale revisions and invalid transitions leave the location and ledger intact.
+A lost successful reply can recover the original receipt. A late transfer
+to or from an archived location is rejected before recording a leg. For a
+still-relevant operation against an archived binding, explain how a manager
+can restore the location before proceeding.
+
+### 11. Security, permissions, and privacy
+
+Recheck current inventory management authority and household membership
+for every write and its recovery. Current household read access protects the
+location and history views. Foreign identifiers do not disclose location
+names or state.
+
+### 12. Observability and operational UX
+
+Location actions have attributable operation receipts. Stock movement history
+retains its original identities, timestamps, quantities, and linkage.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Migrate the current schema 37, representative schema 30 data including paired transfers, and the
+representative schema 20 fixture. Preserve genuine pre-change SQL inputs; do not regenerate an older-version fixture from the new schema. Retain data across restart and activation
+of compatible snapshots. Qualify the immutable Edge candidate with a prior
+compatible image and cold data checkpoint for rollback.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Location maintenance | 2 | Stable identity/name and explicit archive preconditions/restore. |
+| Authorization | 1 | Current grants, household isolation and protected recovery. |
+| State and concurrency | 1 | Archive/transfer and edit/edit races without stranded stock. |
+| State and recovery | 1 | Original-key replay, payload conflict and atomic rollback. |
+| Upgrade and restoration | 1 | Schema 37/30/20, restart and activated compatible restore. |
+| Browser acceptance | 1 | Both compositions/locales, keyboard/touch and retained drafts. |
+| Installed acceptance | 1 | Exact Edge candidate, both CPU images and owned cleanup. |
+| Total | 8 | Distinct owning cases; parameter rows and repeated execution do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| stock-location-lifecycle-C01 | Location maintenance | stock-location-lifecycle-R01 | Rename a populated cupboard and verify its identity, balances and linked historical transfers. Reject a duplicate name, an invalid name and edits to Pantry. |
+| stock-location-lifecycle-C02 | Location maintenance | stock-location-lifecycle-R02 | Reject archive with recorded stock or a live inventory effect. Verify that unlocated product demand and settled history do not block an otherwise eligible location. Archive the empty location and retain prior movements. Restore the same identity and transfer stock to it again. |
+| stock-location-lifecycle-C03 | Authorization | stock-location-lifecycle-R03 | Enforce the current management grant for edits and original recovery. Verify reader controls and deny writes using an identifier from another household. |
+| stock-location-lifecycle-C04 | State and concurrency | stock-location-lifecycle-R02, stock-location-lifecycle-R03 | Race an archive against a transfer on independent connections. Observe either the transfer and a rejected archive or the archived state and a rejected transfer, without stranded stock. Race two edits at one revision. |
+| stock-location-lifecycle-C05 | State and recovery | stock-location-lifecycle-R03 | Retry after losing a successful reply and recover the same result. A changed request cannot reuse its key. An injected failure after the update rolls back both state and receipt. |
+| stock-location-lifecycle-C06 | Upgrade and restoration | stock-location-lifecycle-R04 | Upgrade the actual previous schema 37, schema 30 with real transfer history and schema 20 with legacy data. Restart and activate a compatible backup with an archived location, retained movements and recoverable operations. |
+| stock-location-lifecycle-C07 | Browser acceptance | stock-location-lifecycle-R05 | Use the English keyboard and narrow Spanish touch workflows to rename, archive and restore. Verify draft recovery, accessible feedback, selectors and archived history in both deployment compositions. |
+| stock-location-lifecycle-C08 | Installed acceptance | stock-location-lifecycle-R04, stock-location-lifecycle-R05 | Verify the installed Edge version in Home Assistant, exercise location maintenance with disposable data, and verify both architecture images and scoped cleanup. |
+
+### 15. Documentation and discoverability
+
+[specs/household-inventory.md](household-inventory.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/household-api.md](../docs/household-api.md) · [backend/src/domus/domain/inventory.py](../backend/src/domus/domain/inventory.py) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/application/inventory_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/infrastructure/sqlite_inventory.py](../backend/src/domus/infrastructure/sqlite_inventory.py) · [backend/src/domus/entrypoints/inventory_http.py](../backend/src/domus/entrypoints/inventory_http.py) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/src/presentation/inventory-messages.ts](../frontend/src/presentation/inventory-messages.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| docs/roadmap.md | update |
+| docs/household-api.md | update |
+| backend/src/domus/domain/inventory.py | update |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_inventory.py | update |
+| backend/src/domus/entrypoints/inventory_http.py | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/src/presentation/inventory-messages.ts | update |
+
+### 16. Acceptance scenarios
+
+Exercise the scenarios in the case inventory. Show that renaming and
+archiving change catalog metadata while paired movements and recorded
+quantities retain their identities. Use the same controls through Ingress
+and standalone.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| stock-location-lifecycle-R01 | stock-location-lifecycle-C01 |
+| stock-location-lifecycle-R02 | stock-location-lifecycle-C02, stock-location-lifecycle-C04 |
+| stock-location-lifecycle-R03 | stock-location-lifecycle-C03, stock-location-lifecycle-C04, stock-location-lifecycle-C05 |
+| stock-location-lifecycle-R04 | stock-location-lifecycle-C06, stock-location-lifecycle-C08 |
+| stock-location-lifecycle-R05 | stock-location-lifecycle-C07, stock-location-lifecycle-C08 |
+
+### 18. Implementation sequence
+
+Add lifecycle values, migration and protected commands. Integrate the
+read models, localized controls and recovery. Verify write races,
+historical data, both browser compositions and the installed Edge candidate.
+
+### 19. Definition of Done
+
+Verify all eight cases, global and per-file coverage, both architecture image
+checks, the installed Edge candidate and its disposable data cleanup.
+
+### 20. References and decisions
+
+Extend the Inventory location and history contract in
+specs/household-inventory.md. Preserve the original stock transfer and
+location wording cases.
