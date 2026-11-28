@@ -83,3 +83,41 @@ The initial required-origin configuration and an owner-environment HA restart ar
 separately from acceptance. Debugger events were evicted during the full HA shell reload;
 direct current reads and original receipts were retained afterward. This is not a gapless
 HTTP trace or an installed per-file Python-hash claim.
+
+## Browser response observation follow-up (2026-11-28)
+
+The current destination check at `73fb99355b4e0835ca1db3329bd5041f8430061e`
+exposed a remaining observation-lifetime failure in this journey's `openReview`
+helper. The first source run passed 172 of 173 journeys and the first ARM64 image
+run passed 117 of 118. The unchanged source retry again failed this helper in
+native-English and standalone-English variants. All target requests observed in
+the retained failure traces returned 200; the rendered review form was present.
+Chromium rejected `Response.json()` with `Network.getResponseBody: No data found
+for resource with given identifier`. The available trace does not establish the
+underlying cancellation trigger. Original reports, screenshots and traces remain
+separate from successful execution evidence.
+
+The correction uses the actual-byte pattern already accepted by
+[issue #148](https://github.com/vypdev/domus/issues/148). For each selected target,
+it owns only the exact GET route, performs one real upstream fetch with zero
+retries and zero redirects, retains its raw JSON bytes and delivers the unchanged
+response to the application. The browser status and ready form are checked, and
+exactly one captured target is required. The owned route is removed in `finally`.
+The existing protected-target, policy, single-skip, current-record, draft,
+original-receipt and restart assertions remain intact. This extends the existing
+recurrence-calendar-C30 witness without adding or renumbering an owning case.
+
+Local source qualification passes all four entry-mode/locale scenarios and then
+40 consecutive executions, ten of each scenario. Every execution passes once at
+retry zero, with no skipped, unexpected or flaky results. All 280 actual target
+response bodies, seven per execution, are retained before unchanged delivery.
+The source runtime and four rebuilt UI assets match the already qualified Edge.95
+wheel.
+The local results qualify the test-observation correction. Complete final-head
+CI and substantive review, normal merge and exact destination validation remain
+required. The
+current 173 source, 118 per-image and 70 catalog case inventories, deadlines,
+zero-retry policy, coverage gates, exact Actions tags and self-hosted placement
+are retained. Edge.95 runtime/packaging and its installed private data require no
+change for this observation correction. Full roadmap and distribution acceptance
+remain independent gates.

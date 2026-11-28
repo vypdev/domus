@@ -1050,10 +1050,24 @@ for (const mode of ['native', 'standalone'] as const) {
         const close=review.getByRole('button',{name:t('Close schedule review','Cerrar revisión de programación'),exact:true});
         if(await close.isVisible())await activate(close);
         await choose(id);
-        const pending=page.waitForResponse(response=>response.request().method()==='GET'
-          &&response.url().endsWith('/tasks/recurrence/reviews/targets/'+id));
-        await activate(review.getByRole('button',{name:t('Review scheduling','Revisar programación'),exact:true}));
-        const response=await pending;expect(response.ok()).toBe(true);return response.json();
+        const path=base(mode)+'/api/v1/tasks/recurrence/reviews/targets/'+id;
+        const targets:{actions:string[]}[]=[];
+        // Capture the actual upstream bytes before browser response retirement,
+        // then deliver that same response. Keep one read and the real UI checks.
+        await page.route(path,async route=>{
+          expect(route.request().method()).toBe('GET');
+          const upstream=await route.fetch({maxRetries:0,maxRedirects:0});expect(upstream.status()).toBe(200);
+          const body=await upstream.body();targets.push(JSON.parse(body.toString('utf8')));
+          await info.attach('skip-review-target-response',{body,contentType:'application/json'});
+          await route.fulfill({response:upstream,body});
+        });
+        try{
+          const pending=page.waitForResponse(response=>response.request().method()==='GET'&&response.url()===path);
+          await activate(review.getByRole('button',{name:t('Review scheduling','Revisar programación'),exact:true}));
+          expect((await pending).ok()).toBe(true);
+          await expect(review.getByRole('combobox',{name:t('Schedule change','Cambio de programación'),exact:true})).toBeEnabled();
+          expect(targets).toHaveLength(1);return targets[0]!;
+        }finally{await page.unroute(path);}
       };
       let previews=0,applies=0,policies=0,applyKey='',applyContext='';
       page.on('request',value=>{
