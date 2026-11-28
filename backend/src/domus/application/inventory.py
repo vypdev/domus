@@ -8,6 +8,12 @@ from typing import cast
 from domus.application.authorization import HouseholdAccess, MembershipAuthorization
 from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman
+from domus.application.inventory_locations import (
+    location_archive_block,
+    location_is_archived,
+    location_result,
+    require_active_location,
+)
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_material_ports import InventoryMaterialResult, MaterialPostingRequest
@@ -65,7 +71,12 @@ class InventorySettlement:
         self, household_id: str, actor_member_id: str, reference_id: str
     ) -> MaterialBinding | None:
         # TaskMaterialAccess has already proved actor and household inside this unit.
-        return self.records.material(household_id, reference_id)
+        binding = self.records.material(household_id, reference_id)
+        if binding is not None and location_is_archived(
+            self.records, household_id, binding.location_id
+        ):
+            return None
+        return binding
 
     def settle(self, request: MaterialPostingRequest) -> InventoryMaterialResult:
         intent = request.intent
@@ -75,6 +86,8 @@ class InventorySettlement:
             return InventoryMaterialResult(posting=previous.posting)
         if self.records.material(home, reference) != intent.line.binding:
             return InventoryMaterialResult(pending_reason=MaterialPendingReason.BINDING_CHANGED)
+        if location_is_archived(self.records, home, intent.line.binding.location_id):
+            return InventoryMaterialResult(pending_reason=MaterialPendingReason.LOCATION_ARCHIVED)
         quantity = cast(MaterialQuantity, intent.quantity)
         used = stock_units(quantity)
         corrects = None
@@ -147,6 +160,9 @@ class CatalogAction(StrEnum):
     LINK_BARCODE = "inventory.link-barcode"
     REMOVE_BARCODE = "inventory.remove-barcode"
     ADD_LOCATION = "inventory.add-location"
+    RENAME_LOCATION = "inventory.rename-location"
+    ARCHIVE_LOCATION = "inventory.archive-location"
+    RESTORE_LOCATION = "inventory.restore-location"
     TRANSFER = "inventory.transfer"
     INTAKE = "inventory.intake"
     ADJUST = "inventory.adjust"
@@ -280,6 +296,7 @@ class InventoryCommands:
         source_key: str | None = None,
     ) -> StockMovement:
         home, reference = binding.household_id, binding.reference_id
+        require_active_location(stock, home, binding.location_id)
         received = stock_units(quantity)
         balance = stock.balance(home, reference) + received
         if balance > MAX_STOCK_UNITS:
@@ -329,9 +346,73 @@ class InventoryCommands:
             if stock.location_is_used(home, location.location_id):
                 raise StorageFailure("inventory_location_identity_conflict")
             stock.add_location(home, location)
-            return JsonDocument.from_value(asdict(location))
+            # Preserve the original add-location receipt contract across migration.
+            return JsonDocument.from_value({"location_id": location.location_id, "name": name})
 
         return self._execute(CatalogAction.ADD_LOCATION.value, key, payload, apply)
+
+    def _named_location(
+        self, stock: InventoryRecords, location_id: str, expected_revision: int
+    ) -> StorageLocation:
+        current = stock.location(self.household_id, location_id)
+        if current is None:
+            raise NotFound("inventory_location_missing")
+        if current.revision != expected_revision:
+            raise Conflict("revision_conflict")
+        return current
+
+    def rename_location(
+        self, key: str, location_id: str, name: str, expected_revision: int
+    ) -> Receipt:
+        validate_identifier(location_id)
+        validate_location_name(name)
+        validate_revision(expected_revision)
+        payload = JsonDocument.from_value(
+            {"location_id": location_id, "name": name, "expected_revision": str(expected_revision)}
+        )
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            stock, home = unit.inventory, self.household_id
+            current = self._named_location(stock, location_id, expected_revision)
+            updated = current.rename(name)
+            if any(
+                item.location_id != location_id and item.name.casefold() == name.casefold()
+                for item in stock.locations(home)
+            ):
+                raise Conflict("inventory_location_exists")
+            stock.save_location(home, updated, expected_revision)
+            return location_result(updated)
+
+        return self._execute(CatalogAction.RENAME_LOCATION.value, key, payload, apply)
+
+    def archive_location(self, key: str, location_id: str, expected_revision: int) -> Receipt:
+        return self._set_location_archived(key, location_id, expected_revision, archived=True)
+
+    def restore_location(self, key: str, location_id: str, expected_revision: int) -> Receipt:
+        return self._set_location_archived(key, location_id, expected_revision, archived=False)
+
+    def _set_location_archived(
+        self, key: str, location_id: str, expected_revision: int, *, archived: bool
+    ) -> Receipt:
+        validate_identifier(location_id)
+        validate_revision(expected_revision)
+        payload = JsonDocument.from_value(
+            {"location_id": location_id, "expected_revision": str(expected_revision)}
+        )
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            stock, home = unit.inventory, self.household_id
+            current = self._named_location(stock, location_id, expected_revision)
+            updated = current.set_archived(archived)
+            if archived:
+                block = location_archive_block(unit, home, location_id)
+                if block is not None:
+                    raise Conflict(block.value)
+            stock.save_location(home, updated, expected_revision)
+            return location_result(updated)
+
+        action = CatalogAction.ARCHIVE_LOCATION if archived else CatalogAction.RESTORE_LOCATION
+        return self._execute(action.value, key, payload, apply)
 
     def link_barcode(self, key: str, barcode: str, product_id: str) -> Receipt:
         canonical = canonical_gtin(barcode)
@@ -384,6 +465,8 @@ class InventoryCommands:
             locations = {PANTRY, *(location.location_id for location in stock.locations(home))}
             if source not in locations or destination not in locations:
                 raise NotFound("inventory_location_missing")
+            require_active_location(stock, home, source)
+            require_active_location(stock, home, destination)
             references = stock.location_bindings(home, product_id)
             source_reference = references.get(source)
             if source_reference is None:
@@ -1033,6 +1116,7 @@ class InventoryCommands:
             binding = stock.material(home, reference_id)
             if binding is None:
                 raise InvalidInput("invalid_material_reference")
+            require_active_location(stock, home, binding.location_id)
             binding.require_quantity(quantity)
             line_id = None
             if occurrence_id is not None:

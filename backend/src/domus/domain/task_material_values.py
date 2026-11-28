@@ -29,6 +29,7 @@ class MaterialPendingReason(StrEnum):
     INVENTORY_UNAVAILABLE = "inventory_unavailable"
     STOCK_SHORTAGE = "insufficient_stock"
     BINDING_CHANGED = "inventory_binding_changed"
+    LOCATION_ARCHIVED = "inventory_location_archived"
 
 
 class MaterialAction(StrEnum):

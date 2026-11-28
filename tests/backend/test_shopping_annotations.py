@@ -210,7 +210,7 @@ def test_genuine_previous_and_v20_migrate_atomically_preserving_every_original_c
     assert store.path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with store._connection() as db:
-        assert _verify_database(db, store, previous=False) == 37
+        assert _verify_database(db, store, previous=False) == 38
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table in tables:
             selection = ",".join('"' + column + '"' for column in columns[table])

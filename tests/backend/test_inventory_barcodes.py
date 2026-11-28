@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 from test_activation_compatibility import identity_at
-from test_household_commands import Clock
+from test_household_commands import Actor, Clock, Identifiers
 from test_inventory_catalog_storage import register, setup
 from test_rewards_storage import race
 
 from domus.application.fixed_materialization import MaintenanceScope
-from domus.application.inventory import CatalogAction
+from domus.application.inventory import CatalogAction, InventoryCommands
 from domus.application.inventory_queries import InventoryQueries
 from domus.domain.errors import Conflict, DatabaseRejected, InvalidInput, StorageFailure
 from domus.domain.inventory import BarcodeAssociation, BaseUnit, canonical_gtin
@@ -174,31 +174,19 @@ def test_upgrade_atomicity_and_compatible_activation_keep_links_and_originals(
 ):
     root = tmp_path / "source"
     root.mkdir(mode=0o700)
-    if version == 34:
-        _, store, commands = setup(root)
-        register(commands)
-        with closing(sqlite3.connect(store.path, autocommit=True)) as db:
-            # Derive the complete v34 shape, rather than only changing its version header.
-            db.execute("DROP TABLE automation_scheduled_runs")
-            db.execute("DROP TABLE automation_daily_schedules")
-            db.execute("DROP INDEX retained_scheduled_history")
-            db.execute("DROP TABLE inventory_barcodes")
-            db.execute("ALTER TABLE shopping_extras DROP COLUMN priority")
-            db.execute("ALTER TABLE shopping_extras DROP COLUMN note")
-            db.execute("PRAGMA user_version=34")
-            assert store._inspect(db, allow_previous=True) == 34
-    else:
-        source = (
-            "v20-inventory-history-source.sql" if version == 20 else "v30-purchase-store-source.sql"
+    source = {
+        20: "v20-inventory-history-source.sql",
+        30: "v30-purchase-store-source.sql",
+        34: "v34-barcode-upgrade-source.sql",
+    }[version]
+    path = root / "domus.sqlite3"
+    with closing(sqlite3.connect(path, autocommit=True)) as db:
+        db.executescript((Path(__file__).parents[1] / "fixtures/sqlite" / source).read_text())
+        installation = Installation(
+            *db.execute("SELECT instance_id,channel FROM installation").fetchone()
         )
-        path = root / "domus.sqlite3"
-        with closing(sqlite3.connect(path, autocommit=True)) as db:
-            db.executescript((Path(__file__).parents[1] / "fixtures/sqlite" / source).read_text())
-            installation = Installation(
-                *db.execute("SELECT instance_id,channel FROM installation").fetchone()
-            )
-        path.chmod(0o600)
-        store = SQLiteDatabase(path, installation)
+    path.chmod(0o600)
+    store = SQLiteDatabase(path, installation)
     identity_at(root, store.installation)
     with closing(sqlite3.connect(store.path)) as db:
         before = {
@@ -218,7 +206,7 @@ def test_upgrade_atomicity_and_compatible_activation_keep_links_and_originals(
     assert store.path.read_bytes() == original
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(store.path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (37,)
+        assert db.execute("PRAGMA user_version").fetchone() == (38,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in before.items():
             current = db.execute("SELECT * FROM " + table).fetchall()
@@ -228,6 +216,9 @@ def test_upgrade_atomicity_and_compatible_activation_keep_links_and_originals(
                 assert current == []
     if version != 34:
         return
+    identifiers = Identifiers()
+    identifiers.count = 1_000_000
+    commands = InventoryCommands(store, Actor(), Clock(), identifiers)
     product = before["inventory_products"][0][1]
     receipt = commands.link_barcode("link", "036000291452", product)
     archive, target = tmp_path / "archive", tmp_path / "prepared"

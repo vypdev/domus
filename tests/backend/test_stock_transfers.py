@@ -106,7 +106,15 @@ def test_locations_transfer_and_current_grants_in_both_modes(api):
     assert get(api).json()["products"][0]["shopping_needed"] == "9.5"
 
     api.user(VIEWER)
-    assert get(api, VIEWER).json()["locations"] == [{"location_id": cupboard, "name": "Cupboard"}]
+    assert get(api, VIEWER).json()["locations"] == [
+        {
+            "location_id": cupboard,
+            "name": "Cupboard",
+            "revision": "1",
+            "archived": False,
+            "archive_blocked_reason": "inventory_location_not_empty",
+        }
+    ]
     report = api.client.get(url, headers=member_context(VIEWER)).json()
     assert report["total"] == {"recorded": "251", "reserved": "0", "available": "251"}
     assert [item["stock"]["recorded"] for item in report["locations"]] == ["0.5", "250.5"]

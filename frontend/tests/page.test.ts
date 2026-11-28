@@ -216,7 +216,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route.startsWith('inventory/products/product/movements?')) raw = JSON.stringify({
       product_id:'product', product_name:'Salt', base_unit:'gram', movements:[],
       next_cursor:route.includes('cursor=')?null:'older', total:{recorded:'0',reserved:'0',available:'0'},
-      locations:[{location_id:'pantry',name:null,stock:{recorded:'0',reserved:'0',available:'0'}}],
+      locations:[{location_id:'pantry',name:null,archived:false,stock:{recorded:'0',reserved:'0',available:'0'}}],
     });
     else if (route.startsWith('inventory/purchases/purchase/receipts?')) raw = JSON.stringify({
       purchase:{purchase_id:'purchase',product_id:null,name:'Apples',base_unit:'piece',purchased:'2',

@@ -236,7 +236,7 @@ def test_real_previous_schemas_preserve_every_old_row_and_failed_migration_is_at
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
         db.row_factory = sqlite3.Row
-        assert _verify_database(db, store, previous=False) == 37
+        assert _verify_database(db, store, previous=False) == 38
         # Older independent migrations append columns (for example movement
         # corrections). Every original column and row must remain identical.
         after = {}

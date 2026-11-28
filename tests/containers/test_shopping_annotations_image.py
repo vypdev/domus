@@ -34,7 +34,7 @@ def test_packaged_annotations_migrate_restart_and_restore_genuine_previous_data(
     assert result.returncode == 0, result.stdout + result.stderr
     assert json.loads(result.stdout) == {
         "source_schema": version,
-        "current_schema": 37,
+        "current_schema": 38,
         "all_original_columns_preserved": True,
         "literal_annotations": True,
         "fresh_process_replay": True,

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.fixed_materialization import MaintenanceScope
+from domus.application.inventory_locations import location_archive_block
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.shopping_annotations import (
@@ -32,6 +33,7 @@ from domus.domain.inventory import (
     BarcodeAssociation,
     BaseUnit,
     CatalogProduct,
+    LocationArchiveBlock,
     MovementKind,
     StockTransfer,
     StorageLocation,
@@ -68,6 +70,25 @@ class CatalogStock:
 
 
 @dataclass(frozen=True, slots=True)
+class StorageLocationView:
+    location_id: str
+    name: str
+    revision: str
+    archived: bool
+    archive_blocked_reason: LocationArchiveBlock | None
+
+
+def _location_view(unit: UnitOfWork, home: str, value: StorageLocation) -> StorageLocationView:
+    return StorageLocationView(
+        value.location_id,
+        value.name,
+        str(value.revision),
+        value.archived,
+        None if value.archived else location_archive_block(unit, home, value.location_id),
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class InventoryView:
     location_id: str
     may_manage: bool
@@ -75,7 +96,7 @@ class InventoryView:
     may_request: bool
     products: tuple[CatalogStock, ...]
     next_cursor: str | None
-    locations: tuple[StorageLocation, ...]
+    locations: tuple[StorageLocationView, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,6 +185,7 @@ class LocationStock:
     location_id: str
     name: str | None
     stock: StockTotals
+    archived: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -355,9 +377,12 @@ def _location_stock(
     stock: InventoryRecords, home: str, references: dict[str, str]
 ) -> tuple[tuple[LocationStock, ...], StockTotals]:
     recorded_total = reserved_total = 0
-    locations = [(PANTRY, None), *((item.location_id, item.name) for item in stock.locations(home))]
+    locations: list[tuple[str, str | None, bool]] = [
+        (PANTRY, None, False),
+        *((item.location_id, item.name, item.archived) for item in stock.locations(home)),
+    ]
     view = []
-    for location, name in locations:
+    for location, name, archived in locations:
         reference = references.get(location)
         recorded, reserved = (
             (0, 0)
@@ -366,7 +391,7 @@ def _location_stock(
         )
         recorded_total += recorded
         reserved_total += reserved
-        view.append(LocationStock(location, name, _stock_totals(recorded, reserved)))
+        view.append(LocationStock(location, name, _stock_totals(recorded, reserved), archived))
     return tuple(view), _stock_totals(recorded_total, reserved_total)
 
 
@@ -477,7 +502,7 @@ class InventoryQueries:
                 grants.request,
                 tuple(page),
                 next_cursor,
-                stock.locations(home),
+                tuple(_location_view(unit, home, item) for item in stock.locations(home)),
             )
 
     def stock_attention(self) -> StockAttention:

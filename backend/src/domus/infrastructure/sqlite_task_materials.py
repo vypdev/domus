@@ -6,6 +6,7 @@ from typing import cast
 
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.domain.errors import Conflict
+from domus.domain.storage import validate_identifier
 from domus.domain.task_materials import MaterialIntent
 from domus.infrastructure.sqlite_task_material_records import material_document, read_material
 from domus.infrastructure.sqlite_tasks import SQLiteTasks, _immutable, _model, _page
@@ -27,6 +28,20 @@ def _headers(value: MaterialIntent) -> dict[str, object]:
 @dataclass
 class SQLiteTaskMaterials(TaskMaterialRepository):
     connection: sqlite3.Connection
+
+    def has_pending_location(self, household_id: str, location_id: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(location_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM task_material_intents WHERE household_id=? "
+                "AND json_extract(document,'$.line.binding.location_id')=? "
+                "AND state IN ('pending_recording','pending_authorization',"
+                "'pending_regularization','pending_processing') LIMIT 1",
+                (household_id, location_id),
+            ).fetchone()
+            is not None
+        )
 
     def get(self, household_id: str, intent_id: str) -> MaterialIntent | None:
         _page(household_id, 1, intent_id, "intent_id")

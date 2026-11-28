@@ -104,7 +104,7 @@ export function taskMaterialOutcome(raw: unknown): TaskMaterialOutcome {
   text(value.message, 2048); if (value.action_required !== null) text(value.action_required, 4096);
   const pendingReason = value.pending_reason === null ? null : choice(value.pending_reason, ['actual_quantity_required',
     'material_permission_required', 'explicit_settlement_required', 'awaiting_inventory_confirmation', 'inventory_unavailable',
-    'insufficient_stock', 'inventory_binding_changed']);
+    'insufficient_stock', 'inventory_binding_changed', 'inventory_location_archived']);
   return Object.freeze({intentId: identifier(value.intent_id), cycleId: identifier(value.cycle_id), lineId: identifier(value.line_id),
     revision: responseRevision(value.revision), effectRevision: responseRevision(value.effect_revision),
     submittedQuantity: nullableQuantity(value.submitted_quantity), quantity: nullableQuantity(value.quantity),

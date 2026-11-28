@@ -229,7 +229,7 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         if version >= 25:
             verify_shopping_sessions(connection, has_store=version >= 31)
         if version >= 30:
-            verify_inventory_locations(connection)
+            verify_inventory_locations(connection, lifecycle=version >= 38)
         if version >= 32:
             verify_automation_drafts(connection, allow_daily=version >= 34)
         if version >= 33:

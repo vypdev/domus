@@ -1,10 +1,10 @@
 """Exact stock movements and stable task-linked Inventory effects."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
-from domus.domain.errors import InvalidInput
-from domus.domain.identity import validate_revision
+from domus.domain.errors import Conflict, InvalidInput
+from domus.domain.identity import MAX_REVISION, validate_revision
 from domus.domain.storage import validate_identifier
 from domus.domain.task_material_values import MaterialBinding, MaterialQuantity
 from domus.domain.task_materials import MaterialPosting
@@ -100,12 +100,48 @@ def validate_location_name(name: str) -> None:
 class StorageLocation:
     location_id: str
     name: str
+    revision: int = 1
+    archived: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.location_id)
         if self.location_id == PANTRY:
             raise InvalidInput("invalid_inventory_location")
         validate_location_name(self.name)
+        validate_revision(self.revision)
+        if type(self.archived) is not bool:
+            raise InvalidInput("invalid_inventory_location")
+
+    def _next_revision(self) -> int:
+        if self.revision == MAX_REVISION:
+            raise Conflict("inventory_location_revision_exhausted")
+        return self.revision + 1
+
+    def rename(self, name: str) -> StorageLocation:
+        validate_location_name(name)
+        if self.archived:
+            raise Conflict("inventory_location_archived")
+        if name == self.name:
+            raise Conflict("inventory_location_unchanged")
+        return replace(self, name=name, revision=self._next_revision())
+
+    def set_archived(self, archived: bool) -> StorageLocation:
+        if type(archived) is not bool:
+            raise InvalidInput("invalid_inventory_location")
+        if archived == self.archived:
+            raise Conflict("inventory_location_state_conflict")
+        return replace(self, archived=archived, revision=self._next_revision())
+
+
+class LocationArchiveBlock(StrEnum):
+    RECORDED_STOCK = "inventory_location_not_empty"
+    PENDING_EFFECTS = "inventory_location_pending_effects"
+
+
+@dataclass(frozen=True, slots=True)
+class LocationUsage:
+    recorded_stock: bool
+    pending_effects: bool
 
 
 @dataclass(frozen=True, slots=True)

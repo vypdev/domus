@@ -814,6 +814,33 @@
         "title": "ArchiveCategoryBody",
         "type": "object"
       },
+      "ArchiveLocationBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.archive-location",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "location_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Location Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location_id",
+          "expected_revision",
+          "action"
+        ],
+        "title": "ArchiveLocationBody",
+        "type": "object"
+      },
       "AssignmentBody": {
         "additionalProperties": false,
         "properties": {
@@ -1672,6 +1699,9 @@
           "inventory.link-barcode",
           "inventory.remove-barcode",
           "inventory.add-location",
+          "inventory.rename-location",
+          "inventory.archive-location",
+          "inventory.restore-location",
           "inventory.transfer",
           "inventory.intake",
           "inventory.adjust",
@@ -4338,7 +4368,7 @@
           },
           "locations": {
             "items": {
-              "$ref": "#/components/schemas/StorageLocation"
+              "$ref": "#/components/schemas/StorageLocationView"
             },
             "title": "Locations",
             "type": "array"
@@ -4446,6 +4476,14 @@
         "title": "LinkBarcodeBody",
         "type": "object"
       },
+      "LocationArchiveBlock": {
+        "enum": [
+          "inventory_location_not_empty",
+          "inventory_location_pending_effects"
+        ],
+        "title": "LocationArchiveBlock",
+        "type": "string"
+      },
       "LocationBody": {
         "additionalProperties": false,
         "properties": {
@@ -4470,6 +4508,11 @@
       },
       "LocationStock": {
         "properties": {
+          "archived": {
+            "default": false,
+            "title": "Archived",
+            "type": "boolean"
+          },
           "location_id": {
             "title": "Location Id",
             "type": "string"
@@ -4869,7 +4912,8 @@
           "awaiting_inventory_confirmation",
           "inventory_unavailable",
           "insufficient_stock",
-          "inventory_binding_changed"
+          "inventory_binding_changed",
+          "inventory_location_archived"
         ],
         "title": "MaterialPendingReason",
         "type": "string"
@@ -7197,6 +7241,40 @@
         "title": "RenameCategoryBody",
         "type": "object"
       },
+      "RenameLocationBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.rename-location",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "location_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Location Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location_id",
+          "expected_revision",
+          "action",
+          "name"
+        ],
+        "title": "RenameLocationBody",
+        "type": "object"
+      },
       "ReopenBody": {
         "additionalProperties": false,
         "properties": {
@@ -7370,6 +7448,33 @@
           "destination"
         ],
         "title": "RescheduleBody",
+        "type": "object"
+      },
+      "RestoreLocationBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.restore-location",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "location_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Location Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location_id",
+          "expected_revision",
+          "action"
+        ],
+        "title": "RestoreLocationBody",
         "type": "object"
       },
       "ReturnReceiptBody": {
@@ -9762,8 +9867,22 @@
         "title": "StockTransfer",
         "type": "object"
       },
-      "StorageLocation": {
+      "StorageLocationView": {
         "properties": {
+          "archive_blocked_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationArchiveBlock"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
           "location_id": {
             "title": "Location Id",
             "type": "string"
@@ -9771,13 +9890,20 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
           }
         },
         "required": [
           "location_id",
-          "name"
+          "name",
+          "revision",
+          "archived",
+          "archive_blocked_reason"
         ],
-        "title": "StorageLocation",
+        "title": "StorageLocationView",
         "type": "object"
       },
       "SuccessorVisibility": {
@@ -19132,12 +19258,15 @@
                   "mapping": {
                     "inventory.add-location": "#/components/schemas/LocationBody",
                     "inventory.adjust": "#/components/schemas/AdjustmentBody",
+                    "inventory.archive-location": "#/components/schemas/ArchiveLocationBody",
                     "inventory.configure-replenishment": "#/components/schemas/ReplenishmentBody",
                     "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
                     "inventory.link-barcode": "#/components/schemas/LinkBarcodeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody",
                     "inventory.remove-barcode": "#/components/schemas/RemoveBarcodeBody",
+                    "inventory.rename-location": "#/components/schemas/RenameLocationBody",
+                    "inventory.restore-location": "#/components/schemas/RestoreLocationBody",
                     "inventory.transfer": "#/components/schemas/TransferBody",
                     "shopping.add-extra": "#/components/schemas/AddExtraBody",
                     "shopping.cancel-balance": "#/components/schemas/CancelPurchaseBalanceBody",
@@ -19164,6 +19293,15 @@
                   },
                   {
                     "$ref": "#/components/schemas/LocationBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RenameLocationBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ArchiveLocationBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestoreLocationBody"
                   },
                   {
                     "$ref": "#/components/schemas/TransferBody"

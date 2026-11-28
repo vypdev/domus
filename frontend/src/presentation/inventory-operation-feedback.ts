@@ -18,6 +18,10 @@ const SHOPPING_SAVED = {
   'shopping.post-receipt': 'stockPosted', 'shopping.add-extra': 'extraAdded',
   'shopping.clear-extra': 'extraCleared', 'shopping.record-session': 'sessionSaved',
 } as const;
+const LOCATION_SAVED = {
+  'inventory.rename-location': 'locationRenamed', 'inventory.archive-location': 'locationArchived',
+  'inventory.restore-location': 'locationRestored',
+} as const;
 
 /** Both destinations describe the result of the same application-owned operation. */
 export function inventoryOperationFeedback(view: InventoryState, language: Language,
@@ -42,7 +46,8 @@ export function inventoryOperationFeedback(view: InventoryState, language: Langu
       ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.shoppingAction
         ? SHOPPING_SAVED[saved.shoppingAction] : saved.barcodeSaved
           ? saved.barcodeSaved.linked ? 'barcodeLinkedSaved' : 'barcodeRemovedSaved'
-          : saved.replenishmentSaved ? 'replenishmentSaved' : saved.locationSaved ? 'locationSaved' : 'registered')}
+          : saved.replenishmentSaved ? 'replenishmentSaved' : saved.locationSaved ? 'locationSaved'
+            : saved.locationChanged ? LOCATION_SAVED[saved.locationChanged.action] : 'registered')}
       ${saved.barcodeSaved ? html`<code>${saved.barcodeSaved.barcode}</code>` : nothing}
       ${movement ? html`${language === 'es' ? movement.quantity.replace('.', ',') : movement.quantity} ${text(inventoryUnitMessage(movement.unit, movement.quantity))}` : nothing}</p>
       ${productLink}

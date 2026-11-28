@@ -380,6 +380,11 @@ jobs:
           docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
           --build-arg BUILD_ARCH=${{ matrix.arch }}
           -t "$DOMUS_IMAGE_PREFIX:schema36" tests/fixtures/schema36-app
+      - name: Build the immutable previous schema-37 application
+        run: >-
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t "$DOMUS_IMAGE_PREFIX:schema37" tests/fixtures/schema37-app
       - name: Build the immutable published schema-8 image for profile migration compatibility
         run: >-
           docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
@@ -440,6 +445,7 @@ jobs:
           DOMUS_SCHEMA14_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema14
           DOMUS_SCHEMA35_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema35
           DOMUS_SCHEMA36_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema36
+          DOMUS_SCHEMA37_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema37
         run: uv run pytest tests/containers --no-cov
       - name: Retain native calendar coverage
         uses: actions/upload-artifact@v7.0.2
@@ -468,11 +474,11 @@ jobs:
         run: >-
           lockf -k -t 600 "${HOME:?}/.cache/domus-ci/entry-browser.lock" pnpm --filter @domus/frontend exec playwright test
           -c playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts tests/e2e/workspace-navigation.spec.ts tests/e2e/shopping-annotations.spec.ts tests/e2e/shopping-workspace-navigation.spec.ts tests/e2e/sign-in-recovery.spec.ts
-      - name: Require all 118 actual-image household journeys
+      - name: Require all 122 actual-image household journeys
         run: >-
           uv run python -c "import json; from pathlib import Path;
           result=json.loads(Path('frontend/test-results/entry-results.json').read_text());
-          assert result['stats']['expected']==118 and result['stats']['unexpected']==0
+          assert result['stats']['expected']==122 and result['stats']['unexpected']==0
           and result['stats']['skipped']==0 and result['stats']['flaky']==0"
 
       - name: Retain actual-image browser evidence
@@ -497,7 +503,7 @@ jobs:
       - name: Remove this job's image tags
         if: ${{ always() }}
         run: |
-          for name in current edge edge5 schema8 schema9 schema14 schema35 schema36 previous installed; do
+          for name in current edge edge5 schema8 schema9 schema14 schema35 schema36 schema37 previous installed; do
             image="$DOMUS_IMAGE_PREFIX:$name"
             if docker image inspect "$image" >/dev/null 2>&1; then
               docker image rm "$image"

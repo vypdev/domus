@@ -241,6 +241,25 @@ it. If the quantity exceeds the available stock, revise it and try again. If
 the result is unconfirmed, choose **Recover original request** before sending
 another transfer. Check current balances when a restored request is historical.
 
+Under **Storage locations**, choose **Rename** beside a named location to correct
+its name. Review the current name and choose **Save name**. This keeps the same
+location, stock and linked movements. Pantry keeps its built-in localized name.
+
+Choose **Archive** for an empty location you no longer use, then confirm. First
+move any recorded stock elsewhere and explicitly resolve any pending effect
+bound to that location. General product demand without a location does not
+prevent archiving. Archiving retains the name and movement history and removes
+the location from new transfer choices. Expand **Archived locations** and choose
+**Restore**, then confirm, to use that same location again. Archived names remain
+reserved and count towards the 32 named locations.
+
+If another change wins first, your draft stays in the form. Choose **Review
+current location** before confirming against the new revision. An unconfirmed
+write must be recovered through **Recover original request**. A historical
+receipt after restoration does not repeat the old change; inspect the current
+location and explicitly review a new change when needed. These actions require
+current inventory management access; readers can still inspect the locations.
+
 ### Pantry replenishment
 
 Each Pantry product shows its minimum, target and current amount to replenish
