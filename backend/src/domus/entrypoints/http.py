@@ -103,6 +103,31 @@ _SECURITY_HEADERS = {
 }
 
 
+def _prefers_html(request: Request) -> bool:
+    weights: dict[str, float] = {}
+    for header in request.headers.getlist("accept"):
+        for item in header.split(","):
+            match = re.fullmatch(
+                r"(text/html|application/json|application/\*|\*/\*)"
+                r"(?:[ \t]*;[ \t]*q=(0(?:\.[0-9]{0,3})?|1(?:\.0{0,3})?))?",
+                item.strip(" \t"),
+                re.IGNORECASE,
+            )
+            if match is not None:
+                media, quality = match[1].lower(), 1.0 if match[2] is None else float(match[2])
+                weights[media] = max(weights.get(media, 0.0), quality)
+    json_quality = next(
+        (
+            weights[media]
+            for media in ("application/json", "application/*", "*/*")
+            if media in weights
+        ),
+        0.0,
+    )
+    # Explicit HTML must outrank JSON; wildcards alone and ties retain the API rejection.
+    return weights.get("text/html", 0.0) > json_quality
+
+
 def _error(status: int, code: str, correlation: str) -> JSONResponse:
     restart_login = code in ("invalid_login_attempt", "login_attempt_expired")
     if code in SHOPPING_ANNOTATION_GUIDANCE:
@@ -287,7 +312,21 @@ def create_app(
 
     async def domain_error(request: Request, error: Exception) -> Response:
         status, code = classify(cast(DomusError, error))
-        return _error(status, code, request.state.correlation_id)
+        response = _error(status, code, request.state.correlation_id)
+        if (
+            request.scope["path"] == "/api/v1/auth/callback"
+            and status == 401
+            and code in ("invalid_login_attempt", "login_attempt_expired")
+        ):
+            if _prefers_html(request):
+                # Public guidance only: never retain callback fields or initiate another login.
+                return RedirectResponse(
+                    "/#sign-in-recovery",
+                    status_code=303,
+                    headers={**_SECURITY_HEADERS, "Vary": "Accept"},
+                )
+            response.headers["Vary"] = "Accept"
+        return response
 
     async def invalid_request(request: Request, error: Exception) -> Response:
         return _error(422, "invalid_request", request.state.correlation_id)

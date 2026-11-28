@@ -263,6 +263,164 @@ def test_missing_browser_binding_can_recover_through_a_new_bound_attempt(
     assert client.get("/api/v1/session").json()["access"] == "full"
 
 
+@pytest.mark.parametrize("binding", ["missing", "malformed", "wrong", "expired"])
+@pytest.mark.parametrize(
+    "accept",
+    [
+        "text/html",
+        "TEXT/HTML",
+        "text/html;q=0.1",
+        "text/html; q=0.9, */*;q=0.8",
+        "application/json;q=0.5, text/html;q=0.9",
+    ],
+)
+def test_browser_invalid_attempt_returns_only_fixed_nonpersonal_recovery(
+    binding: str, accept: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, _, oauth, socket, clock, settings = fixture()
+    start = client.get("/api/v1/auth/start")
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    if binding == "missing":
+        client.cookies.clear()
+    elif binding == "malformed":
+        client.cookies.clear()
+        client.cookies.set(settings.browser_cookie, "invalid!binding")
+    elif binding == "wrong":
+        client.cookies.clear()
+        client.cookies.set(settings.browser_cookie, "w" * 43)
+    else:
+        clock.value += 300_000
+
+    def forbidden_exchange(*args: object) -> None:
+        pytest.fail("Browser recovery must not exchange an invalid attempt's provider code")
+
+    monkeypatch.setattr(oauth, "exchange", forbidden_exchange)
+    response = client.get(
+        "/api/v1/auth/callback",
+        params={"state": state, "code": "private-code"},
+        headers={"Accept": accept},
+    )
+    assert response.status_code == 303
+    assert response.headers["location"] == "/#sign-in-recovery"
+    assert response.headers["vary"] == "Accept"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert "default-src 'none'" in response.headers["content-security-policy"]
+    assert "set-cookie" not in response.headers
+    assert "private-code" not in response.text and state not in response.text
+    assert client.cookies.get(settings.session_cookie) is None
+    assert client.get("/api/v1/session").status_code == 401
+    assert socket.tokens == [] and oauth.revoked == []
+
+
+@pytest.mark.parametrize(
+    "accept",
+    [
+        "application/json",
+        "*/*",
+        "text/*",
+        "application/xhtml+xml",
+        "",
+        "text/html;q=0",
+        "text/html;q=0.000, */*;q=1",
+        "text/html;q=invalid",
+        "text/html;q=1.1",
+        "text/html;q=0.0001",
+        "text/html; q=0; q=1",
+        "text/html; charset=utf-8",
+        "application/json, text/html",
+        "application/json;q=1, text/html;q=0.5",
+        "application/*;q=0.9, text/html;q=0.8",
+        "*/*;q=0.9, text/html;q=0.8",
+        "text/html;q=0.9, application/json;q=0.9",
+    ],
+)
+def test_callback_keeps_json_without_a_preferred_explicit_html_representation(accept: str) -> None:
+    client, _, _, _, _, _ = fixture()
+    response = client.get(
+        "/api/v1/auth/callback",
+        params={"state": "s" * 43, "code": "private-code"},
+        headers={"Accept": accept},
+    )
+    assert response.status_code == 401
+    assert response.headers["content-type"] == "application/json"
+    assert response.json()["code"] == "invalid_login_attempt"
+    assert "location" not in response.headers and "set-cookie" not in response.headers
+
+
+def test_html_attempt_recovery_requires_a_deliberate_new_bound_sign_in(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    values = iter(value * 43 for value in ("s", "v", "b", "t", "v", "c", "x"))
+    monkeypatch.setattr(Entropy, "new", lambda self: next(values))
+    client, _, oauth, _, clock, settings = fixture()
+    start = client.get("/api/v1/auth/start")
+    original = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    clock.value += 300_000
+    rejected = client.get(
+        "/api/v1/auth/callback",
+        params={"state": original, "code": "private-code"},
+        headers={"Accept": "text/html"},
+    )
+    assert rejected.status_code == 303
+    assert rejected.headers["location"] == "/#sign-in-recovery"
+    assert client.cookies.get(settings.session_cookie) is None and oauth.revoked == []
+    assert client.get("/api/v1/session").status_code == 401
+    fresh = client.get("/api/v1/auth/start")
+    current = parse_qs(urlsplit(fresh.headers["location"]).query)["state"][0]
+    assert current != original
+    accepted = client.get(
+        "/api/v1/auth/callback",
+        params={"state": current, "code": "code"},
+        headers={"Accept": "text/html"},
+    )
+    assert accepted.status_code == 303 and accepted.headers["location"] == "/"
+    assert client.get("/api/v1/session").json()["access"] == "full"
+
+
+def test_browser_attempt_rejection_does_not_revoke_or_extend_an_existing_session(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, identity, oauth, _, clock, settings = fixture()
+    login(client)
+    session = client.cookies.get(settings.session_cookie)
+    before = identity.get(session)
+    start = client.get("/api/v1/auth/start")
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    clock.value += 300_000
+
+    def forbidden_exchange(*args: object) -> None:
+        pytest.fail("An expired additional attempt must not replace an existing session")
+
+    monkeypatch.setattr(oauth, "exchange", forbidden_exchange)
+    rejected = client.get(
+        "/api/v1/auth/callback",
+        params={"state": state, "code": "private-code"},
+        headers={"Accept": "text/html"},
+    )
+    assert rejected.status_code == 303
+    assert client.cookies.get(settings.session_cookie) == session
+    assert identity.get(session) == before
+    assert oauth.revoked == [] and "set-cookie" not in rejected.headers
+    assert client.get("/api/v1/session").status_code == 200
+
+
+def test_html_accept_cannot_redirect_other_authentication_or_validation_failures() -> None:
+    client, _, _, _, _, _ = fixture()
+    start = client.get("/api/v1/auth/start")
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    for path, params, expected in (
+        ("/api/v1/session", {}, 401),
+        ("/api/v1/auth/callback", {"state": state}, 422),
+        ("/api/v1/auth/callback", {"state": state, "error": "access_denied"}, 401),
+        ("/missing", {}, 404),
+    ):
+        response = client.get(path, params=params, headers={"Accept": "text/html"})
+        assert response.status_code == expected
+        assert response.headers["content-type"] == "application/json"
+        assert "location" not in response.headers
+
+
 def test_reauthentication_rotates_cookie_and_removes_previous_browser_session() -> None:
     client, identity, _, _, _, settings = fixture()
     login(client)

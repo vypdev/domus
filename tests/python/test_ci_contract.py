@@ -423,7 +423,8 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     assert (
         "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
         " tests/e2e/workspace-navigation.spec.ts tests/e2e/shopping-annotations.spec.ts"
-        " tests/e2e/shopping-workspace-navigation.spec.ts" in actual["run"]
+        " tests/e2e/shopping-workspace-navigation.spec.ts tests/e2e/sign-in-recovery.spec.ts"
+        in actual["run"]
     )
     assert actual["run"].startswith(
         'lockf -k -t 600 "${HOME:?}/.cache/domus-ci/entry-browser.lock" '
@@ -436,10 +437,10 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all 114 actual-image household journeys"
+        if step.get("name") == "Require all 118 actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==114" in audit["run"]
+    assert "expected']==118" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )

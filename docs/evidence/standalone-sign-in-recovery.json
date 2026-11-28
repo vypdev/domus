@@ -1,0 +1,67 @@
+{
+  "issue": "https://github.com/vypdev/domus/issues/178",
+  "scope": "Bounded standalone invalid/expired sign-in recovery under existing entry C18/C20/C45 and platform identity C43/C53; no new specification case IDs.",
+  "imageCandidate": {
+    "version": "0.0.0-edge.95",
+    "sourceCommit": "aa5baf97b938a0450f07d6b13a49f2e696795ca3",
+    "sourceArchiveSHA256": "c1b8fc3961a6a1361b7e8fca8085d1dded5962cff6d47a622a5837f5afbd718b",
+    "wheelSHA256": "29bd0fb85c3c55eb3e34debaa73dff08fd1778568e12b3749d62eef0bfbf756c",
+    "storageSchema": 37
+  },
+  "localVerification": {
+    "backend": {
+      "passed": 6106,
+      "authoredPythonFiles": 250,
+      "allLineBranchCountsComplete": true
+    },
+    "frontend": {
+      "passed": 2306,
+      "authoredTypeScriptFiles": 121,
+      "emptyTypeFiles": 7,
+      "allFourMetricsComplete": true
+    },
+    "sourceBrowser": {
+      "passed": 173,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "allDetailedResultsSinglePass": true,
+      "compiledUI": {
+        "index.html": "04cdb5370ecc86d44a1e8224ca91fee401fcf6bc5d2b5e3a69ab6f41a2b9d591",
+        ".vite/manifest.json": "6b6e018807eceb396b34b25c3605517727fa163849758a1465fbe4e706ef68c0",
+        "assets/index-BW_S3-PP.js": "5f4e40f5c14cfb5f94f3e17e8cb877de23914d76337be9ecd20fd32124212937",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
+      }
+    },
+    "catalogBrowser": {
+      "passed": 70,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "allDetailedResultsSinglePass": true
+    },
+    "architecture": {
+      "nodePolicyPassed": 42,
+      "pythonPassed": 51,
+      "layerContractsPassed": true
+    },
+    "ciContractPassed": 48,
+    "frozenSourceFilesByteVerified": 1043,
+    "frozenInstalledRuntimeMatchesWheel": true,
+    "limits": "The source browser uses disposable missing binding with the actual Python/SQLite compositions. Exact five-minute expiry and forbidden exchange are separate backend fixtures; these are not installed real-provider expiry observations."
+  },
+  "pending": {
+    "actualImageArchitectures": [
+      "amd64",
+      "aarch64"
+    ],
+    "actualImageContainerCasesPerCPU": 62,
+    "actualImageBrowserJourneysPerCPU": 118,
+    "calendarAuthoredFilesPerCPU": 10,
+    "installedStandalone": "pending immutable candidate acceptance with real Home Assistant",
+    "installedNative": "pending",
+    "reviewAndCI": "pending final pinned head",
+    "destination": "pending merge, exact destination tree/CI/Branch Sync and issue closure"
+  },
+  "preserved": "Original callback/state/browser/PKCE/single-use rules, no rejected-code exchange or automatic sign-in/replay, unchanged unrelated session, exact origins, storage schema37, historical evidence and ha-ui0.1.0-next.5."
+}

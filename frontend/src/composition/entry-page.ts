@@ -761,6 +761,8 @@ export function mountEntry(page: EntryPage): PageMount {
         shoppingNavigationRoute = null;
       }
       const fragment = new URL(page.location.href).hash;
+      // This public marker changes guidance only; current server proof still selects access.
+      element.signInRecovery = source.target.deployment === 'standalone' && fragment === '#sign-in-recovery';
       element.shoppingTarget = /^#(?:shopping|inventory-shopping)\/((?:product|extra):[A-Za-z0-9][A-Za-z0-9_.:-]{0,127})$/u.exec(fragment)?.[1] ?? null;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family'

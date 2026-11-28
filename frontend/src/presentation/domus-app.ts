@@ -66,7 +66,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 export class DomusApp extends LitElement {
   static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     taskOverview: {attribute: false}, automationPreview: {attribute: false}, automationDrafts: {attribute: false}, automationExecution: {attribute: false}, automationRunHistory: {attribute: false}, automationSchedulePreview: {attribute: false}, automationDaily: {attribute: false}, automationDailyHistory: {attribute: false}, stockAttention: {attribute: false}, shoppingAttention: {attribute: false}, familyOverview: {attribute: false},
-    scheduleReadPending: {attribute: false}, workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
+    scheduleReadPending: {attribute: false}, signInRecovery: {attribute: false}, workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
   declare administration:AdministrationView|null;
@@ -95,6 +95,7 @@ export class DomusApp extends LitElement {
   declare calendarScopeKey: string | null;
   declare calendarToday: string;
   declare deployment: Deployment;
+  declare signInRecovery: boolean;
   declare language: Language;
   declare workspaceDestination: WorkspaceDestination | null;
   shoppingTarget: string | null = null;
@@ -105,6 +106,7 @@ export class DomusApp extends LitElement {
   private authenticationFocus = false;
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
+    this.signInRecovery = false;
     this.recurrenceReview = null; this.scheduleReadPending = false; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.taskOverview = null; this.automationPreview = null; this.nameDraft = ''; this.zoneDraft = '';
@@ -122,7 +124,9 @@ export class DomusApp extends LitElement {
     const context = this.view?.session?.context;
     const scope = context ? `${context.installationId}:${context.channel}:${context.subject}` : null;
     const authenticationRequired = this.view?.decision?.state === 'authentication_required';
-    if (authenticationRequired && (changed.get('view') as EntryView | null | undefined)?.session)
+    const previous = changed.get('view') as EntryView | null | undefined;
+    if (authenticationRequired && (previous?.session || this.signInRecovery && this.deployment === 'standalone'
+        && this.view!.phase === 'ready' && previous?.phase !== 'ready'))
       this.authenticationFocus = true;
     else if (!authenticationRequired) this.authenticationFocus = false;
     if (this.view?.phase === 'closed' || authenticationRequired
@@ -244,6 +248,9 @@ export class DomusApp extends LitElement {
     const loading = view === null || view.phase === 'idle' || view.phase === 'loading' || view.phase === 'sending';
     const workspace = this.hasWorkspace();
     const decision = view?.decision, state = decision?.state ?? 'unavailable';
+    const signInRecovery = this.signInRecovery && this.deployment === 'standalone' && !closed && !loading
+      && state === 'authentication_required';
+    const notice = signInRecovery && view!.notice === 'authentication_required' ? null : view?.notice;
     const taskWorkspace = workspace && this.workspaceDestination === 'tasks' && this.tasks?.phase === 'ready' && this.tasks.access !== null;
     const names: readonly ParticipantName[] = this.administration?.roster?.members
       .filter(row => row.member.status === 'active').map(row => ({id: row.member.memberId,
@@ -260,12 +267,12 @@ export class DomusApp extends LitElement {
       ${workspace ? guard([this.language, this.workspaceDestination], () => this.workspaceNavigation()) : nothing}
       <section id="overview" tabindex="-1" aria-labelledby="entry-title" aria-busy=${loading || view!.busy}>
         <div class="eyebrow">${view?.session ? this.text(view.session.context.channel === 'stable' ? 'stable' : 'edge') : 'Domus'}</div>
-        <h1 id="entry-title">${taskWorkspace && !closed && !loading && view?.household ? view.household.name : this.text(closed ? 'closed' : loading ? 'loading' : `state_${state}`)}</h1>
-        ${!taskWorkspace || closed || loading ? html`<p class="intro" role="status" aria-live="polite">${this.text(closed ? 'closedBody' : loading ? 'loadingBody' : `body_${state}`)}</p>` : nothing}
+        <h1 id="entry-title">${taskWorkspace && !closed && !loading && view?.household ? view.household.name : this.text(closed ? 'closed' : loading ? 'loading' : signInRecovery ? 'signInRecoveryTitle' : `state_${state}`)}</h1>
+        ${!taskWorkspace || closed || loading ? html`<p class="intro" role="status" aria-live="polite">${this.text(closed ? 'closedBody' : loading ? 'loadingBody' : signInRecovery ? 'signInRecoveryBody' : `body_${state}`)}</p>` : nothing}
         ${view?.session && !taskWorkspace ? html`<span class="badge">${this.text('verified')}</span><span class="badge">${this.text(view.session.access === 'read_only' ? 'readOnly' : 'full')}</span>` : nothing}
         ${decision?.readOnly ? html`<div class="note warning"><h2>${this.text('readOnly')}</h2><p>${this.text('grace')}</p>
           <p><strong>${this.text('deadline')}:</strong> ${instant(view!.session!.expiresAt, this.language)}</p></div>` : nothing}
-        ${view?.notice ? html`<p class="note" role="status">${this.text(`notice_${view.notice}`)}</p>` : nothing}
+        ${notice ? html`<p class="note" role="status">${this.text(`notice_${notice}`)}</p>` : nothing}
         ${view?.cleanup === 'unconfirmed' ? html`<p class="note warning" role="alert">${this.text('cleanup')}</p>` : nothing}
         ${taskWorkspace && view?.outcome?.kind === 'receipt' && view.outcome.stage === 'committed'
           ? html`<details><summary>${this.text('outcome_committed')}</summary>${this.outcome()}</details>` : this.outcome()}

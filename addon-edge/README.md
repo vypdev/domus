@@ -3,6 +3,8 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.95 explains when standalone sign-in was not completed and offers one action to start again. English and Spanish guidance preserves household records, existing verified access and the original five-minute attempt limit.
+
 Edge.94 keeps recovered task results historical when restoration removed their effect. Checking the original request refreshes current tasks without opening rolled-away work or recreating it. New drafts and genuine read-retry guidance are preserved.
 
 Edge.93 offers reviewed skips only for currently eligible overdue work. Completed, started, previously performed and already skipped occurrences keep their history and original requests. Scheduling controls fit the narrow card.

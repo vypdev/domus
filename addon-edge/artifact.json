@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.94",
-  "sourceCommit": "4064b50fa7b687665adb55a5dc569c3369f8be6d",
-  "sourceArchiveSHA256": "521c14725fa5d79f0562e5db539f6800cb31bbdbe716bba115b345c384c6bdbd",
+  "version": "0.0.0-edge.95",
+  "sourceCommit": "aa5baf97b938a0450f07d6b13a49f2e696795ca3",
+  "sourceArchiveSHA256": "c1b8fc3961a6a1361b7e8fca8085d1dded5962cff6d47a622a5837f5afbd718b",
   "storageSchema": 37,
-  "wheelSHA256": "89ff7250408567f2a607a622fc7df6f2c448b31632b9162559f454be9fddf954",
+  "wheelSHA256": "29bd0fb85c3c55eb3e34debaa73dff08fd1778568e12b3749d62eef0bfbf756c",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -176,7 +176,7 @@
     "domus/entrypoints/ha_stock_http.py": "517500a3c62eb4652370c33df8b8aac52f827337b491688b7934778be60eb3db",
     "domus/entrypoints/ha_tasks_http.py": "390a4b43903862bc6541a9b89ec3462f727f79ff69a8c430a73d732a46c8db37",
     "domus/entrypoints/household_http.py": "37e948848115bfa8714c9cccc50058389114f2e665cad965a66964b0dcd098c8",
-    "domus/entrypoints/http.py": "01c9ce28aa23f5f560c3fb139f8e7bf0bafaaa44a3803b29b6cb3c9dbaaeef03",
+    "domus/entrypoints/http.py": "0952a752fd5cdaa96f18e485421bc2e7898eeb2b8ac4e0af0f090dc7897d6aca",
     "domus/entrypoints/http_contract.py": "613be310d4ff6a6c7e2a699c20f1c4a142d0b34073629884e58e973c4b040039",
     "domus/entrypoints/http_errors.py": "403e850c96e2125b1a1b5a9b828d2644e65d6d87ce4f9e51e4a45f1570bc6345",
     "domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
@@ -258,9 +258,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    ".vite/manifest.json": "8e97c1026f7f53e9e858daa0db6ba7e2ed40b1a6295e496e58f07cd8c2c6aa26",
-    "assets/index-BQljvmTv.js": "2da06ec194a219c29a0a502e3949057f178ff23bb1520a76663bce1085c15231",
-    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "aa9b9f2c25945e7dd9191c856f18d7ae009c67cba8751e07c187571a33ef92fd"
+    "index.html": "04cdb5370ecc86d44a1e8224ca91fee401fcf6bc5d2b5e3a69ab6f41a2b9d591",
+    ".vite/manifest.json": "6b6e018807eceb396b34b25c3605517727fa163849758a1465fbe4e706ef68c0",
+    "assets/index-BW_S3-PP.js": "5f4e40f5c14cfb5f94f3e17e8cb877de23914d76337be9ecd20fd32124212937",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48"
   }
 }
