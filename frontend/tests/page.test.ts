@@ -296,6 +296,39 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
 function intent(app: DomusApp, detail: unknown) {app.dispatchEvent(new CustomEvent('domus-intent', {detail, bubbles: true, composed: true}));}
 function administrationIntent(app:DomusApp,detail:unknown){app.dispatchEvent(new CustomEvent('domus-administration-intent',{detail,bubbles:true,composed:true}));}
 
+test.each(['en', 'es'] as const)('standalone recovery in %s remains unverified until deliberate navigation', async locale => {
+  const f = fixture('standalone', locale); f.page.location.href += '#sign-in-recovery';
+  f.values.set('unrelated', 'keep');
+  f.fetch.mockImplementation(async path => {
+    const response = new Response(JSON.stringify({state:'blocked',code:'session_required',message:'Sign in.',
+      action_required:'Sign in again.',correlation_id:'cor_sign_in'}),
+    {status:401,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+    Object.defineProperty(response,'url',{value:corpus.standalone.endpoint.origin+path}); return response;
+  });
+  const {app} = await f.open();
+  expect(app.shadowRoot!.querySelector('h1')!.textContent).toBe(locale === 'en'
+    ? 'Sign-in was not completed' : 'No se ha completado el inicio de sesión');
+  expect(app.view?.session).toBeNull(); expect(app.view?.decision?.state).toBe('authentication_required');
+  expect(f.fetch.mock.calls.map(([path])=>path)).toEqual(['/api/v1/session']);
+  expect(f.navigation).toEqual([]); expect(f.values.get('unrelated')).toBe('keep');
+  const proof = app.view;
+  f.page.location.href = f.page.location.href.split('#')[0] + '#sign-in-recovery?return=https://foreign.invalid/';
+  f.events.dispatchEvent(new Event('hashchange')); await app.updateComplete;
+  expect(app.shadowRoot!.querySelector('h1')!.textContent).toBe(locale === 'en' ? 'Verify your access' : 'Verifica tu acceso');
+  expect(app.shadowRoot!.textContent).not.toContain('foreign.invalid');
+  expect(app.view).toBe(proof); expect(f.fetch).toHaveBeenCalledTimes(1); expect(f.navigation).toEqual([]);
+  intent(app,{type:'sign_in'}); expect(f.navigation).toEqual(['/api/v1/auth/start']);
+});
+
+test.each(['native','standalone'] as const)('%s public sign-in marker cannot replace verified proof or navigate', async mode => {
+  const f = fixture(mode); f.phase('active'); f.page.location.href += '#sign-in-recovery';
+  const {app} = await f.open();
+  expect(app.view?.decision?.state).toBe('active'); expect(app.view?.session).not.toBeNull();
+  expect(app.view?.household?.name).toBe('Home 🏠');
+  expect(app.shadowRoot!.querySelector('h1')!.textContent).toBe('Your household');
+  expect(f.navigation).toEqual([]); expect(f.postRequests()).toBe(0); expect(f.putRequests()).toBe(0);
+});
+
 function holdNavigationTimers(page: EntryPage) {
   const schedule = page.setTimeout.bind(page), clear = page.clearTimeout.bind(page);
   const ticks: {id:number; run:() => void}[] = [], cancelled: number[] = [];

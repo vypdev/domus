@@ -137,6 +137,51 @@ test('joining, refresh, standalone sign-in and native reopen emit their closed i
     expect(f.intents).toEqual([{type: deployment === 'native' ? 'reopen' : 'sign_in'}]);
   }
 });
+test.each(['en', 'es'] as const)('invalid sign-in guidance in %s requires one deliberate fresh attempt', async locale => {
+  const f = await mount(null, locale);
+  f.element.signInRecovery = true;
+  f.element.view = view('pending', {session: null, authorization: null,
+    decision: entryDecision('standalone', null, null, 0), journal: null});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('h1')!.textContent).toBe(locale === 'en'
+    ? 'Sign-in was not completed' : 'No se ha completado el inicio de sesión');
+  expect(f.text()).toContain(locale === 'en' ? 'Household records are retained' : 'Los registros del hogar se conservan');
+  expect(f.text()).toContain(locale === 'en' ? 'five minutes' : 'cinco minutos');
+  const button = f.button(locale === 'en' ? 'Sign in with Home Assistant' : 'Iniciar sesión con Home Assistant');
+  expect([...f.root.querySelectorAll('#overview > .actions button')]).toEqual([button]);
+  expect(f.root.activeElement).toBe(button);
+  expect(f.intents).toEqual([]);
+  f.element.view = {...f.element.view!, notice:'authentication_required'};
+  await f.element.updateComplete;
+  expect(f.text()).not.toContain(message('notice_authentication_required',locale));
+  expect(f.root.activeElement).toBe(button);
+  button.click(); expect(f.intents).toEqual([{type: 'sign_in'}]);
+});
+test('changing recovery language retains the language control focus and emits no sign-in', async () => {
+  const f = await mount(); f.element.signInRecovery = true;
+  f.element.view = view('pending', {session: null, authorization: null,
+    decision: entryDecision('standalone', null, null, 0), journal: null});
+  await f.element.updateComplete;
+  const select = f.root.querySelector('select')!; select.focus(); select.value = 'es';
+  select.dispatchEvent(new Event('change')); await f.element.updateComplete;
+  expect(f.root.querySelector('h1')!.textContent).toBe('No se ha completado el inicio de sesión');
+  expect(f.root.activeElement).toBe(select);
+  expect(f.intents).toEqual([{type: 'language', language: 'es'}]);
+  f.element.view = {...f.element.view!}; await f.element.updateComplete;
+  expect(f.root.activeElement).toBe(select);
+  expect(f.intents).toEqual([{type: 'language', language: 'es'}]);
+});
+test.each(['idle', 'loading', 'sending', 'closed', 'native', 'verified'] as const)(
+  'public recovery guidance does not replace %s state or authority', async state => {
+    const deployment = state === 'native' ? 'native' : 'standalone';
+    const actual = state === 'verified' ? view('active') : view('pending', {session: null, authorization: null,
+      decision: entryDecision(deployment, null, null, 0), journal: null,
+      ...state === 'native' ? {} : {phase: state}});
+    const f = await mount(null, 'en', deployment); f.element.signInRecovery = true; f.element.view = actual;
+    await f.element.updateComplete;
+    expect(f.root.querySelector('h1')!.textContent).not.toBe('Sign-in was not completed');
+    expect(f.element.view).toBe(actual); expect(f.intents).toEqual([]);
+  });
 test('closed views expose deployment-specific reentry even while a retired command remains busy', async () => {
   for (const deployment of ['native', 'standalone'] as const) {
     const f = await mount(view('active', {phase: 'closed', busy: true, session: null, decision: null,

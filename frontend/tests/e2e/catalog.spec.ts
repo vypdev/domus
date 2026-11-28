@@ -9,6 +9,44 @@ import type {DomusAutomationDaily} from '../../src/presentation/domus-automation
 
 const origin = 'http://127.0.0.1:56173';
 
+test.describe('sign-in recovery catalog', () => {
+  test.use({hasTouch:true,viewport:{width:390,height:844}});
+  for (const locale of ['en','es'] as const) test('localized recovery is readable and deliberate in ' + locale, async ({page}) => {
+    const unexpected: string[] = [], errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.route('**/*', async route => {
+      const target = new URL(route.request().url());
+      if (target.origin !== origin || target.pathname.includes('/api/')) {
+        unexpected.push(target.pathname); await route.abort();
+      } else await route.continue();
+    });
+    for (const colorScheme of ['light','dark'] as const) {
+      await page.emulateMedia({colorScheme,reducedMotion:'reduce'});
+      await page.goto(origin + '/iframe.html?id=domus-household-entry--sign-in-recovery&viewMode=story&args='
+        + encodeURIComponent('language:' + locale + ';deployment:standalone'));
+      const app = page.locator('domus-app');
+      await expect(app.getByRole('heading',{name:locale === 'en'
+        ? 'Sign-in was not completed' : 'No se ha completado el inicio de sesión',level:1,exact:true})).toBeVisible();
+      const action = app.getByRole('button',{name:locale === 'en'
+        ? 'Sign in with Home Assistant' : 'Iniciar sesión con Home Assistant',exact:true});
+      await expect(action).toHaveCount(1); await expect(action).toBeFocused();
+      expect(await readableContrast(app.locator('#overview > .intro'))).toBeGreaterThanOrEqual(4.5);
+      expect(await readableContrast(action)).toBeGreaterThanOrEqual(4.5);
+      expect((await action.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      await app.evaluate(element => {
+        const state = window as unknown as {recoveryIntents:unknown[]}; state.recoveryIntents = [];
+        element.addEventListener('domus-intent', event => state.recoveryIntents.push((event as CustomEvent).detail));
+      });
+      expect(await page.evaluate(() => (window as unknown as {recoveryIntents:unknown[]}).recoveryIntents)).toEqual([]);
+      if (locale === 'en') await page.keyboard.press('Enter'); else await action.tap();
+      expect(await page.evaluate(() => (window as unknown as {recoveryIntents:unknown[]}).recoveryIntents)).toEqual([{type:'sign_in'}]);
+      await page.screenshot({path:'test-results/sign-in-recovery-' + locale + '-390-' + colorScheme + '.png',fullPage:true});
+    }
+    expect(unexpected).toEqual([]); expect(errors).toEqual([]);
+  });
+});
+
 async function readableContrast(locator:Locator):Promise<number>{
   const colors=await locator.evaluate(element=>{
     const foreground=getComputedStyle(element).color;let current:Element|null=element,background='';

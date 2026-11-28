@@ -393,6 +393,12 @@ progress and merge; product findings still require resolution and full product c
 
 ## Remaining delivery
 
+The bounded [standalone sign-in recovery increment](evidence/standalone-sign-in-recovery-qualification.md)
+keeps the existing C18/C20 callback and fixed-root ownership and C45 guidance boundary. Missing or
+expired browser attempts lead to localized retry guidance while API rejection and current server
+proof remain authoritative. Its source, image and installed checks are recorded independently;
+this addition does not replace the inventory above or complete the integrated entry gate.
+
 The Edge.5 candidate pins corrected runtime source 271a3a0 and its verified source archive. Its separate
 Node/pnpm build stage includes the exact UI in the noneditable Python installation and leaves
 build tools out of the final image. Real amd64/aarch64 image execution, including UI resource bytes,

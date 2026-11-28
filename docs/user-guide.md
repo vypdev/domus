@@ -9,6 +9,12 @@ Open Domus with your own Home Assistant account. Ingress uses the existing HA se
 offers HA sign-in. English and Spanish are supported. Your role controls permitted actions, with
 backend checks applying even when a client presents an outdated button.
 
+Each standalone sign-in attempt lasts five minutes. If Domus shows **Sign-in was not
+completed**, choose **Sign in with Home Assistant** to start a fresh attempt and complete
+it within five minutes. In Spanish, the screen says **No se ha completado el inicio de
+sesión** and offers **Iniciar sesión con Home Assistant**. Household records are retained.
+Domus waits for that deliberate action; an existing valid session continues normally.
+
 During explicit setup, choose how administration maps from HA: all HA administrators by default, only the verified administrator completing setup, or an explicitly selected HA user. The default gives each proven HA administrator inherited Domus administration; ordinary users are not promoted by opening the app. An administrator configures household permission profiles and per-member exceptions. Known suspension or revoked authority still blocks access; changing a label or choosing another performer never changes the caller's permission.
 
 ## Household navigation

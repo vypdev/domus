@@ -7,7 +7,7 @@ import type {MembershipState} from '../src/domain/entry';
 import type {Language} from '../src/presentation/messages';
 import '../src/presentation/domus-app';
 
-type Example = 'loading' | MembershipState | 'denied' | 'unavailable' | 'grace' | 'invalid' | 'uncertain' | 'historical';
+type Example = 'loading' | MembershipState | 'denied' | 'unavailable' | 'grace' | 'invalid' | 'uncertain' | 'historical' | 'sign_in_recovery';
 type Arguments = {example: Example; language: Language; deployment: 'native' | 'standalone'};
 const time = 1_800_000_000_000;
 const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge' as const,
@@ -15,6 +15,9 @@ const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel
 /** Fictional render data only. Stories do not connect to a server or simulate completed commands. */
 function fixture(example: Example, deployment: Arguments['deployment']): EntryView | null {
   if (example === 'loading') return null;
+  if (example === 'sign_in_recovery') return {phase:'ready',busy:false,session:null,authorization:null,
+    decision:entryDecision(deployment,null,null,time),household:null,journal:null,outcome:null,
+    notice:null,fields:[],cleanup:null};
   const state: MembershipState = ['grace', 'uncertain', 'historical'].includes(example) ? 'active'
     : example === 'denied' || example === 'invalid' || example === 'unavailable' ? 'unconfigured' : example as MembershipState;
   const session = {context, deployment, access: example === 'grace' ? 'read_only' as const : 'full' as const,
@@ -44,7 +47,8 @@ const meta: Meta<Arguments> = {
     deployment: {control: 'inline-radio', options: ['native', 'standalone']}, example: {control: false}},
   render: args => html`<p style="margin:0;padding:8px 20px;background:#fff3cd;color:#523e09;font:14px system-ui">
     Fictional interface state. No server is connected; actions emit intents only.</p>
-    <domus-app .view=${fixture(args.example, args.deployment)} .language=${args.language} .deployment=${args.deployment}></domus-app>`,
+    <domus-app .view=${fixture(args.example, args.deployment)} .language=${args.language} .deployment=${args.deployment}
+      .signInRecovery=${args.example === 'sign_in_recovery'}></domus-app>`,
 };
 export default meta;
 type Story = StoryObj<Arguments>;
@@ -62,3 +66,4 @@ export const Invalid: Story = {args: {example: 'invalid'}};
 export const Uncertain: Story = {args: {example: 'uncertain'}};
 export const Historical: Story = {args: {example: 'historical'}};
 export const Spanish: Story = {args: {example: 'unconfigured', language: 'es'}};
+export const SignInRecovery: Story = {args: {example: 'sign_in_recovery', deployment: 'standalone'}};
